@@ -290,6 +290,53 @@ static func _dig(S: SimState, x: float, energy: float, cause, kind: String, dirx
 	return rec
 
 
+## Deepen the crater at x so it is k times as deep as it was (the buried fighter's follow-up: a blow into the crater he lies in). Takes the
+## most recent crater record whose centre is within 0.3 of its radius of x and lowers its bowl by (k - 1) times its depth, the same
+## bowl, whatever relief the ground already has (dig leaves ground already dented deeper than the bowl asked for). Returns the new depth,
+## or 0 when no crater is there or k is not above 1. The record's depth changes; the crater event is sent again for the renderers.
+static func deepen(S: SimState, x: float, cause, k: float, z: float = NAN) -> float:
+	if k <= 1.0:
+		return 0.0
+	var rec = null
+	for i in range(S.craters.size() - 1, -1, -1):
+		var c = S.craters[i]
+		if absf(SimWrap.sdx(c.x, x)) <= 0.3 * c.r:
+			rec = c
+			break
+	if rec == null:
+		return 0.0
+	var zz: float = z
+	if is_nan(zz):
+		zz = float(cause.z) if (S.depthOn and cause != null and "z" in cause) else 0.0
+	var kr: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(zz)) if S.depthOn else -1
+	var NC: int = SimConst.NC
+	var COL: float = SimConst.COL
+	var extra: float = rec.depth * (k - 1.0)
+	var R: float = rec.r
+	var c0: int = _col(rec.x)
+	var n: int = int(ceil(R / COL)) + 1
+	var minG: float = 1e9
+	for q in range(-n, n + 1):
+		var i2: int = (c0 + q + NC) % NC
+		var u: float = absf(SimWrap.sdx(rec.x, float(i2) * COL)) / R
+		if u >= 1.0:
+			continue
+		var t: float = 1.0 - u * u
+		var old: float = S.deform[i2]
+		var nv: float = maxf(DEFORM_FLOOR, old - extra * t * t)
+		if nv < old and S.rubble[i2] > 0.0:
+			S.rubble[i2] = maxf(0.0, S.rubble[i2] - (old - nv))
+		S.deform[i2] = nv
+		minG = minf(minG, S.base[i2] + nv)
+	minG = minf(minG, relax(S, c0, n + REPOSE_PAD))
+	WorldTerrain.lowRefresh(S, c0, n + REPOSE_PAD)
+	WorldTerrain.leaveRow(S, kr)
+	WorldWater.touched(S, c0, n + REPOSE_PAD, minG)
+	rec.depth += extra
+	SimFx.crater(S, rec)
+	return rec.depth
+
+
 ## A beam sample within reach of the ground: carve the groove toward its target depth (never deeper than that however
 ## many samples cross it), raise the permanent burn mark, and emit the scorch event. Half width and depth grow with P.
 static func scorch(S: SimState, x: float, P: float, variant: String, cause, z: float = NAN) -> void:

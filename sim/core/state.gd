@@ -487,6 +487,7 @@ class Fighter:
 	var jLips: int = 0               # flights off a lip so far in this journey (journey_end carries it)
 	var embedT: int = 0              # World's embed (ground-contact.md): ticks left driven into the ground
 	var embedCool: float = -1.0e9    # ... and the match time of his last embed (the cooldown counts from it)
+	var slideFeet: bool = false      # the current launch is a knock-back skid, a slide on the feet (World: its wear is half, its wall is a bump, its journey_end kind is feet)
 	var hopped: bool = false         # the launch has made its one hop
 	var slideEvt: float = 0.0      # the collateral set-piece token of the running slide (world/collateral.gd)
 	var lastSeen = null      # LastSeen or null

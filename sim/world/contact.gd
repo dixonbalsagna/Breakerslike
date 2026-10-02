@@ -54,6 +54,7 @@ static var K_CAPTURNS: Array = [1.5, 3.0, 3.0, 3.0]
 static var K_BODYR: float = 60.0
 static var K_WPS: float = 0.0126
 static var K_WTOUCH: float = 0.3
+static var K_WFEET: float = 1.0          # a knock-back skid pays this share of a launch's wear
 static var K_WCAP: float = 1.0           # the most wear a journey pays, as a share of the single-impact budget
 static var K_AREA_LATER: float = 0.5     # a later contact pays this share of the area damage of the speed it removes
 static var K_AREA_SLAM: float = 1.0      # the first contact pays this share of the impact's area damage when it is a slam ...
@@ -102,6 +103,7 @@ class Body:
 	var lips: int = 0
 	var special: bool = false     # the launch is a special blow (a signature, a finisher, a break launch)
 	var embedOK: bool = true      # the launched fighter is out of the embed cool-down
+	var feet: bool = false        # the launch is a knock-back skid (a slide on the feet): a wall ends it with the bump, never the silent halt
 	var z: float = 0.0            # depth (T: the row the ground is read on when depth is on)
 
 
@@ -189,6 +191,7 @@ static func _cache() -> void:
 	K_WPS = float(D.wear.perSpeed)
 	K_WTOUCH = float(D.wear.touch)
 	K_WCAP = float(D.wear.get("cap", 1.0))
+	K_WFEET = float(D.wear.get("feetShare", 1.0))
 	K_AREA_LATER = float(D.get("area", {}).get("laterShare", 0.5))
 	K_AREA_SLAM = float(D.get("area", {}).get("slam", 1.0))
 	K_AREA_TOUCH = float(D.get("area", {}).get("touch", 0.5))
@@ -469,7 +472,7 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	# ground that rises like a wall stops him with a stop-impact
 	if rise > K_WALL and vN2 > K_STOP:
 		b.done = true
-		if vN2 < K_WALLHALT:
+		if vN2 < K_WALLHALT and not b.feet:
 			b.end = "stop"   # a slow skid against a wall just halts: no stop-impact
 			return
 		b.end = "wall"
@@ -625,6 +628,7 @@ static func toBody(S: SimState, f) -> Body:
 	b.hopped = f.hopped
 	b.special = f.launchSpecial
 	b.embedOK = S.T - f.embedCool >= K_EMB_COOL
+	b.feet = f.slideFeet
 	var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
 	b.tier = by.tier
 	b.slideD = f.slideD
@@ -714,6 +718,8 @@ static func _skidEffects(S: SimState, f, by, b: Body, xa: float) -> void:
 static func _pay(S: SimState, f, by, amount: float) -> void:
 	if amount <= 0.0:
 		return
+	if f.slideFeet:
+		amount *= K_WFEET   # a knock-back skid hurts half as much as a launch's impact (agency-pass.md section 13, rule 4)
 	var a: float = minf(amount, maxf(f.jV0 * 0.018 * K_WCAP - f.slideDmg, 0.0))
 	if a > 0.0:
 		f.slideDmg += a
@@ -873,7 +879,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 	je.lips = f.jLips
 	je.nb = int(f.bounces)
 	je.dur = float(f.jT) * SimConst.DT
-	je.kind = "capped" if (b.capped and how in ["tumble", "stop"]) else how
+	je.kind = "feet" if f.slideFeet else ("capped" if (b.capped and how in ["tumble", "stop"]) else how)   # a knock-back skid is its own class: QA keeps it out of the landing mix
 	je.n = _launchN(f)
 	f.slide = 0.0
 	f.vx = 0.0
@@ -887,6 +893,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 	f.launchBy = null
 	f.launchT = 1.0
 	f.launchSpecial = false
+	f.slideFeet = false
 	f.hopped = false
 	WorldBrunt.endFlight(S, f)
 
@@ -910,3 +917,35 @@ static func _record(S: SimState, f, by) -> void:
 	if S.slides.size() > WorldSlide.LIST_MAX:
 		S.slides.remove_at(0)
 	SimFx.slideEvent(S, rec)
+
+
+## The first obstacle a slide along the ground meets: ground that rises steeper than the wall rule (leave.wall) within dist of x, in
+## direction dir at depth z. Returns {"hit": bool, "d": the distance to it (units), "x", "kind": "wall", "heap" (a rubble heap) or "rim"
+## (a crater's edge), "rise"}; {"hit": false, "d": dist} when the way is clear. Pure: the director's slide plan stops short of it.
+static func slideObstacle(S: SimState, x: float, z: float, dir: float, dist: float) -> Dictionary:
+	var COL: float = SimConst.COL
+	var n: int = int(ceil(dist / COL))
+	var gprev: float = WorldTerrain.groundY(S, x, z)
+	for k in range(1, n + 1):
+		var xk: float = SimWrap.wrap(x + dir * float(k) * COL)
+		var g: float = WorldTerrain.groundY(S, xk, z)
+		var rise: float = (g - gprev) / COL
+		if rise > K_WALL:
+			var col: int = int(floor(xk / COL)) % SimConst.NC
+			var kind: String = "heap" if S.rubble[col] > 0.0 else ("rim" if _nearRim(S, xk) else "wall")
+			return {"hit": true, "d": float(k) * COL, "x": xk, "kind": kind, "rise": rise}
+		gprev = g
+	return {"hit": false, "d": dist}
+
+
+## A slide carried along the ground meets an obstacle (slideObstacle) and ends there: a light brunt, no rebound. The fighter takes the
+## stop-impact's damage by his speed, a rim or a wall takes a small dent (a heap takes none), and the ground shakes a little. By is
+## the striker (the dent's owner and tier); spN the slide's normalised speed at the obstacle. Returns the damage taken.
+static func bump(S: SimState, f, by, kind: String, spN: float) -> float:
+	var dmg: float = spN * WorldSlide.STOP_DMG
+	if kind != "heap":
+		WorldCrater.dig(S, f.x, WorldCrater.impactEnergy(spN, by.tier) * WorldSlide.STOP_E, by, "impact", 0.0, 1.0, false, f.z)
+	SimDamage.hurt(S, f, dmg, by)
+	SimFx.shake(S, minf(10.0, spN * 0.004), f.x, f.z)
+	SimFx.debris(S, f.x, f.y + 8.0, 3, "#6d6a66", 400.0, f.z)
+	return dmg

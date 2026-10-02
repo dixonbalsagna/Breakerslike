@@ -5,7 +5,7 @@ class_name SimHash
 const MASK: int = 0xFFFFFFFF
 const FIGHTER: Array = ["name", "title", "role", "col", "aura", "hair", "care", "dmgMul", "spd", "maxhp", "sigName", "hp", "x", "y", "vx", "vy", "face", "ki", "power", "tier", "stance", "state", "stateT",
 	"hidden", "hideT", "hiddenFor", "menace", "anguish", "ambush", "rot", "spin", "bounces", "lastAtkT", "hurtT", "keys", "beamCharge", "wet", "ambushUntil", "dPrev",
-	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped", "aimB", "aimX0", "aimZ0", "aimZ1", "aimD", "chainEvt", "z", "zT", "zWay", "jContacts", "jT", "jV0", "tumbleT", "contactT", "launchN", "jLips", "lastStandUsed", "lastStandLeft", "embedT", "embedCool",
+	"menaceSeen", "menaceQuiet", "casSeen", "hasAnguish", "hasMenace", "launchT", "slide", "slideX0", "slideD", "slideE", "slideDmg", "slideAcc", "slideEvt", "launchSpecial", "hopped", "aimB", "aimX0", "aimZ0", "aimZ1", "aimD", "chainEvt", "z", "zT", "zWay", "jContacts", "jT", "jV0", "tumbleT", "contactT", "launchN", "jLips", "lastStandUsed", "lastStandLeft", "embedT", "embedCool", "slideFeet",
 	"canHide", "lockBackT", "exT"]
 ## Intent v2 (I1): the v2 fields in the record's order, then today's dash, charge and stance until I3, then the agency fields.
 const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance", "lightHeld", "heavyHeld", "escape"]
