@@ -598,6 +598,19 @@ function xref(docs, root = repoRoot) {
     for (const k of ['count_t3', 'count_t4']) if (typeof r[k] === 'number' && r[k] > 12) err(PW, `/rocks/${k}`, 'vfx-power-range', `${k} ${r[k]} is above the 12 pieces rocks.gd keeps, so the rest would never be drawn`, 'warning');
   }
 
+  // ---- vfx: power language, blast and pressure ----
+  if (isObj(power)) {
+    const PW2 = 'data/vfx/power.json';
+    for (const [g, pairs] of [['blast', [['rs_min', 'rs_max'], ['ring_r0', 'ring_r1'], ['settle_from', 'settle_to'], ['chunk_min', 'chunk_max']]], ['pressure', [['r0_bh', 'r1_bh']]]]) {
+      const o = power[g];
+      if (!isObj(o)) continue;
+      for (const [lo, hi] of pairs) if (typeof o[lo] === 'number' && typeof o[hi] === 'number' && o[lo] > o[hi]) err(PW2, `/${g}/${lo}`, 'vfx-power-range', `${lo} ${o[lo]} is above ${hi} ${o[hi]}`);
+      for (let i = 2; i <= 4; i++) { const a = o['mult_t' + (i - 1)]; const b = o['mult_t' + i]; if (typeof a === 'number' && typeof b === 'number' && b < a) err(PW2, `/${g}/mult_t${i}`, 'vfx-power-tier', `mult_t${i} ${b} is below mult_t${i - 1} ${a}; a higher tier should show at least as much`, 'warning'); }
+    }
+    const pr = power.pressure;
+    if (isObj(pr) && typeof pr.rest_bh === 'number' && typeof pr.fast_bh === 'number' && pr.rest_bh >= pr.fast_bh) err(PW2, '/pressure/rest_bh', 'vfx-power-range', `rest_bh ${pr.rest_bh} is not below fast_bh ${pr.fast_bh}, so no speed would be both`);
+  }
+
   // ---- vfx: water ----
   const water = get(WATER);
   if (isObj(water)) {

@@ -62,6 +62,9 @@
     "halfLife": 0.5,
     "bodyR": 60
   },
+  "slope": {
+    "speedCap": 1.25
+  },
   "surfaces": {
     "paving": {
       "brake": 0.8,

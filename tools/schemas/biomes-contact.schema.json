@@ -15,6 +15,7 @@
     "wear",
     "area",
     "spin",
+    "slope",
     "surfaces",
     "water",
     "biomeSurface",
@@ -580,6 +581,24 @@
         }
       },
       "description": "Area damage to structures from a journey's contacts: the first contact pays slam (a slam) or touch (anything else) of an impact's damage; a later contact pays laterShare of the damage of the speed it removes.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "slope": {
+      "type": "object",
+      "description": "A tumble down a slope (docs/world/ground-contact.md): its speed never exceeds speedCap times its first-contact speed.",
+      "required": [
+        "speedCap"
+      ],
+      "properties": {
+        "speedCap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The most a tumble down a slope may speed up, as a multiple of its first-contact speed."
+        }
+      },
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

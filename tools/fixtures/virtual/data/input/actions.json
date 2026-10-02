@@ -136,6 +136,13 @@
     {
       "id": "hints",
       "kind": "system"
+    },
+    {
+      "id": "escape",
+      "kind": "press",
+      "fields": [
+        "escape"
+      ]
     }
   ]
 }

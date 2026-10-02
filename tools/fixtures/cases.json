@@ -29262,6 +29262,625 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "vfx-power-blast-unknown-key",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/glow": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/glow"
+      }
+    },
+    {
+      "id": "vfx-power-blast-empty-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-blast-mult-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/mult_t3": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/mult_t3"
+      }
+    },
+    {
+      "id": "vfx-power-blast-mult-zero-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/mult_t1": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-blast-mult-falls-warns",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/mult_t3": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-tier",
+        "pointer": "/blast/mult_t3"
+      }
+    },
+    {
+      "id": "vfx-power-blast-ref-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/r_ref": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/blast/r_ref"
+      }
+    },
+    {
+      "id": "vfx-power-blast-lob-range",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/lob": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/blast/lob"
+      }
+    },
+    {
+      "id": "vfx-power-blast-gap-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/gap_s": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/gap_s"
+      }
+    },
+    {
+      "id": "vfx-power-blast-ring-life-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/ring_life": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/blast/ring_life"
+      }
+    },
+    {
+      "id": "vfx-power-blast-chunks-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/chunks": -2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/chunks"
+      }
+    },
+    {
+      "id": "vfx-power-blast-type",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/dome": "big"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/dome"
+      }
+    },
+    {
+      "id": "vfx-power-blast-scale-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/rs_min": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/blast/rs_min"
+      }
+    },
+    {
+      "id": "vfx-power-blast-ring-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/ring_r0": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/blast/ring_r0"
+      }
+    },
+    {
+      "id": "vfx-power-blast-settle-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/settle_from": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/blast/settle_from"
+      }
+    },
+    {
+      "id": "vfx-power-blast-chunk-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/chunk_min": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/blast/chunk_min"
+      }
+    },
+    {
+      "id": "vfx-power-blast-equal-range-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/blast/chunk_min": 22
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-pressure-unknown-key",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/spike": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/pressure/spike"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-empty-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure": {}
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "vfx-power-pressure-mult-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/mult_t2": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pressure/mult_t2"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-mult-falls-warns",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/mult_t4": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-tier",
+        "pointer": "/pressure/mult_t4"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-fast-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/fast_bh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/pressure/fast_bh"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-rest-above-fast",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/rest_bh": 12
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/pressure/rest_bh"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-window-integer",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/start_window": 24.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/pressure/start_window"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-window-negative",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/stop_window": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pressure/stop_window"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-turn-dot-range",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/turn_dot": -2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pressure/turn_dot"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-squash-range",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/squash": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/pressure/squash"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-life-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/life_start": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pressure/life_start"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-alpha-range",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/alpha": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/pressure/alpha"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-thick-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/thick": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/pressure/thick"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-alive-max-positive",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/alive_max": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/pressure/alive_max"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-radius-order",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/r0_bh": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:vfx-power-range",
+        "pointer": "/pressure/r0_bh"
+      }
+    },
+    {
+      "id": "vfx-power-pressure-second-delay-zero-ok",
+      "schema": "vfx-power.schema.json",
+      "mutate": [
+        {
+          "file": "data/vfx/power.json",
+          "set": {
+            "/pressure/second_delay": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-slope-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/slope"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-contact-slope-key-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/slope"
+      }
+    },
+    {
+      "id": "biomes-contact-slope-unknown-key",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope": {
+              "speedCap": 1.25,
+              "grip": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/slope/grip"
+      }
+    },
+    {
+      "id": "biomes-contact-slope-note-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-slope-cap-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope/speedCap": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/slope/speedCap"
+      }
+    },
+    {
+      "id": "biomes-contact-slope-cap-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope/speedCap": "fast"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/slope/speedCap"
+      }
+    },
+    {
+      "id": "biomes-contact-slope-cap-zero-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope/speedCap": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-slope-cap-large-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/slope/speedCap": 3
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

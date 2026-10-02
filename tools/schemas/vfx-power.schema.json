@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/vfx-power",
   "title": "vfx power language (version 1)",
-  "description": "data/vfx/power.json: VFX's power language (docs/vfx/power-language.md): visual ways to show a higher tier without more speed. Today it holds one prototype, the levitating rocks (render/vfx/rocks.gd), behind the hub flag rocks_enabled (default off); a new idea adds a group here and a line to this schema. Presentation only: never read by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because rocks.gd falls back to the same default. Lengths are in fighter heights (_bh, 75 units), times in seconds, drift in radians a second. Pairs where the minimum must not exceed the maximum, and counts above the 12 pieces rocks.gd keeps, are checked by tools/lib/xref.js (vfx-power-range).",
+  "description": "data/vfx/power.json: VFX's power language (docs/vfx/power-language.md): visual ways to show a higher tier without more speed. It holds the levitating rocks (render/vfx/rocks.gd), the blast amplification (blast.gd) and the pressure rings (pressure.gd); a new idea adds a group here and a line to this schema. Presentation only: never read by the sim. Version field: version. Policy: closed except keys starting with an underscore. Every key is optional because rocks.gd falls back to the same default. Lengths are in fighter heights (_bh, 75 units), times in seconds, drift in radians a second. Pairs where the minimum must not exceed the maximum, counts above the 12 pieces rocks.gd keeps, rest below fast speed for the pressure rings, and tier multipliers that fall with the tier (a warning) are checked by tools/lib/xref.js (vfx-power-range).",
   "type": "object",
   "required": [
     "version"
@@ -97,6 +97,231 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "blast": {
+      "type": "object",
+      "description": "Blast amplification (idea 2 of the list; render/vfx/blast.gd): a crater is bigger to look at the higher the tier of who caused it: a flat shock ring, chunks thrown from the rim, a dust dome, a fall of pebbles and the bowl's dust settling. Tier 1 adds nothing.",
+      "properties": {
+        "mult_t1": {
+          "description": "The scale of the amplification at tier 1 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "mult_t2": {
+          "description": "The scale of the amplification at tier 2 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "mult_t3": {
+          "description": "The scale of the amplification at tier 3 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "mult_t4": {
+          "description": "The scale of the amplification at tier 4 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "r_ref": {
+          "description": "The bowl radius (u) that counts as one unit of size.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rs_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rs_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "gap_s": {
+          "description": "Seconds between two amplified craters of one owner.",
+          "type": "number",
+          "minimum": 0
+        },
+        "ring_life": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ring_r0": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ring_r1": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ring_r1_t": {
+          "description": "The end radius gained per tier step.",
+          "type": "number",
+          "minimum": 0
+        },
+        "ring2_delay": {
+          "type": "number",
+          "minimum": 0
+        },
+        "chunks": {
+          "type": "number",
+          "minimum": 0
+        },
+        "lob": {
+          "description": "The share of the chunks lobbed high.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pebbles": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pebble_delay": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dome": {
+          "type": "number",
+          "minimum": 0
+        },
+        "settle": {
+          "type": "number",
+          "minimum": 0
+        },
+        "settle_from": {
+          "type": "number",
+          "minimum": 0
+        },
+        "settle_to": {
+          "type": "number",
+          "minimum": 0
+        },
+        "chunk_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "chunk_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "pressure": {
+      "type": "object",
+      "description": "Pressure rings on movement (idea 4 of the list; render/vfx/pressure.gd): a thin ring of shoved air at the start of a dash, a hard stop or a hard turn; the size and the second ring come from the tier, not the speed. Tier 1 has none.",
+      "properties": {
+        "mult_t1": {
+          "description": "The size of the ring at tier 1 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "mult_t2": {
+          "description": "The size of the ring at tier 2 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "mult_t3": {
+          "description": "The size of the ring at tier 3 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "mult_t4": {
+          "description": "The size of the ring at tier 4 (0: none).",
+          "type": "number",
+          "minimum": 0
+        },
+        "fast_bh": {
+          "description": "A speed above this (fighter heights a second) is fast.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rest_bh": {
+          "description": "A speed below this counts as rest; below fast_bh.",
+          "type": "number",
+          "minimum": 0
+        },
+        "start_window": {
+          "description": "Ticks in which a break from rest into a dash makes a ring.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stop_window": {
+          "description": "Ticks in which a hard stop makes a ring.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stop_hold": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "turn_dot": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "A turn counts as hard when the direction's dot product is below this."
+        },
+        "cooldown": {
+          "description": "Ticks between rings of one fighter.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "r0_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "r1_bh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "r1_t_bh": {
+          "description": "The end radius gained per tier step.",
+          "type": "number",
+          "minimum": 0
+        },
+        "squash": {
+          "description": "How narrow the ring is across his line of travel (0 to 1).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "life_start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "life_stop": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "thick": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "second_delay": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "second_scale": {
+          "description": "The second ring (tier 4) as a share of the first.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alive_max": {
+          "type": "integer",
+          "minimum": 1
         }
       },
       "additionalProperties": false,
