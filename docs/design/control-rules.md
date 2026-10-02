@@ -210,6 +210,7 @@ There are two kinds of blitz. The **flurry** is the fast chain in place. The **p
 - *For the AI and the Simple layout* the director decides, with the standing blitz chance: 0.25 in Tense, 0.50 in Frenzied, +0.05 per act, capped at 0.60.
 - *Conditions:* the rival is still in flight, the attacker has the ki for one bounce, and the attacker's blitz cooldown is over.
 - A blitz never starts from another blitz's ender, so it can't loop.
+- *A fresh press* (proposed, `balance-targets.md` §23): if the masher's ping-pongs prove to be why he beats the medium AI, a ping-pong doesn't start when the attacker pressed attack in the 20 ticks before the launch connected.
 
 **How long it runs.** A ping-pong is 2 to 5 return blows, and the last one is the ender. The cap comes from tier and mood:
 

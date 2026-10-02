@@ -221,7 +221,7 @@ Under Wounds, the fighter's slide damage is wear from an impact source (legs and
 | Ground contacts that slide rather than slam | **Retired at G0** (§14): the landing mix per launch below replaces it. Slams stay at 15% or more of launches, so craters still read (pillar 4) |
 | Slides per match | **Retired.** It was written for about 100 s matches, and at 6 to 8 minutes the count scales with length (S3b ruling) |
 | Slides per minute, game scale | **Retired at G0** (§14): it was derived from the old 4 to 6 launches a minute |
-| **How launches end** | By how the journey ends (§20, the second landing ruling): skids or tumbles to a halt 40 to 60% and the largest class; wall 5 to 15%; slam 8 to 18%; caught in the air 15 to 30%; water 2 to 10%; brunt 4 to 10%. Bounces are an event rate: 15 to 30% of launches |
+| **How launches end** | By how the journey ends (§20, the second landing ruling): skids or tumbles to a halt 40 to 60% and the largest class; wall 5 to 15%; slam 8 to 18%; caught in the air 15 to 30%; water 2 to 10%; brunt 4 to 10%. Bounces are an event rate: 20 to 40% of launches (§23) |
 | Casualties from one slide, as a share of the starting population | Tier 2 or below at most 2%; tier 3 at most 5%; tier 4 at most 10% (a demolition line). 0 in open country. The planner reads the predicted slide and declines any launch whose slide would go over budget (a hard test, as for chains) |
 | Low-tier bleed (§4) | Still at most 4% of the population per minute, with slides included |
 
@@ -666,7 +666,7 @@ Orb wants fighters to be ragdolled: to skid, tumble and bounce over the course o
 | **Skid** | Ground contact shallower than **40** degrees, at a speed over 900 (30 before the ruling at the end of this section) | Today's slide: braking of 1,200 + 1.2 v, and a trench. The surface scales the braking: ×0.8 on paving and rock, ×1.3 on sand and soil | His speed falls under 600 (tumble); the ground curves away (airborne); or a rise steeper than 0.8 stops him with a stop-impact, as today |
 | **Bounce** | Contact between **40** and 70 degrees, at a speed over 900, with a bounce left | He rebounds, keeping 80% of his speed along the ground and 45% of his vertical speed. The second bounce keeps 35% and the third 25% | At once: he is airborne again |
 | **Slam** | Contact steeper than 70 degrees (§19) | A crater. One small hop at a speed of 2,000 or more, as today | He is down |
-| **Tumble** | Any contact or skid at a speed of 350 to 900; any contact on rubble; or a 40 to 70 degree contact with no bounce left and too little speed to skid | He rolls, with double braking, for 1.2 s at most | He stops (down), recovers early (below), or the ground curves away (airborne) |
+| **Tumble** | Any contact or skid at a speed of 350 to 900; any contact on rubble; or a 40 to 70 degree contact with no bounce left and too little speed to skid | He rolls, with 0.7 of the skid's braking (§23; it was double), for 1.2 s at most | He stops (down), recovers early (below), or the ground curves away (airborne) |
 | **Skip** | On water, as today: a speed over 500 and shallower than about 31 degrees | Up to 6 skips, each keeping 85% of the speed along the water | He sinks with a splash |
 | **Down** | He stops | Recovery of 0.35 s after a skid or a tumble, or 0.75 s after a slam | He is free |
 
@@ -706,7 +706,7 @@ A launch is still classed by its first contact. A bounce is a new class. A fligh
 | :--- | :--- |
 | Bounces per bounced launch | A mean of 1.3 to 2.2 |
 | Flights off a lip | 0.3 to 1.5 a minute once craters have rims. They rise through the match, because craters accumulate |
-| Journeys ending in a tumble | 30 to 60% |
+| Journeys with a tumble that is seen (at least 18 ticks; §23) | 30 to 60% of ground journeys |
 | Early recoveries | 20 to 40% of the chances, at medium AI |
 
 ### What keeps it from looking silly at low power
@@ -798,7 +798,7 @@ World re-measured on Encounter's landing slice at the 40 degree boundary (`docs/
 
 | Event | Measured | Band |
 | :--- | ---: | :--- |
-| Launches with at least one bounce | 27.9% | 15 to 30% |
+| Launches with at least one bounce | 27.9% | 15 to 30% (20 to 40% since §23) |
 | Bounces per bounced journey | 1.28 | 1.2 to 2.0 |
 | Flights off a crater's lip, seen | 1.75 a minute | 0.5 to 2.5 a minute |
 | Flights off any terrain (lips, crests, cliffs and heaps), seen | 4.7 a minute | 1.5 to 5 a minute |
@@ -890,3 +890,42 @@ KAI is at 52.6% and the median is 7:10, with 72 bands passing and 14 failing. Pe
 | **Speed lines** | Heavies land 12.3 a minute and launches 11.8, so the streak would ride on about 25 hits a minute | **A cap: one streak per exchange,** on its launch if it has one, otherwise on its last landed heavy, and never on a hit that gets a panel. That is about 17 a minute. The panel rule is unchanged |
 | **Frenzied mood** | 3.7%, and 8.1% of act 4 | No ruling. It waits for the form impulse in Simulation's next slice |
 | **The masher** | QA reads 0 of 40 against the medium AI, and Encounter reads 41% | The band of 35 to 50% stands while the two probes are reconciled |
+
+## 23. Rulings on the contact baseline (QA's `docs/qa/baseline-contact.md` on `bc857b4`, 2026-10-02)
+
+### The light masher against the medium AI
+
+**Measured:** a masher who takes forms wins 60% (24 of 40) against the medium AI, against a band of 35 to 50%. It was 41 to 48% before ground contact. Against the easy AI it wins 100%, and against the hard AI 5%, which both pass.
+
+**The band stays.** It is the measure of "fine for beginners, beatable by experts": the default opponent shouldn't lose to mashing more often than not. The sample is 40 matches, so QA first repeats it at 200.
+
+**Find the cause before pulling a lever.** QA runs the masher with ground contact off, and with it on, and counts the masher's ping-pongs and air catches per match. The suspect is the follow-up after a launch: a masher who holds toward presses during every launch flight, so he starts a ping-pong every time without meaning to.
+
+**The levers, in order:**
+
+| # | Lever | Owner | When |
+| ---: | :--- | :--- | :--- |
+| 1 | **A ping-pong needs a fresh press.** It doesn't start if the attacker pressed attack in the 20 ticks before the launch connected. This is the same lockout the perfect block and the clash pulses use, and a masher pressing every 8 ticks never passes it | Encounter (a rule in `control-rules.md` §11) | If the masher's ping-pongs are the cause |
+| 2 | **The medium AI uses its outs.** It recovers early on 50% of chances (§20), and it bursts or perfect-blocks a ping-pong's return blow at its difficulty's rates | Encounter (AI) | If the AI is being juggled without answering |
+| 3 | The placeholder `dmgMul` pair | QA | Only to re-centre KAI afterwards. It is not a fix for the masher |
+
+**A masher who never transforms** wins 75% against the easy AI and 7.5% against the medium AI. The bands are for a masher who takes forms. The easy band (at least 60%) also applies to the masher without forms, and passes. There is no band for him against the medium or hard AI: a player who never transforms fights at tier 1, and losing there is fair.
+
+### Tumbles and bounces
+
+**Measured:** 2.5% of journeys end in a tumble, against 30 to 60%, and 35.6% of launches have a bounce, against 15 to 30%. Halted (45.1%), slam (17.0%), caught in the air (19.8%) and bounces per bounced journey (1.32) all pass, and skids are the commonest first contact.
+
+**The tumble band was measuring the wrong thing, and the tumble itself is too short to see.**
+- `journey_end` says `tumble` only when a journey is cut off mid-roll. A tumble that rolls to a stop ends as `stop`, so it wasn't counted.
+- With double braking a tumble lasts 0.13 to 0.3 s (World's note). Orb wants to see fighters tumble, and nobody can see that.
+
+**The rulings:**
+1. **A tumble rolls further.** Its braking is **×0.7 of the skid's**, where it was ×2. A rolling body loses speed more slowly than a sliding one, so this is also the truer physics. It gives a roll of about 0.5 s over 2 to 4 bh. The 1.2 s cap stays, and so does the hard stop at the end.
+2. **The band is "journeys with a tumble that is seen".** A journey counts when it has a `tumble_end` whose roll lasted at least **18 ticks**. World adds the roll's length in ticks to `tumble_end` as `dur`. The share is taken over journeys that travel along the ground, which are those whose `journey_end` is `stop`, `tumble`, `recover` or `capped`.
+   - **Band: 30 to 60%** of those journeys.
+3. **The bounce band widens to 20 to 40%** of launches. Orb asked to see bounces, and every class around it passes with bounces at 35.6%: skids are still the majority and the commonest first contact.
+
+**What QA and World act on:**
+- World: `tumble.brakeMul` 0.7, and `dur` on `tumble_end`.
+- QA: the tumble row reads `tumble_end.dur` of 18 or more, over ground journeys; the bounce row's band is 20 to 40%.
+- QA re-checks journey length after the change. A longer tumble lengthens journeys a little: the bounds of at most 8% capped and at most 20% over 4,000 units still apply.
