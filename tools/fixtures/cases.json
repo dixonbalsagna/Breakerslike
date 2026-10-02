@@ -31309,6 +31309,231 @@
         "rule": "required",
         "pointer": "/kinds/bolt"
       }
+    },
+    {
+      "id": "shots-lob-valid",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/lobTicks": 30,
+            "/kinds/bolt/lobArc": 200
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-lob-ticks-without-arc",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/lobTicks": 30
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-lob",
+        "pointer": "/kinds/bolt"
+      }
+    },
+    {
+      "id": "shots-lob-arc-without-ticks",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/lobArc": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-lob",
+        "pointer": "/kinds/bolt"
+      }
+    },
+    {
+      "id": "shots-lob-ticks-above-life-warns",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/lobTicks": 200,
+            "/kinds/bolt/lobArc": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-lob",
+        "pointer": "/kinds/bolt/lobTicks"
+      }
+    },
+    {
+      "id": "shots-lob-ticks-integer",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/lobTicks": 30.5,
+            "/kinds/bolt/lobArc": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/bolt/lobTicks"
+      }
+    },
+    {
+      "id": "shots-cap-range",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/cap": 100
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/cap"
+      }
+    },
+    {
+      "id": "shots-cap-zero",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/cap": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/cap"
+      }
+    },
+    {
+      "id": "shots-arrive-ticks-positive",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/arriveTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/arriveTicks"
+      }
+    },
+    {
+      "id": "shots-kind-power-positive",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/power": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/kinds/bolt/power"
+      }
+    },
+    {
+      "id": "shots-kind-life-integer",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/lifeTicks": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/bolt/lifeTicks"
+      }
+    },
+    {
+      "id": "shots-kinds-empty",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/kinds"
+      }
+    },
+    {
+      "id": "shots-kind-new-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/beam": {
+              "speed": 100,
+              "r": 20,
+              "power": 5,
+              "dmg": 60,
+              "lifeTicks": 90
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-kind-stronger-does-less-warns",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/lob/dmg": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-order",
+        "pointer": "/kinds/lob/dmg"
+      }
+    },
+    {
+      "id": "shots-kind-equal-power-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/lob/power": 1,
+            "/kinds/lob/dmg": 2
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

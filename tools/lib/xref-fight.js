@@ -923,6 +923,19 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- fight shots: a lobbed kind has both its numbers; a kind that trades with more power does not do less damage ----
+  const shotsD = get('data/fight/shots.json');
+  if (isObj(shotsD) && isObj(shotsD.kinds)) {
+    const SH = 'data/fight/shots.json';
+    const kinds = Object.entries(shotsD.kinds).filter(([k, v]) => !k.startsWith('_') && isObj(v));
+    for (const [name, k] of kinds) {
+      if ((k.lobTicks === undefined) !== (k.lobArc === undefined)) err(SH, `/kinds/${esc(name)}`, 'shots-lob', `kind "${name}" has ${k.lobTicks === undefined ? 'lobArc but no lobTicks' : 'lobTicks but no lobArc'}; a lobbed shot needs both`);
+      if (typeof k.lobTicks === 'number' && typeof k.lifeTicks === 'number' && k.lobTicks > k.lifeTicks) err(SH, `/kinds/${esc(name)}/lobTicks`, 'shots-lob', `lobTicks ${k.lobTicks} is longer than lifeTicks ${k.lifeTicks}`, 'warning');
+    }
+    const byPower = kinds.filter(([, k]) => typeof k.power === 'number' && typeof k.dmg === 'number').sort((a, b) => a[1].power - b[1].power);
+    for (let i = 1; i < byPower.length; i++) if (byPower[i][1].power > byPower[i - 1][1].power && byPower[i][1].dmg < byPower[i - 1][1].dmg) err(SH, `/kinds/${esc(byPower[i][0])}/dmg`, 'shots-order', `"${byPower[i][0]}" trades with more power (${byPower[i][1].power}) than "${byPower[i - 1][0]}" (${byPower[i - 1][1].power}) but does less damage (${byPower[i][1].dmg} against ${byPower[i - 1][1].dmg})`, 'warning');
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
