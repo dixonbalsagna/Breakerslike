@@ -65,6 +65,7 @@ const PLANE_Y: float = 0.7             # the fighter plane on screen in the refe
 
 # --- opening, merging, the slam (sections 6 and 7) ---
 const T_OPEN: float = 0.45
+const KNOCK_APART_RATE: float = 1500.0  # a chased fighter flying apart this fast (units a second, smoothed) opens the split at once
 const T_OPEN_URGENT: float = 0.20       # the split opens this fast when a fighter has left the shared view or one was knocked away
 const T_CLOSE: float = 0.55
 const SLAM_WINDOW: float = 0.8         # a rush this close to its end starts the lean

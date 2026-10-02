@@ -381,3 +381,13 @@ Each is classified by the first cause that applies (a solo shot starting, ending
 - *A launch or knock-back in progress* (811, mostly 0.05 to 0.2 of the width): the lag bound's whip catching a fighter that accelerates from 0 to 20,000 units a second in 5 ticks. It is the design that keeps him on the screen; the alternative is to lose him.
 - *At 49 degrees, a fighter whose lane depth eases from 1,500 units back to the plane* (the sim moves it 150 units a tick): the pitched view moves him 250 px a tick up the screen and the camera compensates; the biggest remaining ones (0.3 to 0.4) are these. A slower lane ease in the sim would remove them.
 - *Solo shot hand-overs* (228) are the starts of the hold, the KO and launch shots (0.15 to 0.3): each is a real change of subject; the cut would be the alternative.
+
+### 21b. After Encounter's agency slice and World's slope cap (HEAD d732355, 2026-10-02)
+
+The sweep on the new sim failed three checks, all a fighter out of his pane for 0.31 s while a split opened. Two causes:
+1. **A fighter knocked apart at 30,000 to 60,000 units a second (launches are 1.6 times harder now), two humans.** The split opened 0.25 s after he left, because a slam had just closed it (the layout's age was 0, and a split waits 0.25 s after a fighter is out of frame); by then he was 9,000 units away. A chased fighter that is out of the frame, or flying apart faster than 1,500 units a second (smoothed), now opens the split at once (`KNOCK_APART_RATE`), and the split does not merge while he is chased. Fixes two of the three.
+2. **A pair 2,600 units apart in depth at 49 degrees.** The slam shut the split on a view that cannot hold them (the depth is 1,970 units of vertical extent on the screen, below the zoom floor): one of them was 190 px under the bottom of the screen for 0.3 s. A slam does not start when the pair's size on the screen is below the floor, and at a pitch or in depth the opening blends the two cameras by where the fighter is on the screen, not by the camera numbers (which let a fighter leave the screen mid-blend).
+
+**Knock-backs.** A ground knock-back is 3.5 to 8 body heights over 20 ticks (about 800 to 1,800 units a second), below the chase's 4,000 units a second gate, so it never starts a chase, a hold or a split; the `launch` event that follows its plan is read like any launch and gated by the fighter's real speed. No separate case was needed.
+
+**Counts on HEAD d732355 (13 matches):** 1,911 jolts before these changes, 1,742 after (camera jerks only; the zoom and divider counts were already 0). The chased-launch jerks (about 970) are the lag bound's whip; the pitch 49 matches still carry the lane-depth ones.

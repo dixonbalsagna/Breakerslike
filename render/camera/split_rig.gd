@@ -396,16 +396,22 @@ func _update_trigger(S: SimState) -> void:
 			return
 		# A fighter already lost off the edge of the one view does not wait out the dwell or the full merged age.
 		var age_ok: bool = _layout_age >= CamParams.MIN_MERGED_AGE or (out_of_frame and _layout_age >= CamParams.MIN_OUT_OF_FRAME_AGE)
+		# A fighter knocked out of the shared view that is still flying apart (two humans: each on his own pane): no
+		# waiting for the layout's age. Right after a slam closed the split the age was 0, so the split opened 0.25 s after
+		# he left, with him 9,000 units away and out of his pane for the opening (the jolt scan's remaining failures).
+		var knocked_apart: bool = chase_slot >= 0 and (out_of_frame or _sep_rate > CamParams.KNOCK_APART_RATE)
+		if knocked_apart:
+			age_ok = true
 		# While they are still moving apart the shared zoom-out holds a little longer (a wide "flying around the world" beat).
 		# It runs only between the split line and the floor: below the floor the shared view cannot zoom out any more.
 		var floor_r: float = maxf(CamParams.R_FLOOR, CamParams.MIN_PX / vh)
 		var dwell: float = CamParams.SPLIT_DWELL + (CamParams.WIDE_HOLD if _sep_rate > 500.0 and r_now > floor_r else 0.0)
 		if r_now <= floor_r:
 			dwell = 0.0
-		if (_below_t >= dwell or out_of_frame) and age_ok and (guard_ok or out_of_frame):
-			_set_split(true, "out of frame" if _below_t < dwell or _layout_age < CamParams.MIN_MERGED_AGE else "trigger")
+		if (_below_t >= dwell or out_of_frame or knocked_apart) and age_ok and (guard_ok or out_of_frame or knocked_apart):
+			_set_split(true, "out of frame" if (_below_t < dwell or _layout_age < CamParams.MIN_MERGED_AGE) else "trigger")
 	else:
-		_above_t = _above_t + DT if r_now > rm else 0.0
+		_above_t = _above_t + DT if (r_now > rm and chase_slot < 0) else 0.0   # not while one is being chased
 		if _above_t >= CamParams.MERGE_DWELL and _layout_age >= CamParams.MIN_SPLIT_AGE:
 			_set_split(false)
 	_apply_solo_follow(S)
@@ -468,6 +474,10 @@ func _slam_step(S: SimState) -> bool:
 	# Not while a pane still holds the screen (e above 0.05, the ease back from a shot): the door sets e from its own clock,
 	# so starting it then moved the divider 0.4 of the width in a tick (found by the jolt scan).
 	if e > 0.05 and _slam_slot < 0:
+		return false
+	# Nor when one view cannot hold the pair (their size on the screen below the floor: a pair 2,600 units apart in depth
+	# at 49 degrees): the door would shut on a view with one of them off the bottom of the screen for the dwell.
+	if r_now < maxf(CamParams.R_FLOOR, CamParams.MIN_PX / vh) and _slam_slot < 0:
 		return false
 	for k in range(2):
 		var f = S.fighters[k]
@@ -1914,6 +1924,15 @@ func _outputs(S: SimState) -> void:
 	var slam_now: bool = _slam_slot >= 0 and e > 0.0
 	for i in range(2):
 		var o: Vector3 = _blend_cam(_owns[i], shared, w)
+		var fz_i: float = float(S.fighters[i].z)
+		if w > 0.0 and w < 1.0 and (_pitch_now != 0.0 or absf(fz_i) > 1.0) and solo_kind == "" and _ov_kind == "":
+			# At a pitch or in depth the screen is not linear in the camera's y: blending the cameras let the fighter
+			# leave the screen mid-blend (a pair 2,600 units apart in depth at 49 degrees: fighter 0 190 px below the
+			# bottom while the split opened). Blend where he is on the screen instead: the camera that puts him at
+			# the mix of his place in the shared view and his anchor, at the blended zoom.
+			var f_i = S.fighters[i]
+			var ps: Vector2 = SplitFrame.project(shared.x, shared.y, shared.z, _pitch_now, vw, vh, f_i.x, f_i.y + CamParams.CHEST, fz_i)
+			o = _cam_at(f_i.x, f_i.y + CamParams.CHEST, fz_i, o.z, ps.lerp(_anchors[i], 1.0 - w))
 		# Whatever the blends do, the drawn zoom never changes faster than the comfort limit; the slam's door gets the
 		# higher SLAM_ZOOM_RATE (it was exempt: 0.2 of a log unit in one tick, the largest jolt in the sweep's scan).
 		if _oz_valid:
