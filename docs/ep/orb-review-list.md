@@ -30,7 +30,7 @@ Written by the EP on 2026-10-01. Paths are from the project folder. The fuller s
 
 - Review packs, five A/B letters each: art/animation/review/wave1/README.md and wave2/README.md; three A/B pairs in art/animation/review/step3/README.md.
 - Reels: art/animation/overhaul-L-showcase-reel.gif, golive1-before-after.gif, intro-reel.gif, ground-*.gif, laststand-*.gif, tumble-broken-arm-before-after.gif.
-- Coming: the joint-limit fix for the unnatural bends, docs/animation/joint-limits.md.
+- The joint-limit fix for the unnatural bends is live: docs/animation/joint-limits.md; before and after in art/animation/joint-limits/ (four GIFs). 150 of 359 poses changed, including wave 1 and 2 poses, so the wave review packs above show the old look until Animation rebuilds them: review them after that. The list of changed poses: art/animation/records/joint-limits.md.
 - Decide: go or no go on the rich moveset (docs/combat/m0-rich.md, docs/combat/pending/waves-index.md, docs/animation/review-plan.md), and switching on wave 1's strikes.
 - Decide: whether the transformation's "draw in, snap, hold still" staging is what Orb wanted.
 
