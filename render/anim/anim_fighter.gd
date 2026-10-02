@@ -54,6 +54,8 @@ var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
 var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
+var _ls_t0: float = -1.0               # the last stand's window open from this time (the held resolve), -1 when closed ...
+var _ls_t1: float = -1.0               # ... and closed at this time (the resolve fades out)
 var _intro: Dictionary = {}           # the opening, from the sim's events: {on, fall_t, fall_dur, land_t, stare_t, stare_dur} (seconds on the sim's tick)
 var _gc_hold_w: float = 0.5            # how much of the pose the brace is (set when it starts: firmer when slow and unworn, looser when fast and worn)
 var _gc_hold_t1: float = -1.0           # ... until this one (-1 while it lasts)
@@ -268,6 +270,27 @@ func on_skim(T: float, spd: float) -> void:
 
 ## World's ground-contact events (left_ground, bounce, land, tumble_end; docs/world/ground-contact.md section 4). They plug
 ## into the same body: a bounce whips it by the normal speed, a slam or a skid folds it, the end of a tumble lets it go.
+## The last stand (docs/architecture/last-stand.md): ready starts his steadying beat in his own shape and the held resolve; end `used` lets the resolve go
+## (the signature's own animation takes over), `expired` slumps him.
+func on_last_stand(kind: String, t: float, dur: float, end_kind: String) -> void:
+	var L: Dictionary = AnimData.last_stand
+	if not RenderAnim.last_stand_poses or L.is_empty():
+		return
+	if kind == "last_stand_ready":
+		var sk: String = _rd.shape_key
+		var sid: String = String(L.get("ready", {}).get(sk, L.get("ready", {}).get("default", "")))
+		if AnimData.entries.has(sid):
+			_seq = {"id": sid, "t0": t, "dur": float(AnimData.entries[sid].dur) / 60.0, "wt": 0.6 if RenderAnim.reduced_motion else 1.0}
+			debug["last_stand"] = int(debug.get("last_stand", 0)) + 1
+		_ls_t0 = t
+		_ls_t1 = -1.0
+	elif kind == "last_stand_end":
+		if _ls_t0 >= 0.0 and _ls_t1 < 0.0:
+			_ls_t1 = t
+		if end_kind == "expired" and AnimData.entries.has("ls.slump"):
+			_seq = {"id": "ls.slump", "t0": t, "dur": float(AnimData.entries["ls.slump"].dur) / 60.0, "wt": 0.6 if RenderAnim.reduced_motion else 1.0}
+
+
 ## The opening's pose from the sim's tick: waiting or falling (the body one narrow line, head first), the landing (a deep compression with one open hand on
 ## the ground and the head up, held, then up through a half crouch), the staredown (upright and loose, one small beat of character for his shape, then the
 ## tension in the last stretch before the clock). Reduced motion: no fall and no landing: he drops into frame and stands.
@@ -603,6 +626,20 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			_entry_layer(float(_seq.t0), float(_seq.dur), String(_seq.id), T, 1.0 / float(_prof.get("solve_hz", 60.0)), float(_seq.get("wt", 1.0)))
 	if not _intro.is_empty() and f.state == "intro":
 		_intro_layer(S, f)
+	if _ls_t0 >= 0.0 and AnimData.pose_exists("ls.hold.resolve") and f.state == "free":
+		var LS: Dictionary = AnimData.last_stand
+		var lw: float = smoothstep(0.0, float(LS.get("in", 0.6)), T - _ls_t0)
+		if _ls_t1 >= 0.0:
+			lw *= 1.0 - smoothstep(0.0, float(LS.get("out", 0.5)), T - _ls_t1)
+			if T - _ls_t1 >= float(LS.get("out", 0.5)):
+				_ls_t0 = -1.0
+				_ls_t1 = -1.0
+		lw *= float(LS.get("hold_weight", 0.3)) * (0.6 if RenderAnim.reduced_motion else 1.0)
+		if lw > 0.001:
+			var rp: AnimPose = AnimData.pose("ls.hold.resolve")
+			AnimPose.mix(q, rp.q, lw)
+			hips = hips.lerp(rp.hips, lw)
+			curl = curl.lerp(rp.curl, lw)
 	if _gc_hold_t0 >= 0.0 and AnimData.pose_exists("gc.hold.brace_tumble"):
 		var hin: float = float(AnimData.ground.get("hold", {}).get("in", 0.08))
 		var hout: float = float(AnimData.ground.get("hold", {}).get("out", 0.15))

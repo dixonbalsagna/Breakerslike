@@ -1242,6 +1242,17 @@ All checks pass with the switch on (`anim_check`, `determinism`, `pane_check`, `
 
 **Reduced motion is calmer** (the EP's ruling): it also narrows every ragdoll joint to half its range (`AnimRagdoll.REDUCED_LIMIT`), and the ground poses are 60% of their weight (the bounce, the lip launch, the tumble brace). Full motion is untouched. Over the same 1,200-tick match with contact on, reduced motion moves **8.16 against 17.73, 46% of full** (it was 73%); the match-level check is back at under 60% and the controlled test (the same crumple at half the movement) stays.
 
+### 9.20 The opening on the sim's own state, and the last stand's body cue (2026-10-01, HEAD 74ede76)
+
+**The opening wired to the real state.** A match started with the setup's `"intro": true` was stepped in a scratch export: `S.tick` runs from 1 while `S.T` stays 0, the fighters are in the state `intro`, A falls from tick 0 and lands at 36, B from 84 to 114, `staredown_start` at 144, `clock_start` at 300, exactly as `_intro_layer` expects (it runs on `S.tick`, the events carry their tick). `anim_check` now has an **intro real test**: a real intro match, the mannequin 0.04 rad from the fall pose at tick 20 and 0.05 at B's wait, 0.06 from the set at tick 110, 0.0 and 0.01 from the tension at tick 270, both fighters free after the clock and the animator's opening ended. (The test at first asked for the set at tick 90, which is the end of A's rise: a mistake in the test, not the layer.) Camera's shots do not run in my harness's scene, so the entrance reel is `art/animation/intro-reel.gif` from `intro_lab.gd` (the real events' times and Camera's planned cuts, injected); `render/anim/tools/intro_real.gd` records the game's own scene for a real-camera reel once Camera's rig runs there.
+
+**The last stand's body cue** (`data/anim/waves/laststand1.*`: 15 poses, 5 sequences; `data/anim/laststand.json`; ON by default, `--no-last-stand-poses` switches it off; the events `last_stand_ready {actor, dur}` and `last_stand_end {actor, kind}` exist in the sim and play in real matches: 1 in 26,000 ticks of seed 12345, none yet in seed 4's shorter match):
+- *Ready:* a steadying beat in his own shape, 40 ticks: the body folded in on the hurt, then a deep breath drawing it up, then the guard set again. **P** (circles) opens: the chest wide, the palms turned out. **A** (the wedge) draws up tall and narrow, the blade hands along the thighs, the chin lifted. **E** sweeps the arms out wide as he rises. **C** squares: drawn up level in one even motion with the feet wide. No scream, no aura, no clenched fists at the sides, no crossed arms: it is a pose, not an effect (the stacking rule).
+- *While the window is open:* a held resolve (the chest up, the head level, the guard set) mixed in at 30% over his wounded stance, fading in over 0.6 s and out over 0.5 s, so the free signature reads on the body.
+- *Ends:* `expired` slumps him (the shoulders letting go, 24 ticks); `used` lets the resolve go and the signature's own animation takes over.
+- Reduced motion plays all of it at 60%.
+- `anim_check`: a last stand test (the shape picks its sequence, the end kinds, reduced motion). GIFs: `art/animation/laststand-pa-before-after.gif` (P and A, left the cue off, right on: both reach the brink, then the window expires for the left one and is used by the right) and `laststand-ec.gif` (E and C), from `laststand_lab.gd`.
+
 ---
 
 ## 10. How we will know it works

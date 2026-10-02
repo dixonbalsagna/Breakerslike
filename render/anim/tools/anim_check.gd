@@ -815,6 +815,64 @@ func _test_intro() -> void:
 	print("intro test: the fall, the set and the tension are %s rad from their poses; reduced motion stands; the clock ends it" % str(errs))
 
 
+## The opening through the sim's own state and events (a match started with the setup's "intro": true): the mannequin follows the fall, the landing and the
+## staredown, the tension is in before the clock, and the clock hands the body back; the gameplay hash is compared in the main loop.
+func _test_intro_real() -> void:
+	RenderAnim.enabled = true
+	main.start_match(4, {"p1": false, "p2": false}, {"intro": true})
+	var S: SimState = main.host.S
+	var ix: Dictionary = AnimRig.index
+	var checks: Array = [[20, 0, "in.hold.fall"], [110, 0, "in.hold.set"], [60, 1, "in.hold.fall"], [270, 0, "in.hold.tense"], [270, 1, "in.hold.tense"]]
+	var results: Array = []
+	var ci: int = 0
+	while main.host.ticks < 300 and ci < checks.size():
+		main.frame(DT)
+		var ck: Array = checks[ci]
+		if S.tick >= int(ck[0]):
+			var f = S.fighters[int(ck[1])]
+			var af: AnimFighter = RenderAnim.solve(S, f)
+			af.socket("foot_l")
+			var pz: AnimPose = AnimData.pose(String(ck[2]))
+			var worst: float = 0.0
+			for bn in ["spine_2", "upper_arm_r", "thigh_l"]:
+				worst = maxf(worst, af.q[ix[bn]].angle_to(pz.q[ix[bn]]))
+			results.append(snappedf(worst, 0.01))
+			_expect(f.state == "intro" and worst < 0.5, "intro real test: at tick %d fighter %d is %s and %.2f rad from %s" % [int(ck[0]), int(ck[1]), f.state, worst, String(ck[2])])
+			ci += 1
+	_expect(ci == checks.size(), "intro real test: the opening did not reach all its checks (%d of %d)" % [ci, checks.size()])
+	for i in range(40):
+		main.frame(DT)
+	_expect(S.fighters[0].state == "free" and S.fighters[1].state == "free", "intro real test: the fighters are not free after the clock")
+	_expect(RenderAnim.fighter(S, S.fighters[0])._intro.is_empty(), "intro real test: the clock did not end the opening in the animator")
+	print("intro real test: the animator follows the sim's own opening: %s rad from the fall, set, fall, tension, tension poses" % str(results))
+
+
+## The last stand's body cue (docs/architecture/last-stand.md): ready starts the steadying beat of his shape and the held resolve, `expired` slumps him, `used`
+## only lets the resolve go; reduced motion plays it at 60%.
+func _test_last_stand() -> void:
+	AnimData.load_all()
+	_expect(not AnimData.last_stand.is_empty() and AnimData.entries.has("ls.ready_a") and AnimData.pose_exists("ls.hold.resolve"), "last stand test: the data or poses are not loaded")
+	var got: Array = []
+	for pair in [["KAI", "ls.ready_p"], ["VORR", "ls.ready_a"]]:
+		var af := AnimFighter.new(0)
+		af._rd.set_shape(String(pair[0]))
+		af.on_last_stand("last_stand_ready", 5.0, 20.0, "")
+		got.append(String(af._seq.get("id", "")))
+		_expect(String(af._seq.get("id", "")) == String(pair[1]) and af._ls_t0 == 5.0, "last stand test: %s plays %s, not %s" % [String(pair[0]), String(af._seq.get("id", "")), String(pair[1])])
+		af.on_last_stand("last_stand_end", 9.0, 0.0, "used")
+		_expect(af._ls_t1 == 9.0 and String(af._seq.get("id", "")) == String(pair[1]), "last stand test: a used window slumped him or kept the resolve held")
+	var ex := AnimFighter.new(0)
+	ex.on_last_stand("last_stand_ready", 5.0, 20.0, "")
+	ex.on_last_stand("last_stand_end", 25.0, 0.0, "expired")
+	_expect(String(ex._seq.get("id", "")) == "ls.slump", "last stand test: an expired window did not slump")
+	RenderAnim.reduced_motion = true
+	var rd := AnimFighter.new(0)
+	rd.on_last_stand("last_stand_ready", 5.0, 20.0, "")
+	_expect(float(rd._seq.wt) < 0.7, "last stand test: reduced motion does not soften the beat")
+	RenderAnim.reduced_motion = false
+	print("last stand test: %s for the two shapes in play, the slump on expiry, reduced motion softer" % str(got))
+
+
 func _run() -> void:
 	await process_frame
 	_scan_writes()
@@ -826,6 +884,8 @@ func _run() -> void:
 	_test_entry()
 	_test_ground()
 	_test_intro()
+	_test_intro_real()
+	_test_last_stand()
 	RenderAnim.debug_checks = true
 	for seed in seeds:
 		var hashes: Dictionary = {}
@@ -859,6 +919,7 @@ func _run() -> void:
 			var vars: Dictionary = {}
 			var ksets: Dictionary = {}
 			var s3n: int = 0
+			var lsn: int = 0
 			var late := 0
 			for id in RenderAnim._fighters:
 				var d: Dictionary = RenderAnim._fighters[id].debug
@@ -876,6 +937,7 @@ func _run() -> void:
 				rdu += int(d.rd_usec)
 				catches += int(d.catches)
 				s3n += int(d.get("step3", 0))
+				lsn += int(d.get("last_stand", 0))
 				for kk in d.get("keysets", {}):
 					ksets[kk] = int(ksets.get(kk, 0)) + int(d.keysets[kk])
 				for vk in d.variants:
@@ -905,7 +967,7 @@ func _run() -> void:
 			if mode == "mix":
 				print("  key sets played: %s" % [ksets])
 				if RenderAnim.step3_cues:
-					print("  step 3 cue sequences played: %d" % s3n)
+					print("  step 3 cue sequences played: %d, last stand cues: %d" % [s3n, lsn])
 			print("  ragdoll step: %.1f us a tick a fighter (%d ticks), %d contact catches smeared" % [float(rdu) / maxf(1.0, rdt), rdt, catches])
 			print("  blows: %d, announced under 4 ticks ahead (no wind-up possible): %d" % [blows, late])
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])

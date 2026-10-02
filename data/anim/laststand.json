@@ -1,0 +1,14 @@
+{
+  "schema": "anim.laststand/1",
+  "_about": "The last stand's body cue (docs/architecture/last-stand.md; render/anim/anim_fighter.gd, on_last_stand). ready: for each shape key (P circles, A the crouched wedge, E wedges and sweeps, C squares), the steadying sequence played when last_stand_ready arrives (data/anim/waves/laststand1.sequences.json); hold_weight, in, out: the share of the held resolve pose mixed in while the window is open, and its fade in and out times (s). The `expired` end plays ls.slump; `used` hands over to the signature's own animation. Render only, outside the sim's data hash.",
+  "ready": {
+    "P": "ls.ready_p",
+    "A": "ls.ready_a",
+    "E": "ls.ready_e",
+    "C": "ls.ready_c",
+    "default": "ls.ready_p"
+  },
+  "hold_weight": 0.3,
+  "in": 0.6,
+  "out": 0.5
+}

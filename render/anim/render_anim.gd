@@ -23,6 +23,7 @@ static var debug_checks: bool = false
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
+static var last_stand_poses: bool = true   # the last stand's body cue (docs 9.20); --no-last-stand-poses switches it off
 static var intro_poses: bool = true        # the opening's fall, landing and staredown (docs 9.19); --no-intro-poses switches them off
 static var ground_poses: bool = true       # World's ground-contact events play their poses and sequences (docs 9.18); --no-ground-poses switches them off
 static var step3_cues: bool = true         # Encounter's step 3 cue events (perfect_block, reversal, dodge_cancel, burst, burst_absorbed) play their pose sequences: ON (they are the only feedback for live mechanics); --no-step3-cues switches them off
@@ -67,6 +68,8 @@ static func _read_args() -> void:
 			enabled = false
 		elif a == "--noragdoll":
 			ragdoll_enabled = false
+		elif a == "--no-last-stand-poses":
+			last_stand_poses = false
 		elif a == "--no-intro-poses":
 			intro_poses = false
 		elif a == "--no-ground-poses":
@@ -184,6 +187,11 @@ static func consume(S: SimState, events: Array) -> void:
 							gd[key] = gv
 					var t_ev: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)   # the event's own time
 					fighter(S, S.fighters[ga]).on_ground_event(String(e.type), gd, t_ev)
+			"last_stand_ready", "last_stand_end":
+				var gl: int = int(_ev(e, "actor", -1))
+				if gl >= 0 and gl < S.fighters.size():
+					var t_ls: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					fighter(S, S.fighters[gl]).on_last_stand(String(e.type), t_ls, float(_ev(e, "dur", 0.0)), String(e.kind))
 			"intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start":
 				# the opening, on the sim's tick (the match clock is frozen until clock_start)
 				var te: float = float(int(e.tick)) / 60.0
