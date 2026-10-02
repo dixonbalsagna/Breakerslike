@@ -69,7 +69,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "exEnds": {}, "firstContact": {}, "liftsSeen": {}, "reachFlat": [], "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"durSeen": false, "halted": 0, "tumbleSeen": 0, "jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "exEnds": {}, "exEndEvents": {}, "flowMax": [0, 0], "flowTo3": [0, 0], "firstContact": {}, "liftsSeen": {}, "reachFlat": [], "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"durSeen": false, "halted": 0, "tumbleSeen": 0, "jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
@@ -86,6 +86,9 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var closing: bool = false          # an exchange closed this tick: its ending is read once the tick's events are in
 	var closing_kind: String = ""
 	var ex_launch: bool = false        # a launch happened inside the running exchange
+	var ex_end_ev: String = ""         # the exchange_end event of the closing exchange
+	var ex_end_evs: Dictionary = {}
+	var ex_decided: bool = false       # a launch_plan was sent inside the running exchange: it reached a launch decision
 	var ex_end_kind: String = ""       # an `exchange_end {actor, kind: continue | knockback | launch}` event, once the agency pass has them
 	var ex_start: float = 0.0
 	var last_release: float = -1.0
@@ -251,11 +254,19 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				rec.skims += 1
 			if e.type == "launch":
 				ex_launch = true
-			elif e.type == "exchange_end":
-				ex_end_kind = str(e.get("kind"))
+			elif e.type == "exchange_end":   # slice 3: one per exchange, kind continue | knockback | launch; a "continue" also covers an exchange that never reached a launch decision, so the decision itself is read from launch_plan
+				ex_end_ev = str(e.get("kind"))
+				ex_end_evs[ex_end_ev] = ex_end_evs.get(ex_end_ev, 0) + 1
+			elif e.type == "flow":   # slice 3: the fighter's flow count is now n (a timed press adds 1 up to 5; an off-beat press or 90 idle ticks resets it)
+				var fa_: int = int(e.actor)
+				if fa_ >= 0 and fa_ < 2:
+					rec.flowMax[fa_] = maxi(int(rec.flowMax[fa_]), int(e.n))
+					if int(e.n) == 3:
+						rec.flowTo3[fa_] += 1
 			elif e.type == "launch_plan":   # agency slice 1: the launch decision names its ending: KNOCK BACK (a heavy that was not earned), STAY (a light: the brawl goes on), else a launch; a chain's last decision wins
 				var lpc: String = str(e.get("chosen"))
 				ex_end_kind = "knockback" if lpc == "KNOCK BACK" else ("continue" if lpc == "STAY" else "launch")
+				ex_decided = true
 			if e.type == "cue":   # the director's cues by kind: perfect_block, dodge_cancel, burst (step 3)
 				var cq: String = str(e.get("kind"))
 				rec.cues[cq] = rec.cues.get(cq, 0) + 1
@@ -312,9 +323,15 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			closing = false
 			if closing_kind == "light" or closing_kind == "heavy":   # melee exchanges only (a signature is a beam set piece)
 				var ek: String = ex_end_kind if ex_end_kind != "" else ("launch" if ex_launch else "other")   # without the events a launch is the only ending that can be told apart
+				if ex_end_ev == "knockback" or ex_end_ev == "launch":
+					ek = ex_end_ev   # the director's own ending wins when it names a knock-back or a launch
+				elif not ex_decided and ex_end_ev == "continue":
+					ek = "other"      # a "continue" with no launch decision: the string never reached a launch beat
 				rec.exEnds[ek] = rec.exEnds.get(ek, 0) + 1
 			ex_launch = false
 			ex_end_kind = ""
+			ex_end_ev = ""
+			ex_decided = false
 		var fr = S.get("frontsInFrame")   # hazard fronts inside the camera framing, once living destruction lands; null before
 		if fr != null:
 			rec.fronts = maxi(rec.fronts, int(fr))
@@ -405,6 +422,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 					rec.journeys.bounced += 1
 				if fl.tum:
 					rec.journeys.tumbled += 1
+	rec.exEndEvents = ex_end_evs
 	rec.hash = SimHash.stateHash(S).gameplay
 	SimCore.dispose(S)
 	return rec

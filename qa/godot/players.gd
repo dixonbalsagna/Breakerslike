@@ -211,12 +211,12 @@ func _init() -> void:
 
 
 func _blank() -> Dictionary:
-	return {"presses": 0, "onBeat": 0, "inExchange": 0, "styles": {}, "exchanges": 0, "launchEnds": 0, "otherEnds": 0, "damage": 0.0, "hits": 0, "heavyHits": 0, "launchesEarned": 0, "launchesTaken": 0, "airCatches": 0, "alternations": 0, "pairs": 0}
+	return {"presses": 0, "onBeat": 0, "inExchange": 0, "styles": {}, "exchanges": 0, "launchEnds": 0, "otherEnds": 0, "damage": 0.0, "hits": 0, "heavyHits": 0, "launchesEarned": 0, "launchesTaken": 0, "airCatches": 0, "alternations": 0, "pairs": 0, "flowMax": 0, "flowTo3": 0, "end_launch": 0, "end_knockback": 0, "end_continue": 0}
 
 
 func _report(s: Dictionary, n: int) -> Dictionary:
 	var ex: float = maxf(1.0, float(s.exchanges))
-	return {"pressesPerMatch": snappedf(float(s.presses) / n, 0.1), "onBeatShare": snappedf(float(s.onBeat) / maxf(1.0, float(s.inExchange)), 0.001), "styles": s.styles, "exchangesPerMatch": snappedf(float(s.exchanges) / n, 0.1), "launchShareOfExchanges": snappedf(float(s.launchEnds) / ex, 0.001), "damagePerMatch": snappedf(float(s.damage) / n, 1.0), "damagePerExchange": snappedf(float(s.damage) / ex, 0.1), "hitsPerMatch": snappedf(float(s.hits) / n, 0.1), "heavyHitsPerMatch": snappedf(float(s.heavyHits) / n, 0.1), "launchesEarnedPerMatch": snappedf(float(s.launchesEarned) / n, 0.1), "launchesTakenPerMatch": snappedf(float(s.launchesTaken) / n, 0.1)}
+	return {"pressesPerMatch": snappedf(float(s.presses) / n, 0.1), "onBeatShare": snappedf(float(s.onBeat) / maxf(1.0, float(s.inExchange)), 0.001), "styles": s.styles, "exchangesPerMatch": snappedf(float(s.exchanges) / n, 0.1), "launchShareOfExchanges": snappedf(float(s.launchEnds) / ex, 0.001), "damagePerMatch": snappedf(float(s.damage) / n, 1.0), "damagePerExchange": snappedf(float(s.damage) / ex, 0.1), "hitsPerMatch": snappedf(float(s.hits) / n, 0.1), "heavyHitsPerMatch": snappedf(float(s.heavyHits) / n, 0.1), "launchesEarnedPerMatch": snappedf(float(s.launchesEarned) / n, 0.1), "launchesTakenPerMatch": snappedf(float(s.launchesTaken) / n, 0.1), "endsLaunch": s.end_launch, "endsKnockback": s.end_knockback, "endsContinue": s.end_continue, "flowMax": s.flowMax, "flowTo3PerMatch": snappedf(float(s.flowTo3) / n, 0.1)}
 
 
 ## One match: specs[i] plays slot slots[i]. Returns {winner: 0 or 1 (the spec's index), -1 for a timeout, t}.
@@ -293,6 +293,15 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 				who.hits += 1
 				if str(e.get("kind")) == "heavy":
 					who.heavyHits += 1
+			elif e.type == "exchange_end":   # slice 3: the director's ending of this player's exchange (the actor is the attacker)
+				var xw = sums[_idx(pl, by_slot[int(e.actor)])]
+				var xk: String = "end_" + str(e.get("kind"))
+				xw[xk] = int(xw.get(xk, 0)) + 1
+			elif e.type == "flow":   # slice 3: the flow count; nothing but the HUD and QA reads it
+				var fwho = sums[_idx(pl, by_slot[int(e.actor)])]
+				fwho.flowMax = maxi(int(fwho.flowMax), int(e.n))
+				if int(e.n) == 3:
+					fwho.flowTo3 += 1
 			elif e.type == "launch":
 				var victim: int = int(e.actor)
 				var lau: int = int(e.target)
