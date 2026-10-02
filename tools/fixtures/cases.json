@@ -26445,6 +26445,685 @@
         "rule": "type",
         "pointer": "/out"
       }
+    },
+    {
+      "id": "anim-joints-live-valid",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/schema": "anim.joints/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-joints-key-required",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "del": [
+            "/shapes"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-joints-schema-version",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/schema": "anim.joints/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-joints-unknown-key",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-joints-underscore-key-ok",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-joints-give-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/give_deg": 20
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/give_deg"
+      }
+    },
+    {
+      "id": "anim-joints-give-negative",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/give_deg": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/give_deg"
+      }
+    },
+    {
+      "id": "anim-joints-arm-back-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/arm_back_soft": 0.3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/arm_back_soft"
+      }
+    },
+    {
+      "id": "anim-joints-retarget-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/retarget_units": 50
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/retarget_units"
+      }
+    },
+    {
+      "id": "anim-joints-comfort-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/comfort_twist_deg": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/comfort_twist_deg"
+      }
+    },
+    {
+      "id": "anim-joints-straight-below-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/straight_below_deg": 120
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/straight_below_deg"
+      }
+    },
+    {
+      "id": "anim-joints-straight-not-below-bent",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/straight_below_deg": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-order",
+        "pointer": "/straight_below_deg"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-key-required",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "del": [
+            "/hinges/elbow/sign"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/hinges/elbow"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-unknown-key",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/twist": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/hinges/elbow/twist"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-sign-enum",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/sign": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/hinges/elbow/sign"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-min-positive",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/min_deg": 5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/hinges/elbow/min_deg"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-max-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/max_deg": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/hinges/elbow/max_deg"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-max-too-small",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/max_deg": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/hinges/elbow/max_deg"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-min-not-give-warns",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/knee/min_deg": -6
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-order",
+        "pointer": "/hinges/knee/min_deg"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-bones-empty",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/bones": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/hinges/elbow/bones"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-bone-unknown",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/bones/0": "tentacle_l"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-bone",
+        "pointer": "/hinges/elbow/bones/0"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-bone-duplicate-in-ball",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/bones/0": "upper_arm_l"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-bone",
+        "pointer": "/balls/shoulder/bones/0"
+      }
+    },
+    {
+      "id": "anim-joints-hinge-bone-duplicate-in-list",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/hinges/elbow/bones": [
+              "forearm_l",
+              "forearm_l"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/hinges/elbow/bones/1"
+      }
+    },
+    {
+      "id": "anim-joints-ball-key-required",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "del": [
+            "/balls/neck/twist_deg"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/balls/neck"
+      }
+    },
+    {
+      "id": "anim-joints-ball-unknown-key",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/neck/roll_deg": 10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/balls/neck/roll_deg"
+      }
+    },
+    {
+      "id": "anim-joints-ball-axis-enum",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/clavicle/axis": "w"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/balls/clavicle/axis"
+      }
+    },
+    {
+      "id": "anim-joints-ball-swing-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/neck/swing_deg": 200
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/balls/neck/swing_deg"
+      }
+    },
+    {
+      "id": "anim-joints-ball-twist-length",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/neck/twist_deg": [
+              -50
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/balls/neck/twist_deg"
+      }
+    },
+    {
+      "id": "anim-joints-ball-twist-range",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/neck/twist_deg": [
+              -200,
+              50
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/balls/neck/twist_deg/0"
+      }
+    },
+    {
+      "id": "anim-joints-ball-twist-order",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/neck/twist_deg": [
+              50,
+              -50
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-order",
+        "pointer": "/balls/neck/twist_deg"
+      }
+    },
+    {
+      "id": "anim-joints-ball-straight-twist-narrower",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/shoulder/straight_twist_deg": [
+              -50,
+              50
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-order",
+        "pointer": "/balls/shoulder/straight_twist_deg"
+      }
+    },
+    {
+      "id": "anim-joints-ball-straight-twist-equal-ok",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/shoulder/straight_twist_deg": [
+              -100,
+              100
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-joints-ball-bone-unknown",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/neck/bones/0": "throat"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-bone",
+        "pointer": "/balls/neck/bones/0"
+      }
+    },
+    {
+      "id": "anim-joints-ball-bone-twice",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/head/bones/0": "neck"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-bone",
+        "pointer": "/balls/head/bones/0"
+      }
+    },
+    {
+      "id": "anim-joints-ball-name-shape",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/balls/Bad Name": {
+              "bones": [
+                "head"
+              ],
+              "twist_deg": [
+                -10,
+                10
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/balls/Bad Name"
+      }
+    },
+    {
+      "id": "anim-joints-shape-default-required",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/shapes": {
+              "P": {
+                "swing": 1
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/shapes"
+      }
+    },
+    {
+      "id": "anim-joints-shape-scale-positive",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/shapes/P/swing": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/shapes/P/swing"
+      }
+    },
+    {
+      "id": "anim-joints-shape-unknown-key",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/shapes/P/reach": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/shapes/P/reach"
+      }
+    },
+    {
+      "id": "anim-joints-shape-partial-ok",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/shapes/A": {
+              "swing": 0.9
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-joints-shape-not-in-motion",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "set": {
+            "/shapes/Z": {
+              "swing": 1,
+              "twist": 1,
+              "hinge": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-shape",
+        "pointer": "/shapes/Z"
+      }
+    },
+    {
+      "id": "anim-joints-shape-missing-scale-warns",
+      "schema": "anim-joints.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/joints.json",
+          "del": [
+            "/shapes/C"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:joints-shape",
+        "pointer": "/shapes"
+      }
     }
   ],
   "text": [

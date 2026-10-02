@@ -877,6 +877,42 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (seqsL && !('ls.slump' in seqsL)) err(LS, '/ready', 'laststand-seq', 'the expired end plays ls.slump, which is not in data/anim/waves/laststand1.sequences.json');
   }
 
+  // ---- anim joints: bones exist and are in one joint, the orders, the shape scales ----
+  const jts = get('data/anim/joints.json');
+  if (isObj(jts)) {
+    const JT = 'data/anim/joints.json';
+    const prJ = get('data/anim/profiles.json');
+    const boneJ = new Set(isObj(prJ) && isObj(prJ.bone_lag) ? Object.keys(prJ.bone_lag) : []);
+    const seenB = new Map();
+    for (const [group, defs] of [['hinges', jts.hinges], ['balls', jts.balls]]) {
+      if (!isObj(defs)) continue;
+      for (const [name, d] of Object.entries(defs)) {
+        if (name.startsWith('_') || !isObj(d)) continue;
+        const at = `/${group}/${esc(name)}`;
+        (Array.isArray(d.bones) ? d.bones : []).forEach((b, i) => {
+          if (typeof b !== 'string') return;
+          if (boneJ.size && !boneJ.has(b)) err(JT, `${at}/bones/${i}`, 'joints-bone', `bone "${b}" is not in profiles.json bone_lag`);
+          if (seenB.has(b)) err(JT, `${at}/bones/${i}`, 'joints-bone', `bone "${b}" is already a joint at ${seenB.get(b)}`); else seenB.set(b, at);
+        });
+        if (group === 'hinges' && typeof d.min_deg === 'number' && typeof d.max_deg === 'number') {
+          if (d.min_deg >= d.max_deg) err(JT, `${at}/min_deg`, 'joints-order', `min_deg ${d.min_deg} is not below max_deg ${d.max_deg}`);
+          if (typeof jts.give_deg === 'number' && Math.abs(d.min_deg + jts.give_deg) > 1e-9) err(JT, `${at}/min_deg`, 'joints-order', `min_deg ${d.min_deg} is not -give_deg (${-jts.give_deg}); the give past straight is one number`, 'warning');
+        }
+        if (group === 'balls') {
+          for (const k of ['twist_deg', 'straight_twist_deg']) if (Array.isArray(d[k]) && d[k].length === 2 && d[k][0] >= d[k][1]) err(JT, `${at}/${k}`, 'joints-order', `${k} runs from ${d[k][0]} to ${d[k][1]}; it must rise`);
+          if (Array.isArray(d.twist_deg) && Array.isArray(d.straight_twist_deg) && d.twist_deg.length === 2 && d.straight_twist_deg.length === 2 && (d.straight_twist_deg[0] > d.twist_deg[0] || d.straight_twist_deg[1] < d.twist_deg[1])) err(JT, `${at}/straight_twist_deg`, 'joints-order', `straight_twist_deg ${JSON.stringify(d.straight_twist_deg)} is narrower than twist_deg ${JSON.stringify(d.twist_deg)}; a straight limb may twist further, not less`);
+        }
+      }
+    }
+    if (typeof jts.straight_below_deg === 'number' && typeof jts.bent_above_deg === 'number' && jts.straight_below_deg >= jts.bent_above_deg) err(JT, '/straight_below_deg', 'joints-order', `straight_below_deg ${jts.straight_below_deg} is not below bent_above_deg ${jts.bent_above_deg}`);
+    const motJ = get('data/anim/ragdoll_motion.json');
+    if (isObj(jts.shapes) && isObj(motJ) && isObj(motJ.shapes)) {
+      const known = Object.keys(motJ.shapes).filter((k) => !k.startsWith('_'));
+      for (const k of Object.keys(jts.shapes)) if (!k.startsWith('_') && k !== 'default' && !known.includes(k)) err(JT, `/shapes/${esc(k)}`, 'joints-shape', `shape "${k}" is not in ragdoll_motion.json shapes (${known.join(', ')})`);
+      for (const k of known) if (!(k in jts.shapes)) err(JT, '/shapes', 'joints-shape', `ragdoll_motion.json has shape "${k}" but joints.json has no scale for it (default applies)`, 'warning');
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);
