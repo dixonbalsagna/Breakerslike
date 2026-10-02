@@ -61,12 +61,18 @@ func _draw() -> void:
 
 
 func _prompt(host: SimHost, vw: float, vh: float) -> void:
+	# The opening plays clean, as UI hides its HUD until the clock: no key help and no seed line while the intro runs.
+	# The demo's one-line prompt stays, since UI shows its skip hint to a human player only and a key here takes
+	# player one over (which skips the intro).
+	var intro: bool = host.intro_running()
 	var card: bool = main.ui_hud != null and main.ui_hud.is_overlay_open()
 	var dp: float = _dp()
 	var touch: bool = main.ui_hud != null and bool(main.ui_hud.opts.get("touch_ui", false))
 	if not main.started and not card and touch:
 		# A touch screen has no keys to list: one line, at least 12 dp like UI's text floor.
 		_text("AI vs AI demo. Tap to take control of P1.", Vector2(vw * 0.5, vh - 96.0 * dp), int(round(16.0 * dp)), Color(1, 1, 1, 0.9), 0)
+	elif not main.started and not card and intro:
+		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, vh - 62.0), 16, Color(1, 1, 1, 0.9), 0)
 	elif not main.started and not card:
 		# The system and debug keys only (UI's legend and hints own the fighters' controls), wrapped to the screen's width.
 		var lines: Array = _wrap(SYSTEM_KEYS, ",  ", 11, vw - 24.0)
@@ -76,7 +82,8 @@ func _prompt(host: SimHost, vw: float, vh: float) -> void:
 		_text("AI vs AI demo. Press any key to take control of P1.", Vector2(vw * 0.5, y0 - 18.0), 16, Color(1, 1, 1, 0.9), 0)
 		for k in range(lines.size()):
 			_text(lines[k], Vector2(vw * 0.5, y0 + HELP_STEP * float(k)), 11, Color(1, 1, 1, 0.7 if k < n_sys else 0.6), 0)
-	_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
+	if not intro:
+		_text("seed %d   tick %d%s" % [host.seed, host.ticks, "   PAUSED" if host.paused else ""], Vector2(vw - 10, vh - 30), 10, Color(1, 1, 1, 0.5), 1)
 	if show_perf:
 		_perf(vw)
 

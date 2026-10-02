@@ -79,6 +79,35 @@ Fighter A falling (tick 20), just landed (tick 40), and the staredown (tick 200)
 
 - **The default, on the live page** (74ede76, checked 2026-10-02 in Chrome): the match starts from the intro's end state. At tick 0 the toll chip reads "craters 2", and both fighters stand in their entrance craters, 900 units apart. ![live start](img/intro-live-start.png)
 
+### 2.3a The intro end to end, with everyone's side in (2026-10-02)
+
+Run on desktop from an export of HEAD 55edf60: the real sim with `"intro": true`, Camera's rig and compositor, Animation, VFX and UI's HUD, seed 4, both fighters the AI (the demo), 1280x720. A frame every 8 ticks, left to right and top to bottom, ticks 1 to 329:
+
+![reel 1](img/intro-reel-1.png) ![reel 2](img/intro-reel-2.png) ![reel 3](img/intro-reel-3.png)
+
+What plays: Camera chases fighter A down (ticks 1 to 36), drops to its low angle on his landing (pitch -6 degrees, ticks 41 to 81), does the same for B (89 to 137), holds a two-shot for the staredown (145 to 233), cuts to each fighter in turn (241 to 281), returns to the two-shot (289) and the clock starts at tick 300. UI's HUD is hidden until the clock and fades in after it. No head badge shows before the clock.
+
+**On the web** the page's URL switches it on: `/play/?intro=1` (`main.URL_ARGS`; the page passes the game no arguments, so the host reads `location.search` itself). Without the query, or with `intro=0`, the match starts from the intro's end state as before. Checked in Chrome 154 and Edge 154: off by default, on with the query, the demo leaves it alone, a key takes player one over and skips it, and left alone it ends at the clock.
+
+The staredown on the web build (Chrome, `?intro=1`, the demo): ![web staredown](img/intro-web-staredown.png)
+
+**Faults seen, by owner.**
+
+| Owner | Fault | Where |
+| :--- | :--- | :--- |
+| Camera | The staredown's two-shot opens with fighter A off the left edge; he is in frame about 24 ticks later | ticks 145 to 165 (A at x -98 px at 145, 198 at 169) |
+| Camera | The same when it returns to the two-shot after the face cuts, just before the clock | ticks 289 to 297 (A at x -93, then -14) |
+| Camera | The fall is a chase with the fighter pinned at the screen's centre, not the planned low wide angle on the landing spot with the fighter falling into frame. To confirm as intended | ticks 1 to 36 and 89 to 114 |
+| VFX | The landings' dust hangs between the fighters through most of the staredown and draws the eye | ticks 145 to about 240 |
+| VFX | Settled chunks lie flat on the sand and read as dark dashes at the side-on camera | ticks 240 to 310, beside both craters |
+| VFX | The landing ring is an upright ring that grows across the whole sky, and a pale arc lies on the ground under the falling fighter. To confirm as intended | ticks 41 to 65 and 121 to 137; ticks 17 to 33 |
+| UI | None seen. Its skip hint is for a human player; the demo has none by design | |
+| Rendering | The greybox overlay's key help (three lines) and seed line showed during the intro. Fixed in this batch: only the demo's one-line prompt stays until the clock | the web frames |
+| Animation | None seen. The upright first frame is fixed (55edf60) | |
+| Simulation | None seen | |
+
+**The cloud band at Camera's low angle** (my open item): nothing to change. At pitch -6 degrees and Camera's zoom after a landing (1.13 to 1.21) the clouds reach the top of the frame; the sky there is not bare. ![low angle](img/intro-low-angle-t44.png)
+
 ### 2.3b Found against Simulation's parked code (fixed in 74ede76)
 
 - **The landing's dust and debris hang in the air until the clock.** The parked `sim.gd` marks an intro tick as frozen for effects (`SimFx.tickMark(S, dt, true)`), and every effects consumer steps frozen ticks at a tenth speed (the hit-stop's slow motion). Fighter A lands at tick 36; at tick 200 his crater's debris is still airborne. Marked live (`false`) in my scratch copy, the dust and debris settle as they should, and my host test still passes. **Ask for Simulation:** mark intro ticks live for effects. The fight's clock is stopped, but the entrance is a live presentation. Simulation did so in 74ede76.
@@ -106,4 +135,4 @@ Tick 200 with the parked code, and with intro ticks marked live: ![hanging](img/
 
 1. With World's G3 (the contact events): the contact point in the blend, the shadow's extent, the pane check for a body over a rim.
 2. With World's G1 (rims): the rim term in the bowl function.
-3. With Simulation's intro slice: the host's side is built (section 2.3). Left: the cloud band's top at the low angle, and passing `"intro": true` by default when the others are ready.
+3. With Simulation's intro slice: the host's side is built (section 2.3) and the intro runs end to end (section 2.3a). Left: passing `"intro": true` by default, which is Orb's call after seeing it.

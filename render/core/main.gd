@@ -26,8 +26,8 @@ extends Node3D
 ## join turns the split screen on if it was off; T makes P2 human or hands the slot back; the pause menu's entry hands
 ## it back at once. UI's HUD is told each player's device and layout every frame (_sync_players).
 ##
-## The intro phase (docs/architecture/intro-phase.md): --intro plays it (_match_setup); without it the sim starts from
-## its end state. SimHost passes intents on pre-clock ticks, and a take-over skips it.
+## The intro phase (docs/architecture/intro-phase.md): --intro plays it (_match_setup), and on the web /play/?intro=1
+## does; without it the sim starts from its end state. SimHost passes intents on pre-clock ticks; any press skips it.
 ##
 ## Command-line options (after "--"): --seed=N, --human (take P1 at start), --legacy-hud, --frames=N (quit after N frames),
 ## --shot=path.png (save the last frame), --bench (vsync off; print frame-time stats at quit, also split by whether two
@@ -923,6 +923,10 @@ func _notification(what: int) -> void:
 		host.release_all()
 
 
+## The options a web page's URL may set (parse_args): off unless the URL names them.
+const URL_ARGS: Array = ["intro"]
+
+
 static func fresh_seed() -> int:
 	return ((Time.get_ticks_usec() ^ int(Time.get_unix_time_from_system() * 1000.0)) & 0xFFFFFF) | 1
 
@@ -933,6 +937,13 @@ static func parse_args() -> Dictionary:
 		if a.begins_with("--"):
 			var kv: PackedStringArray = a.substr(2).split("=", true, 1)
 			out[kv[0]] = kv[1] if kv.size() > 1 else "1"
+	# On the web the page's own URL can set the options named in URL_ARGS (the page passes the game no arguments):
+	# /play/?intro=1 plays the intro phase. A value of 0, or none of these keys, changes nothing.
+	if OS.has_feature("web"):
+		for pair in str(JavaScriptBridge.eval("location.search", true)).trim_prefix("?").split("&", false):
+			var kv: PackedStringArray = pair.split("=", true, 1)
+			if URL_ARGS.has(kv[0]) and not (kv.size() > 1 and (kv[1] == "0" or kv[1] == "false")):
+				out[kv[0]] = kv[1] if kv.size() > 1 and kv[1] != "" else "1"
 	return out
 
 
