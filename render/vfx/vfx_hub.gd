@@ -195,6 +195,7 @@ func _consume(S: SimState, events: Array) -> void:
 			if e.type == "damage" and e.kind == "heavy" and e.number:
 				_speed_heavy(S, e)
 	debris.now = fx_now(S)
+	earth.entrance_now = false
 	if transform_enabled and standing_aura_enabled:
 		aura.step_mark(frozen)
 		for e in events:
@@ -213,6 +214,7 @@ func _consume(S: SimState, events: Array) -> void:
 			if la >= 0 and la < 2 and _fell[la]:
 				debris.quality = quality
 				debris.reduced = reduced_motion
+				earth.entrance_now = true
 				earth.on_entrance_land(S, e)
 	_sync_cracks(S)
 	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled:
@@ -492,6 +494,10 @@ func _drop_kind(kind: int) -> void:
 
 
 func _queue_crater(S: SimState, c) -> void:
+	# The entrance craters (no owner, dug at clock zero: docs/architecture/intro-phase.md) get no crack set: at the side-on camera their fine
+	# draped cracks read as dark dashes on the sand beside the bowl (the intro reel), and the bowl and its rim already mark them.
+	if float(c.owner) < 0.0 and c.t == 0.0:
+		return
 	var sp = c.get("special")
 	var special: bool = bool(sp) if sp != null else false
 	var key: int = VfxCrackGen.crater_key(c.x, c.r, c.depth)

@@ -143,6 +143,8 @@ func step(S: SimState, dt: float) -> void:
 					b.vy = 0.0
 					b.vx *= 0.85
 					b.spin = 0.0
+					if b.kind == CHUNK and b.mode == 2:
+						b.age = maxf(b.age, b.life - 0.3)   # an earth chunk that has come to rest is buried in dust within 0.3 s: it must not lie on the sand as a dark dash
 	_spray_alive = spray_n
 	_rubble_alive = rubble_n
 	_flame_alive = flame_n
@@ -470,7 +472,7 @@ func _puff_at(x: float, y: float, z: float, vx: float, vy: float, s0: float, s1:
 	_add(b)
 
 
-func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float) -> void:
+func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float, flat: bool = false) -> void:
 	var b := Bit.new()
 	b.kind = RING
 	b.x = SimWrap.wrap(x)
@@ -480,6 +482,7 @@ func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float) 
 	b.sy = r0 * 2.0
 	b.grow = growth * 2.0
 	b.life = life
+	b.mode = 3 if flat else 0     # 3: lies on the ground, drawn as a flat ellipse (an entrance landing's ring)
 	b.grav = 0.0
 	b.col = VfxPalette.dust(_biome, "light")
 	b.col2 = Color(VfxLook.STEEL_HI)

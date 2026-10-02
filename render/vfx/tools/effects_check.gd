@@ -45,7 +45,7 @@ func _run() -> void:
 	_tick(S, h, [])
 	# newMatch now starts every default match with two entrance craters (docs/architecture/intro-phase.md), each a crack set of its own:
 	# one set a record, and only the dug crater (energy 14) has fissures to vent.
-	_check(h.crack_sets.size() == S.craters.size() and S.craters.size() == 3, "one crack set a record: the two entrance craters and the dug one (%d sets, %d records)" % [h.crack_sets.size(), S.craters.size()])
+	_check(h.crack_sets.size() == S.craters.size() - 2 and S.craters.size() == 3, "one crack set a record, but the two entrance craters get none: only the dug one (%d sets, %d records)" % [h.crack_sets.size(), S.craters.size()])
 	_check(h.debris.jobs.size() > 0, "fissure vents are scheduled (%d jobs)" % h.debris.jobs.size())
 	var puffs0: int = h.debris.bits.size()
 	for k in range(60):
@@ -57,7 +57,7 @@ func _run() -> void:
 	h2.reset(S, 4)
 	S.T += 5.0
 	_tick(S, h2, [])
-	_check(h2.crack_sets.size() == S.craters.size() and h2.debris.jobs.is_empty(), "sets rebuilt long after their records have no vents")
+	_check(h2.crack_sets.size() == S.craters.size() - 2 and h2.debris.jobs.is_empty(), "sets rebuilt long after their records have no vents")
 	# Embers by variant.
 	print("embers")
 	for v in ["GLASS TRENCH", "FIRESTORM", "HORIZON CLEAVE", "MERIDIAN SCAR"]:
@@ -1232,12 +1232,7 @@ func _intro() -> void:
 	h.cracks_enabled = true
 	h.reset(S, 6)
 	_tick(S, h, [])
-	_check(S.craters.size() == 2 and h.crack_sets.size() == 2, "a default match has two entrance craters and a crack set for each (%d, %d)" % [S.craters.size(), h.crack_sets.size()])
-	var grown: bool = true
-	for cs in h.crack_sets:
-		if h.fx_now(S) - cs.born < 5.0:
-			grown = false
-	_check(grown and h.debris.jobs.is_empty(), "they are drawn grown at tick 0, with no vents (their energy is 1.5)")
+	_check(S.craters.size() == 2 and h.crack_sets.is_empty() and h.debris.jobs.is_empty(), "a default match has two entrance craters and no crack set for them: their fine cracks read as dark dashes at the side-on camera (%d craters, %d sets)" % [S.craters.size(), h.crack_sets.size()])
 	# The effects clock runs through the intro's pre-clock ticks while the sim clock stands still.
 	S.intro.t = 90
 	_check(absf(h.fx_now(S) - (S.T + 1.5)) < 1e-6, "the effects clock is the sim's time plus the intro's ticks (%.2f s at 90 ticks)" % h.fx_now(S))
@@ -1263,18 +1258,61 @@ func _intro() -> void:
 	_tick(S, hr, [VfxMock.ev("entrance_fall", {"actor": 0.0, "x": plains, "y": 0.0, "z": 0.0, "y1": 6000.0, "dur": 0.6})])
 	_tick(S, hr, [land.call(0.0)])
 	_check(hr.debris.bits.filter(func(b): return b.kind == VfxDebris.RING).size() == 0 and hr.earth.contact_made < hf.earth.contact_made, "reduced motion: fewer pieces and no ring (%d against %d)" % [hr.earth.contact_made, hf.earth.contact_made])
-	# A crater dug during a played intro spreads from the landing, on the effects clock.
+	# The landing is quiet and short so the staredown reads: dust gone in under 1.5 s, low, and one ring that lies on the ground near
+	# the crater; the crater's own ejecta of that tick is as short.
+	var hq := VfxHub.new()
+	hq.reset(S, 6)
+	_tick(S, hq, [VfxMock.ev("entrance_fall", {"actor": 0.0, "x": plains, "y": 0.0, "z": 0.0, "y1": 6000.0, "dur": 0.6})])
+	var gy: float = WorldTerrain.groundY(S, plains)
+	_tick(S, hq, [VfxMock.ev("crater", {"x": plains, "y": gy, "r": 196.0, "depth": 50.0, "energy": 1.5, "cause": "impact", "owner": -1.0, "special": 0.0, "rim": 10.0, "z": 0.0}), land.call(0.0)])
+	var longest: float = 0.0
+	var highest: float = 0.0
+	for b in hq.debris.bits:
+		if b.kind == VfxDebris.PUFF:
+			longest = maxf(longest, b.life)
+			highest = maxf(highest, b.vy)
+	_check(longest <= 1.5 and highest <= 260.0, "the landing's dust lives at most %.2f s (limit 1.5) and rises at most %.0f u/s" % [longest, highest])
+	var ring = null
+	for b in hq.debris.bits:
+		if b.kind == VfxDebris.RING:
+			ring = b
+	_check(ring != null and ring.mode == 3 and ring.sx * 0.5 + ring.grow * 0.5 * ring.life < 2.5 * 196.0, "the ring is a ground ring (flat) and ends within 2.5 crater radii (%.0f of %.0f)" % [(ring.sx * 0.5 + ring.grow * 0.5 * ring.life) if ring != null else -1.0, 2.5 * 196.0])
+	var gone_by: int = -1
+	for k in range(200):
+		_tick(S, hq, [])
+		if gone_by < 0 and hq.debris.bits.filter(func(b): return b.kind == VfxDebris.PUFF or b.kind == VfxDebris.CHUNK).is_empty():
+			gone_by = k
+	_check(gone_by >= 0 and gone_by < 100, "every puff and chunk of the landing has cleared within 100 ticks (%d)" % gone_by)
+	# The entrance craters have no crack set, played or skipped.
 	var hc := VfxHub.new()
 	hc.cracks_enabled = true
 	hc.reset(S, 6)
 	S.intro.t = 36
 	_tick(S, hc, [VfxMock.ev("entrance_fall", {"actor": 0.0, "x": plains, "y": 0.0, "z": 0.0, "y1": 6000.0, "dur": 0.6})])
-	var born_ok: bool = false
-	for cs in hc.crack_sets:
-		if absf(cs.born - 0.6) < 0.05:
-			born_ok = true
 	S.intro.t = 0
-	_check(born_ok, "an entrance crater of a played intro is born at its landing, not grown at tick 0")
+	_check(hc.crack_sets.is_empty(), "no crack set for an entrance crater of a played intro either")
+	# A chunk that has come to rest fades within 0.3 s (it must not lie on the sand as a dark dash); a falling one is not touched.
+	var hcf := VfxHub.new()
+	hcf.reset(S, 6)
+	_tick(S, hcf, [])
+	hcf.debris.chunk(plains, gy + 2.0, 0.0, 0.0, -50.0, 12.0, 2.0, [Color.GRAY, Color.WHITE, Color.BLACK], 2, 0.0)
+	for k in range(120):
+		_tick(S, hcf, [])
+	var left_t: float = -1.0
+	for b in hcf.debris.bits:
+		if b.kind == VfxDebris.CHUNK:
+			left_t = b.life - b.age
+	_check(left_t < 0.0 or left_t <= 0.31, "an earth chunk at rest has at most 0.3 s left (%.2f)" % left_t)
+	# The trail's break ring is for flight, not for the scripted entrance fall.
+	var tf := VfxTrailState.new()
+	var rgi := SimRng.new(8)
+	S.fighters[0].state = "intro"
+	for k in range(30):
+		S.fighters[0].x = plains
+		S.fighters[0].y = gy + 6000.0 - 200.0 * float(k)
+		tf.step(S, S.fighters[0], SimConst.DT, rgi, VfxLook.Q_HIGH, false)
+	_check(tf.rings == 0 and tf.max_k > 0.5, "a fighter in the intro's fall has his trail but no break ring (%d rings, k %.2f)" % [tf.rings, tf.max_k])
+	S.fighters[0].state = "free"
 	# Jobs run through the intro: the sim clock stands still, the effects clock does not.
 	var hj := VfxHub.new()
 	hj.reset(S, 6)

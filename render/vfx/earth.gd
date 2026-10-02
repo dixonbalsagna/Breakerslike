@@ -28,6 +28,7 @@ var flames_made: int = 0
 var contact_made: int = 0      # chunks and puffs thrown for contact events
 var contact_events: int = 0
 var dust_made: int = 0
+var entrance_now: bool = false   # this tick holds an entrance landing: the other effects of its tick (the crater's ejecta and dust) are quiet and short, so the dust clears by the staredown
 var _acc := PackedFloat32Array([0.0, 0.0])    # the skid's spawn accumulators per slot
 var _skid_n := PackedInt32Array([0, 0])
 var _fire_n: int = 0
@@ -70,6 +71,10 @@ func _q() -> float:
 
 
 ## A count scaled by quality, rounded, with the remainder decided by a draw so the average is right.
+func _lk() -> float:
+	return 0.55 if entrance_now else 1.0
+
+
 func _count(n: float) -> int:
 	var v: float = n * _q()
 	var whole: int = int(floor(v))
@@ -119,7 +124,7 @@ func on_debris(e) -> void:
 		var flip: float = -1.0 if debris._rd.next() < 0.5 else 1.0
 		var ox: float = debris._rd.range_(-20.0, 20.0)
 		var size: float = debris._rd.range_(p("deb", "size_min"), p("deb", "size_max"))
-		var life: float = debris._rd.range_(p("deb", "life_min"), p("deb", "life_max"))
+		var life: float = debris._rd.range_(p("deb", "life_min"), p("deb", "life_max")) * _lk()
 		var keep: float = debris._rd.next()
 		if keep < _q():
 			debris.chunk(float(e.x) + ox, float(e.y), z, cos(a) * s * flip, sin(a) * s, size, life, tn["t"], int(tn["mode"]), p("deb", "spin"))
@@ -170,7 +175,7 @@ func _chunks(x: float, y: float, z: float, n: int, tones: Array, dirx: float, ba
 		var sz: float = debris._rd.range_(p("land", "size_min"), p("land", "size_max")) * size_k
 		var vx: float = -dirx * debris._rd.range_(0.0, 1.0) * back + debris._rd.range_(-side, side)
 		var vy: float = debris._rd.range_(up_lo, up_hi)
-		debris.chunk(x + debris._rd.range_(-30.0, 30.0), y + 4.0, z, vx, vy, sz, debris._rd.range_(1.0, 2.0), tones, 2, 11.0)
+		debris.chunk(x + debris._rd.range_(-30.0, 30.0), y + 4.0, z, vx, vy, sz, debris._rd.range_(1.0, 2.0) * _lk(), tones, 2, 11.0)
 		contact_made += 1
 
 
@@ -299,7 +304,7 @@ func on_dust(e) -> void:
 		var py: float = y + debris._rd.range_(0.0, 20.0)
 		var vx: float = debris._rd.range_(-90.0, 90.0)
 		var vy: float = debris._rd.range_(20.0, 140.0)
-		var life: float = debris._rd.range_(0.9, 1.9)
+		var life: float = debris._rd.range_(0.9, 1.9) * _lk()
 		var sz: float = debris._rd.range_(14.0, 34.0)
 		var keep: float = debris._rd.next()
 		if keep < _q():
@@ -324,7 +329,7 @@ func on_crater_ejecta(e) -> void:
 		var vx: float = (1.0 if off >= 0.0 else -1.0) * debris._rd.range_(0.3, 1.0) * sp
 		var vy: float = debris._rd.range_(0.6, 1.4) * sp
 		var sz: float = debris._rd.range_(8.0, 13.0 + 2.0 * sqrt(maxf(E, 0.0)))
-		var life: float = debris._rd.range_(1.0, 2.0)
+		var life: float = debris._rd.range_(1.0, 2.0) * _lk()
 		if debris._rd.next() < _q():
 			debris.chunk(x + off, float(e.y) + 6.0, z + 6.0, vx, vy, sz, life, tones, 2, 10.0)
 			contact_made += 1
@@ -333,7 +338,7 @@ func on_crater_ejecta(e) -> void:
 		var side: float = 1.0 if k % 2 == 0 else -1.0
 		var sz: float = debris._rd.range_(18.0, 36.0)
 		if debris._rd.next() < _q():
-			debris.dust_puff(biome, x + side * r * debris._rd.range_(0.8, 1.25), float(e.y) + float(e.get("rim") if e.get("rim") != null else 0.0) + debris._rd.range_(0.0, 20.0), z + debris._rd.range_(2.0, 24.0), side * debris._rd.range_(20.0, 90.0) * sws, debris._rd.range_(20.0, 110.0) * sws, sz * 1.2, sz * 2.6, debris._rd.range_(1.2, 2.4), k % 3)
+			debris.dust_puff(biome, x + side * r * debris._rd.range_(0.8, 1.25), float(e.y) + float(e.get("rim") if e.get("rim") != null else 0.0) + debris._rd.range_(0.0, 20.0), z + debris._rd.range_(2.0, 24.0), side * debris._rd.range_(20.0, 90.0) * sws, debris._rd.range_(20.0, 110.0) * sws * (0.5 if entrance_now else 1.0), sz * 1.2, sz * 2.6, debris._rd.range_(1.2, 2.4) * _lk(), k % 3)
 			contact_made += 1
 
 
@@ -360,28 +365,32 @@ func on_slide_end(S: SimState, e) -> void:
 
 ## The entrance landing (the sim's `entrance_land`, played intro only): a fighter comes down out of the sky into a crater, so it
 ## is a slam with more drama than the crater's own 1.5-energy ejecta: clods thrown both ways, a low skirt of dust spreading along
-## the ground in two layers, a short column of dust rising off the impact, and one thin ring on the ground. Scaled by the height
-## he fell from (`y1` less `y`). The crater and its cracks are the sim's record, drawn by the crack sets.
+## the ground, a short column of dust, and one thin ring lying on the ground round the crater. Scaled by the height he fell from.
+## It is all short and low on purpose: the staredown starts 30 ticks after the second landing, and it is the faces that must read
+## then, so the dust lives under a second and a half, hugs the ground and has cleared by about 1.5 s (docs/vfx/README.md, the
+## intro reel). The crater itself is the sim's record.
 func on_entrance_land(S: SimState, e) -> void:
 	var x: float = float(e.x)
 	var y: float = float(e.y)
 	var z: float = float(e.get("z") if e.get("z") != null else 0.0)
+	var r: float = maxf(float(e.get("r") if e.get("r") != null else 0.0), 120.0)
 	var s: float = clampf(sqrt(maxf(float(e.y1) - y, 0.0) / 3000.0), 0.7, 2.0)
 	var biome: String = VfxPalette.biome_key(x)
 	var tones: Array = tones_for_surface("soil", x)
 	contact_events += 1
-	_chunks(x, y, z, _count(p("land", "chunks_slam") * 1.4 * s), tones, 0.0, 0.0, 300.0 * s, 1000.0 * s, 700.0 * s, 0.8 + 0.4 * s)
-	# The skirt: puffs along the ground out to both sides, darker behind, lighter in front.
-	var n: int = _count(10.0 * s)
+	_chunks(x, y, z, _count(p("land", "chunks_slam") * 1.2 * s), tones, 0.0, 0.0, 300.0 * s, 900.0 * s, 650.0 * s, 0.8 + 0.4 * s)
+	# The skirt: puffs along the ground out to both sides, low and quick to go.
+	var n: int = _count(8.0 * s)
 	for k in range(n):
 		var side: float = 1.0 if k % 2 == 0 else -1.0
-		var sz: float = debris._rd.range_(50.0, 100.0) * (0.7 + 0.4 * s)
-		debris.dust_puff(biome, x + side * debris._rd.range_(20.0, 160.0), y + debris._rd.range_(0.0, 30.0), z + debris._rd.range_(4.0, 36.0), side * debris._rd.range_(200.0, 700.0) * s, debris._rd.range_(30.0, 150.0), sz * 0.6, sz * 1.6, debris._rd.range_(1.6, 2.8), k % 3)
+		var sz: float = debris._rd.range_(45.0, 90.0) * (0.7 + 0.3 * s)
+		debris.dust_puff(biome, x + side * debris._rd.range_(20.0, 140.0), y + debris._rd.range_(0.0, 24.0), z + debris._rd.range_(4.0, 36.0), side * debris._rd.range_(200.0, 600.0) * s, debris._rd.range_(10.0, 60.0), sz * 0.6, sz * 1.5, debris._rd.range_(0.8, 1.3), k % 3)
 		contact_made += 1
-	# The column: a few puffs rising off the impact.
-	for k in range(_count(4.0 * s)):
-		var sz2: float = debris._rd.range_(60.0, 110.0) * (0.7 + 0.4 * s)
-		debris.dust_puff(biome, x + debris._rd.range_(-50.0, 50.0), y + debris._rd.range_(10.0, 80.0), z + debris._rd.range_(4.0, 30.0), debris._rd.range_(-60.0, 60.0), debris._rd.range_(150.0, 420.0) * s, sz2 * 0.6, sz2 * 1.5, debris._rd.range_(1.8, 3.0), 2)
+	# The column: a few puffs off the impact, rising a little and gone in about a second.
+	for k in range(_count(3.0 * s)):
+		var sz2: float = debris._rd.range_(55.0, 95.0) * (0.7 + 0.3 * s)
+		debris.dust_puff(biome, x + debris._rd.range_(-50.0, 50.0), y + debris._rd.range_(10.0, 70.0), z + debris._rd.range_(4.0, 30.0), debris._rd.range_(-60.0, 60.0), debris._rd.range_(60.0, 150.0) * s, sz2 * 0.6, sz2 * 1.3, debris._rd.range_(0.9, 1.4), 2)
 		contact_made += 1
+	# One ring lying on the ground round the crater: from just inside its lip out to about twice its radius, in half a second.
 	if not debris.reduced:
-		debris._ring(x, y + 6.0, z + 8.0, 60.0, 1100.0 * s, 0.55)
+		debris._ring(x, y + 18.0, z + 8.0, r * 0.7, r * 1.4 / 0.5, 0.5, true)

@@ -111,6 +111,9 @@ void fragment() {
 		// ring: a thin cel ring that thins as it fades
 		float r = length(p);
 		float w = 0.05 + 0.04 * (1.0 - COLOR.a);
+		if (v_custom.z > 2.5) {
+			w = 0.16;   // a ring lying on the ground (an entrance landing): a band, so it still reads when it is flattened to a sliver
+		}
 		a = edge(abs(r - (1.0 - w)) - w, aa);
 		base = mix(base, rim_steel.rgb, 0.5);
 	}

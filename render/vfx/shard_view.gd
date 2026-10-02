@@ -83,7 +83,9 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 					shards += 1
 				VfxDebris.RING:
 					c.a = 0.6 * (1.0 - f)
-					sy = sx
+					sy = sx * (0.22 if b.mode == 3 else 1.0)
+					if b.mode == 3:
+						c.a = 0.9 * (1.0 - f)
 				_:
 					c.a = 1.0 - smoothstep(0.7, 1.0, f)
 					shards += 1
@@ -92,6 +94,8 @@ func update(hub: VfxHub, cam_x: float, zoom: float, half_w: float) -> void:
 			var cy_v: float = b.y
 			if b.kind == VfxDebris.CHUNK:
 				mode = float(b.mode)
+			elif b.kind == VfxDebris.RING and b.mode == 3:
+				mode = 3.0
 			elif b.kind == VfxDebris.FLAME:
 				mode = f
 				rot_v = 0.0 if hub.reduced_motion else sin(b.age * 7.0 + b.seed * 6.0) * 0.12

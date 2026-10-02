@@ -97,7 +97,7 @@ func step(S: SimState, f, dt: float, rng: SimRng, quality: int, reduced: bool) -
 	k += (target - k) * (1.0 - exp(-dt / tau))
 	# The break ring: once, each time it crosses the top of the scale from below (not during a rush, not again within a second and a half).
 	ring_age += dt
-	if speed_bh >= VfxLook.V_FULL and not _was_full and target > 0.99 and ring_age > VfxLook.RING_GAP_S:
+	if speed_bh >= VfxLook.V_FULL and not _was_full and target > 0.99 and ring_age > VfxLook.RING_GAP_S and f.state != "intro":   # not a scripted entrance fall
 		ring_age = 0.0
 		rings += 1
 	_was_full = speed_bh >= VfxLook.V_FULL
