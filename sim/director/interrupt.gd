@@ -48,7 +48,14 @@ const PB_SHOT: int = 31     # the shot his guard press marked for a perfect bloc
 const AI_SHOT: int = 32     # the last shot the AI weighed a perfect block against (the same key)
 const BLAST_AT: int = 33    # S.tick of his last blast press
 const PB_DEFL: int = 34     # ... and how many times the marked shot had been sent back when he marked it
-const N: int = 35
+const BURY_WAS: int = 35   # 1 while he lay buried last tick (DirBury)
+const BURY_USED: int = 36  # 1 once the follow-up of this burial has been used
+const SAFE_UNTIL: int = 37 # S.tick until which he is safe, just out of his crater
+const BURY_AI: int = 38    # the AI rival's choice for this burial's follow-up (DirBury.AI_*)
+const BUMP_AT: int = 39    # S.tick his upright slide ends early against an obstacle (DirLaunch); 0 when none
+const BUMP_REQ: int = 40   # ... the obstacle's kind (1 wall, 2 heap, 3 rim) | the slide's speed in whole units a second << 4
+const BURY_E: int = 41     # the energy of the impact that buried him, in thousandths (from the embed event)
+const N: int = 42
 const END_NONE: int = -1   # LAST_END before any launch beat or launch: the exchange has sent nobody anywhere
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
@@ -412,7 +419,7 @@ static func _beforeWindup(ex) -> bool:
 static func _canBurst(S: SimState, f) -> bool:
 	var c: Dictionary = data().burst
 	var ex = S.dirS.ex
-	if f.ki < float(c.ki) or f.act.burstCool > 0 or f.state == "launched" or f.state == "down":
+	if f.ki < float(c.ki) or f.act.burstCool > 0 or f.state == "launched" or (f.state == "down" and not DirBury.canBurst(f)):   # buried, he bursts out once the follow-up's time is over
 		return false
 	return ex == null or (ex.kind != "sig" and not DirExchange.finisherPlanned(ex))
 
@@ -427,6 +434,7 @@ static func burst(S: SimState, f) -> bool:
 	var o = SimRoster.opp(S, f)
 	f.ki -= float(c.ki)
 	f.act.burstCool = int(c.cooldownTicks)
+	DirBury.burstOut(S, f)   # a buried fighter's burst throws him out of his crater
 	SimFx.ring(S, f.x, f.y + 34.0, float(c.rangeBh) * BH * 2.0, f.aura, 0.5, 14.0)
 	if o.input.guard and o.stunTicks <= 0:
 		f.stunTicks = maxi(f.stunTicks, int(c.baitStaggerTicks))

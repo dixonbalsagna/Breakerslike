@@ -92,6 +92,10 @@ static func planMelee(S: SimState, ex) -> String:
 	var defState: String = "CHARGING" if (D.dPrev != null and D.dPrev == "charging") else DirExchange.STN[int(D.stance)]
 	var ctx := {"S": S, "A": A, "D": D, "heavy": heavy, "dist": dist, "base": 66.0 if heavy else 26.0}
 	_flags(S, ctx, A, D)
+	if DirExchange.planDefStance >= 0:
+		defState = DirExchange.STN[DirExchange.planDefStance]   # a buried defender: his guard, or nothing; he neither presses nor moves
+		ctx.defQueued = false
+		ctx.defClipped = false
 	# Step 2b (stance-matrix.md §7): Press needs the defender's own attack request. Without one, a fighter holding nothing
 	# is NEUTRAL, in a profile that has the Neutral column.
 	if defState == "AGGRESSIVE" and not ctx.defQueued and _hasTemplate(ex.kind, "NEUTRAL"):

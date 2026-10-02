@@ -74,6 +74,8 @@ static func aiInput(S: SimState, f) -> void:
 			DirInterrupt.si(f, DirInterrupt.AI_HOLD, 0)
 	# The rival is coming, or taunting (DirBands): the answer the AI chose, once its reaction time is up. It guards,
 	# dodges, or presses to meet him.
+	if f.state == "free" and DirBury.aiFollow(S, f, o):
+		i.heavy = true   # the free blow on a buried rival, at its level's rate
 	var ans: int = DirBands.aiAnswer(f, o) if f.state == "free" else DirBands.R_NONE
 	if ans == DirBands.R_GUARD:
 		a.st = 1.0

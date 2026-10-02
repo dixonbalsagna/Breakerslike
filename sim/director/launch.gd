@@ -315,6 +315,8 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, spec
 	tgt.rush = null
 	tgt.hidden = false
 	tgt.wet = tgt.y < 0.0 and WorldTerrain.seaAt(S, tgt.x)
+	if "slideFeet" in tgt:
+		tgt.slideFeet = String(plan.get("slide", "")) == "feet"   # World's flag for a slide on the feet (ground-contact.md section 24), once the field exists
 	tgt.launchT = WorldSlide.launchTravel(plan.ux, plan.uy)
 	tgt.slide = 0.0
 	tgt.vx = plan.ux * f * tgt.launchT
@@ -408,9 +410,25 @@ static func knock(S: SimState, att, tgt, mul: float = 1.0) -> void:
 	var slide: bool = ground and not WorldTerrain.seaAt(S, r.px)   # the upright slide ends on the ground; a drift keeps its height
 	r.py = g2 if slide else SimMathx.jmax(tgt.y, g2)
 	var ticks: float = float(kb.slideTicks if slide else kb.driftTicks)
+	# The bump (World, ground-contact.md section 24): an obstacle inside an upright slide's length ends it early, a body
+	# short of it. World's slideObstacle finds it and its bump pays the light brunt when the slide ends; until World has
+	# both, the hook does nothing.
+	var bumpKind: int = 0
+	var so := Callable(WorldContact, "slideObstacle")
+	if slide and so.is_valid() and Callable(WorldContact, "bump").is_valid():
+		var ob = so.call(S, tgt.x, tgt.z, s, dist)
+		if ob is Dictionary and ob.get("hit", false):
+			var d2: float = maxf(0.0, float(ob.d) - BUMP_SHORT)
+			ticks = maxf(1.0, round(ticks * d2 / maxf(dist, 1.0)))   # the same speed, a shorter way
+			dist = d2
+			r.px = SimWrap.wrap(tgt.x + s * dist)
+			r.py = WorldTerrain.groundY(S, r.px)
+			bumpKind = maxi(1, BUMP_KINDS.find(String(ob.get("kind", "wall"))))
+			DirInterrupt.si(tgt, DirInterrupt.BUMP_AT, S.tick + int(ticks))
+			DirInterrupt.si(tgt, DirInterrupt.BUMP_REQ, bumpKind | (int(dist / (ticks * SimConst.DT)) << 4))
 	r.end = S.T + ticks * SimConst.DT
 	tgt.rush = r
-	SimFx.knockback(S, tgt, att, "slideShort" if slide else "drift", dist, S.tick + int(ticks))
+	SimFx.knockback(S, tgt, att, "bump" if bumpKind > 0 else ("slideShort" if slide else "drift"), dist, S.tick + int(ticks))
 	tgt.vx = 0.0
 	tgt.vy = 0.0
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 300.0, "#ffffff", 0.25, 12.0)
@@ -418,6 +436,23 @@ static func knock(S: SimState, att, tgt, mul: float = 1.0) -> void:
 	var wear: float = float(kb.get("wear", 0.0)) * float(kb.get("impactPerSpeed", 0.0)) * dist / (ticks * SimConst.DT)
 	if wear > 0.0:
 		SimDamage.hurt(S, tgt, wear, att)
+
+
+const BUMP_SHORT: float = 30.0   # the slide stops this far short of the obstacle (a body's radius; World's figure)
+const BUMP_KINDS: Array = ["", "wall", "heap", "rim"]   # World's obstacle kinds, as BUMP_REQ packs them
+
+
+## Once a live tick: an upright slide that was cut short by an obstacle ends now, and World's bump pays its light brunt.
+static func tick(S: SimState) -> void:
+	for f in S.fighters:
+		var at: int = DirInterrupt.gi(f, DirInterrupt.BUMP_AT)
+		if at <= 0 or S.tick < at:
+			continue
+		DirInterrupt.si(f, DirInterrupt.BUMP_AT, 0)
+		var req: int = DirInterrupt.gi(f, DirInterrupt.BUMP_REQ)
+		var bump := Callable(WorldContact, "bump")
+		if bump.is_valid() and S.game.ko == null and f.state != "launched":
+			bump.call(S, f, SimRoster.opp(S, f), String(BUMP_KINDS[req & 15]), float(req >> 4))
 
 
 ## No launch in the old profiles: the strike shoves the (locked) target back along the attacker's facing.

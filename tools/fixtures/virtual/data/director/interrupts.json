@@ -147,5 +147,15 @@
     "provisional": true,
     "cooldownSec": 15,
     "damageMul": 0.6
+  },
+  "buried": {
+    "enabled": true,
+    "followTicks": 40,
+    "guardFromTick": 40,
+    "burstFromTick": 40,
+    "safeTicks": 10,
+    "reachBh": 2000,
+    "damage": 66,
+    "deepen": 1.2
   }
 }

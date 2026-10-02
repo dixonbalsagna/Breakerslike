@@ -136,7 +136,8 @@
             "answerTaunt",
             "approachReact",
             "earnerUse",
-            "blastShare"
+            "blastShare",
+            "buriedFollowUp"
           ],
           "properties": {
             "beamAnswer": {
@@ -250,6 +251,12 @@
             },
             "blastShare": {
               "description": "The share of the AI's presses outside an exchange that are blasts.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "buriedFollowUp": {
+              "description": "The chance the AI takes the free follow-up on a buried rival.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -280,7 +287,8 @@
             "answerTaunt",
             "approachReact",
             "earnerUse",
-            "blastShare"
+            "blastShare",
+            "buriedFollowUp"
           ],
           "properties": {
             "beamAnswer": {
@@ -394,6 +402,12 @@
             },
             "blastShare": {
               "description": "The share of the AI's presses outside an exchange that are blasts.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "buriedFollowUp": {
+              "description": "The chance the AI takes the free follow-up on a buried rival.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -424,7 +438,8 @@
             "answerTaunt",
             "approachReact",
             "earnerUse",
-            "blastShare"
+            "blastShare",
+            "buriedFollowUp"
           ],
           "properties": {
             "beamAnswer": {
@@ -538,6 +553,12 @@
             },
             "blastShare": {
               "description": "The share of the AI's presses outside an exchange that are blasts.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "buriedFollowUp": {
+              "description": "The chance the AI takes the free follow-up on a buried rival.",
               "type": "number",
               "minimum": 0,
               "maximum": 1

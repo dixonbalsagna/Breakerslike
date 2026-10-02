@@ -153,5 +153,16 @@
     "cooldownSec": 15,
     "damageMul": 0.6,
     "_note": "Game Design's provisional signature limit (agency-pass.md section 5; Orb's to revisit once he has played the energy slice). provisional true: a signature recharges in cooldownSec and does damageMul of its damage; it still costs 45 ki. false: the fighter's own sigCooldown (120 s) and full damage, as before. QA's band to watch: signatures deal at most 30% of a match's damage"
+  },
+  "buried": {
+    "enabled": true,
+    "followTicks": 40,
+    "guardFromTick": 40,
+    "burstFromTick": 40,
+    "safeTicks": 10,
+    "reachBh": 2000,
+    "damage": 66,
+    "deepen": 1.2,
+    "_note": "The buried fighter (agency-pass.md section 7; sim/director/bury.gd; World's embed holds him down for its own ticks, data/biomes/contact.json embed.ticks). followTicks: his rival's first attack press this soon after the burial, from within reachBh, is the free follow-up: one heavy blow of 'damage' he cannot answer, no launch; it digs a bowl 'deepen' times as deep as the one that buried him (World's dig leaves ground alone that is already dented deeper than the bowl asked for). A blast that reaches him in that time is the follow-up too. guardFromTick: his guard counts only from here, or once the follow-up is used; buried, he never dodges or presses. burstFromTick: his burst throws him out, not before this. safeTicks: out of the crater, no exchange starts on him and no shot lands for this long"
   }
 }

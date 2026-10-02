@@ -248,6 +248,15 @@ static func hit(S: SimState, sh, f) -> bool:
 	var c: Dictionary = data()
 	var by = S.fighters[sh.owner]
 	var slot: int = S.fighters.find(f)
+	# Just out of his crater he is safe: the shot passes. Buried and helpless, he answers nothing: it is the follow-up.
+	if DirBury.safe(S, f):
+		SimFx.shotHit(S, sh, f, "safe")
+		return false
+	if DirBury.helpless(f):
+		DirBury.blasted(f)
+		SimDamage.hit(S, null, by, f, sh.dmg, {"kind": "blast", "ignoreStance": true, "stop": float(c.stopTicks) / DirData.TICKS_PER_SEC, "shake": 7.0})
+		SimFx.shotHit(S, sh, f, "buried")
+		return true
 	# The dodge: inside his dodge window he lets it pass, and it flies on.
 	if f.state != "launched" and f.state != "down" and f.stunTicks <= 0 and S.tick - f.act.dodgeTick < SimAct.dodgeWindow:
 		SimFx.shotHit(S, sh, f, "dodge")

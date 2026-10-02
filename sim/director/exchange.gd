@@ -51,7 +51,7 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 	var entry: int = 1 if m > SimAct.awayDead else (-1 if m < -SimAct.awayDead else 0)   # toward, neutral or away (step 4 reads it)
 	if kind != "sig" and A.act.mode == 1 and DirBlast.press(S, A, KIND.find(kind)):
 		return   # the energy family, outside an exchange: the press fires a blast from where he stands, in any band
-	if kind != "sig" and DirBands.farPressNow(S, A, KIND.find(kind), entry):
+	if kind != "sig" and not DirBury.followUp(S, A, SimRoster.opp(S, A)) and DirBands.farPressNow(S, A, KIND.find(kind), entry):
 		return   # the far band: the press fires on its tick as a taunt, an answer or (held) a charge; it never waits
 	SimAct.push(A, KIND.find(kind), A.act.mode, entry, S.tick)
 	_drain(S)
@@ -67,6 +67,7 @@ static var planStale: int = 0
 static var planTick: int = -1   # the tick of the request being started (its press in the log), -1 outside _drain
 static var engaging: bool = false   # true while an approach's end starts its exchange (DirBands._engage); not state
 static var planOpen: int = 0        # ... and the opening that approach began with (DirInterrupt.OPEN_*, or 0)
+static var planDefStance: int = -1   # ... and the stance a buried defender is read in (DirBury.stance), -1 otherwise
 static var planMeet: bool = false   # ... and whether it is the meeting after an answered taunt: the rival is pressing too
 static var planMeetEdge: float = 0.0   # ... and the edge of a rival met while he held a heavy charge (off the attacker's clash chance)
 
@@ -78,7 +79,7 @@ static func _drain(S: SimState) -> void:
 	if S.dirS.ex != null or S.game.ko != null:
 		return
 	# Step 3: a fighter with an opening (a riposte, a reversal, a punish) starts through the cooldown.
-	if S.dirS.cool > 0.0 and DirInterrupt.opening(S, S.fighters[0]) == 0 and DirInterrupt.opening(S, S.fighters[1]) == 0:
+	if S.dirS.cool > 0.0 and DirInterrupt.opening(S, S.fighters[0]) == 0 and DirInterrupt.opening(S, S.fighters[1]) == 0 and not DirBury.followUp(S, S.fighters[0], S.fighters[1]) and not DirBury.followUp(S, S.fighters[1], S.fighters[0]):
 		return
 	var q0: Array = SimAct.peek(S.fighters[0])
 	var q1: Array = SimAct.peek(S.fighters[1])
@@ -135,11 +136,16 @@ static func _start(S: SimState, A, kind: String) -> int:
 	if not engaging and DirBands.who(S) >= 0 and (kind != "sig" or DirBands.pending(A)):
 		return WAIT
 	var opn: int = planOpen if engaging else (DirInterrupt.opening(S, A) if kind != "sig" else 0)   # an approach carries its opening to the engage
-	if S.dirS.cool > 0.0 and opn == 0:
+	var D = SimRoster.opp(S, A)
+	# The buried fighter (DirBury): his rival's first press in time is the free follow-up, through the cooldown and from
+	# where he stands; and a fighter just out of his crater is safe for a moment.
+	var fu: bool = kind != "sig" and not engaging and DirBury.followUp(S, A, D)
+	if DirBury.safe(S, D):
+		return WAIT
+	if S.dirS.cool > 0.0 and opn == 0 and not fu:
 		return WAIT
 	if A.stunTicks > 0 and DirInterrupt.on():
 		return WAIT   # step 3: a staggered fighter's requests wait
-	var D = SimRoster.opp(S, A)
 	if A.state != "free" and A.state != "charging":
 		return WAIT
 	if D.state == "launched" or D.state == "locked":
@@ -166,7 +172,7 @@ static func _start(S: SimState, A, kind: String) -> int:
 	# The ranged press (agency-pass.md section 1): outside the close band only the attacker's approach starts. Nothing
 	# is decided, and the rival stays free, until it ends; the exchange then starts here again (engaging). An opening
 	# (a riposte, a reversal, a punish) begins its approach through the cooldown and is kept for the engage.
-	if kind != "sig" and not engaging and DirBands.on():
+	if kind != "sig" and not engaging and DirBands.on() and not fu:
 		var pt: int = planTick if planTick >= 0 else S.tick
 		var bd: int = DirBands.band(A, D)
 		# The far taunt is a challenge: the rival's attack press while it plays answers it, and both rush to meet.
@@ -198,7 +204,9 @@ static func _start(S: SimState, A, kind: String) -> int:
 		SimFx.banner(S, "AMBUSH FROM COVER", "#ffd45a", 1.1)
 	A.hideT = 0.0
 	A.state = "free"
-	if kind == "heavy":
+	if fu:
+		kind = "heavy"   # the follow-up is a heavy blow whatever was pressed, and it is free
+	elif kind == "heavy":
 		A.ki -= 4.0
 	if kind == "sig":
 		if SimFighter.sigFree(A):
@@ -213,6 +221,9 @@ static func _start(S: SimState, A, kind: String) -> int:
 	D.exT = S.T
 	ex.sA = A.stance   # R8: the stances hit() uses for the whole exchange
 	ex.sD = D.stance
+	planDefStance = -1 if fu else DirBury.stance(D)   # a buried defender guards only from the ruled tick, and never dodges or presses
+	if planDefStance >= 0:
+		ex.sD = float(planDefStance)
 	A.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(A.x, D.x)), A.face)
 	D.face = -A.face
 	var dState: String = D.state
@@ -226,7 +237,7 @@ static func _start(S: SimState, A, kind: String) -> int:
 	for s in range(S.fighters.size()):
 		if S.fighters[s].brink:
 			ex.startBrink |= 1 << s
-	if kind != "sig" and DirData.hasNeutral() and opn == 0:
+	if kind != "sig" and DirData.hasNeutral() and opn == 0 and not fu and planDefStance < 0:
 		DirAI.react(S, D, dState)   # step 2b: the AI defender's press, before the plan reads defQueued (dState: its state before the lock)
 	# Step 3: staleness, and an opening spent on this attack (the riposte plans from its own template).
 	planStale = DirInterrupt.onStart(S, ex, KIND.find(kind), A.act.mode, planEntry)
@@ -241,9 +252,14 @@ static func _start(S: SimState, A, kind: String) -> int:
 		chk = _planByCode(S, ex, "sig" if kind == "sig" else "melee")
 	if kind == "sig":
 		DirBeam.planBeam(S, ex)
+	elif fu:
+		DirBury.plan(S, ex)   # the director's interim piece: one heavy blow he cannot answer, no launch
+		DirData.defLabel = "BURIED"
+		ex.loser = S.fighters.find(D)
 	else:
 		var fav: String = DirMelee.planMelee(S, ex)
 		ex.loser = S.fighters.find(D) if fav == "attacker" else (S.fighters.find(A) if fav == "defender" else -1)
+	planDefStance = -1
 	planContext = ""
 	planLaunch = false
 	planStale = 0
@@ -297,6 +313,8 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.launchBeat(S, ex, D if a.rev else A, A if a.rev else D, a.force, false, a)
 		"window":
 			openWindow(S, ex)
+		"buryDeepen":
+			DirBury.opDeepen(S, ex)
 		"nop":
 			pass
 		"slip":
@@ -457,6 +475,7 @@ static func endEx(S: SimState, ex) -> void:
 	S.dirS.ex = null
 	S.dirS.cool = cooldownAfter(ex)
 	DirInterrupt.onEnd(S, ex)   # step 3: a fully blocked string leaves its attacker behind
+	DirBury.onEnd(S, ex)   # a defender taken in his crater is out of it, with his safety
 
 
 ## Breathing room after an exchange (balance-targets.md section 10): 0.8 s after a quick exchange, rising with its
@@ -485,6 +504,8 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	DirBands.tick(S)   # the approach before an exchange: it counts down, and the exchange starts at its end
 	DirAlchemy.tick(S)   # the flow count lapses
 	DirBlast.tick(S)   # blasts winding up leave; the AI weighs a perfect block against a shot about to arrive
+	DirBury.tick(S)   # a burial starts and ends
+	DirLaunch.tick(S)   # an upright slide that ends early against an obstacle: the bump
 	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:

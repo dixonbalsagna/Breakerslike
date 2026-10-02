@@ -37373,6 +37373,801 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/buried"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-buried-valid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2,
+              "reach": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/buried/reach"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-enabled-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-follow-ticks-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-guard-from-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-burst-from-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-safe-ticks-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-reach-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-damage-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-deepen-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/buried"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-enabled-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": "yes",
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/buried/enabled"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-off-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": false,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-follow-ticks-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": -1,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/followTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-follow-ticks-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40.5,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/buried/followTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-guard-from-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": -1,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/guardFromTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-burst-from-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40.5,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/buried/burstFromTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-safe-ticks-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": -1,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/safeTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-safe-ticks-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 0,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-reach-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 0,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/buried/reachBh"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-damage-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": -1,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/damage"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-damage-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 0,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-buried-deepen-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": -0.5
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/buried/deepen"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-damage-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": "heavy",
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/buried/damage"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-guard-after-embed",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 90,
+              "burstFromTick": 40,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:buried-order",
+        "pointer": "/buried/guardFromTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-burst-after-embed",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 40,
+              "burstFromTick": 90,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:buried-order",
+        "pointer": "/buried/burstFromTick"
+      }
+    },
+    {
+      "id": "director-interrupts-buried-guard-at-embed-end-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/buried": {
+              "enabled": true,
+              "followTicks": 40,
+              "guardFromTick": 60,
+              "burstFromTick": 60,
+              "safeTicks": 10,
+              "reachBh": 2000,
+              "damage": 66,
+              "deepen": 1.2
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-buried-follow-up-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/buriedFollowUp"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-hard-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/buriedFollowUp"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/buriedFollowUp": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/buriedFollowUp"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/buriedFollowUp": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/easy/buriedFollowUp"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/buriedFollowUp": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/buriedFollowUp"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/buriedFollowUp": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/buriedFollowUp"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-medium-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/buriedFollowUp": 0.95
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/medium/buriedFollowUp"
+      }
+    },
+    {
+      "id": "director-ai-buried-follow-up-equal-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/buriedFollowUp": 0.8
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-buried-follow-up-note-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_buriedFollowUp": "comment"
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

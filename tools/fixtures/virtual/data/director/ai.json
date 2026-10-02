@@ -48,7 +48,8 @@
         0.2
       ],
       "earnerUse": 0.25,
-      "blastShare": 0.1
+      "blastShare": 0.1,
+      "buriedFollowUp": 0.4
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -75,7 +76,8 @@
         0.2
       ],
       "earnerUse": 0.6,
-      "blastShare": 0.2
+      "blastShare": 0.2,
+      "buriedFollowUp": 0.8
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -102,7 +104,8 @@
         0.2
       ],
       "earnerUse": 1,
-      "blastShare": 0.25
+      "blastShare": 0.25,
+      "buriedFollowUp": 1
     }
   }
 }

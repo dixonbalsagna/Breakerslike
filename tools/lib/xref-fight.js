@@ -678,7 +678,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const lv = isObj(dai.levels) ? dai.levels : {};
     if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
     const order = ['easy', 'medium', 'hard'];
-    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse']) {
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp']) {
       for (let i = 1; i < order.length; i++) {
         const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
@@ -717,6 +717,9 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (isObj(bl2.heavy) && typeof bl2.heavy.holdMaxTicks === 'number' && typeof bl2.heavy.chargeTicks === 'number' && bl2.heavy.holdMaxTicks < bl2.heavy.chargeTicks) err(IT, '/blast/heavy/holdMaxTicks', 'interrupts-order', `holdMaxTicks ${bl2.heavy.holdMaxTicks} is below chargeTicks ${bl2.heavy.chargeTicks}, so the charge could never finish`);
       if (kindsI && isObj(bl2.light) && isObj(bl2.heavy) && isObj(kindsI[bl2.light.kind]) && isObj(kindsI[bl2.heavy.kind]) && typeof kindsI[bl2.light.kind].power === 'number' && typeof kindsI[bl2.heavy.kind].power === 'number' && kindsI[bl2.heavy.kind].power < kindsI[bl2.light.kind].power) err(IT, '/blast/heavy/kind', 'blast-shot-kind', `the heavy blast "${bl2.heavy.kind}" trades with less power (${kindsI[bl2.heavy.kind].power}) than the light "${bl2.light.kind}" (${kindsI[bl2.light.kind].power})`, 'warning');
     }
+    const bu = itr.buried;
+    const embedC = get('data/biomes/contact.json');
+    if (isObj(bu) && isObj(embedC) && isObj(embedC.embed) && typeof embedC.embed.ticks === 'number') for (const k of ['guardFromTick', 'burstFromTick']) if (typeof bu[k] === 'number' && bu[k] > embedC.embed.ticks) err(IT, `/buried/${k}`, 'buried-order', `${k} ${bu[k]} is after the burial ends (embed.ticks ${embedC.embed.ticks} in data/biomes/contact.json), so it could never happen`);
     const rv = itr.reversal;
     if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);
     const st = itr.stale;

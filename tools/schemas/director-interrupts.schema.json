@@ -15,7 +15,8 @@
     "stale",
     "bands",
     "blast",
-    "signature"
+    "signature",
+    "buried"
   ],
   "properties": {
     "schema": {
@@ -836,6 +837,65 @@
         }
       },
       "description": "Game Design's provisional signature limit (agency-pass.md section 5).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "buried": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "followTicks",
+        "guardFromTick",
+        "burstFromTick",
+        "safeTicks",
+        "reachBh",
+        "damage",
+        "deepen"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "The buried-fighter rules switch."
+        },
+        "followTicks": {
+          "description": "His rival's first attack press this soon after the burial is the free follow-up.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "guardFromTick": {
+          "description": "The buried fighter may guard from this tick of the burial (at most data/biomes/contact.json embed.ticks).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "burstFromTick": {
+          "description": "He may burst out from this tick (at most embed.ticks).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "safeTicks": {
+          "description": "The ticks he cannot be hit at the start.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "reachBh": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The follow-up must come from within this reach."
+        },
+        "damage": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The follow-up's damage: one heavy blow he cannot answer, no launch."
+        },
+        "deepen": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The follow-up digs a bowl this many times as deep."
+        }
+      },
+      "description": "The buried fighter (agency-pass.md section 7; sim/director/bury.gd; World's embed holds him down for embed.ticks). guardFromTick and burstFromTick are at most the embed ticks (checked by tools/lib/xref-fight.js, buried-order).",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true
