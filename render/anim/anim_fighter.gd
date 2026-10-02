@@ -54,6 +54,7 @@ var _last_T: float = -1.0
 var _cue: Dictionary = {}
 var _seq: Dictionary = {}          # a pose sequence of Encounter's step 3 cues (data/anim/waves/step3.*): {id, t0, dur}
 var _gc_hold_t0: float = -1.0           # a held ground-contact pose (the brace of a tumble) from this time ...
+var _ag_sq: Dictionary = {}            # the agency slice's own sequence (the embed: its own, so a ground contact's sequence at the same tick cannot replace it)
 var _ag_hold: String = ""              # the agency slice's held pose (a knockback, a charge: docs 9.22) from _ag_t0 ...
 var _ag_kind: String = ""              # ... of this kind (a key of data/anim/agency.json)
 var _ag_t0: float = -1.0
@@ -285,6 +286,12 @@ func on_agency(kind: String, T: float, e: Dictionary) -> void:
 	if not RenderAnim.agency_poses or A.is_empty():
 		return
 	var wt: float = 0.6 if RenderAnim.reduced_motion else 1.0
+	# the cues that end a taunt (his dodge cut it, it was answered, it took off into a charge) or a charge (the dodge-cancel, a meeting in the middle) at once
+	if A.get("taunt", {}).get("cut_kinds", []).has(kind) and String(_seq.get("id", "")) == String(A.get("taunt", {}).get("seq", "")):
+		_seq = {}
+	if A.get("charge", {}).get("end_kinds", []).has(kind) and _ag_kind.begins_with("charge_") and _ag_t1 < 0.0:
+		_ag_t1 = T
+		return
 	match kind:
 		"knockback":
 			var kk: Dictionary = A.get("knockback", {}).get(String(e.get("kind", "slideShort")), {})
@@ -301,17 +308,15 @@ func on_agency(kind: String, T: float, e: Dictionary) -> void:
 		"embed":
 			var em: Dictionary = A.get("embed", {})
 			if AnimData.entries.has(String(em.get("seq", ""))):
-				var dur: float = maxf(float(e.get("dur", 1.0)), 0.3)
-				_seq = {"id": String(em.seq), "t0": T, "dur": dur, "wt": float(em.get("weight", 1.0))}
+				# starts after the landing's own bounce (the first tenth of a second), and runs to the end of the held-down time
+				var dur: float = maxf(float(e.get("dur", 1.0)) - 0.12, 0.3)
+				_ag_sq = {"id": String(em.seq), "t0": T + 0.12, "dur": dur, "wt": float(em.get("weight", 1.0)) * wt}
 				debug["agency"] = int(debug.get("agency", 0)) + 1
 		"taunt_start":
 			var tn: Dictionary = A.get("taunt", {})
 			if AnimData.entries.has(String(tn.get("seq", ""))):
 				_seq = {"id": String(tn.seq), "t0": T, "dur": float(AnimData.entries[String(tn.seq)].dur) / 60.0, "wt": float(tn.get("weight", 0.7)) * wt}
 				debug["agency"] = int(debug.get("agency", 0)) + 1
-		"taunt_end_cut":
-			if String(_seq.get("id", "")) == String(A.get("taunt", {}).get("seq", "")):
-				_seq = {}
 		"charge_light", "charge_heavy", "charge_feint":
 			var which: String = kind.substr(7)
 			var cc: Dictionary = A.get("charge", {}).get(which, {})
@@ -329,6 +334,11 @@ func on_agency(kind: String, T: float, e: Dictionary) -> void:
 
 ## The held agency pose: eased in, held, eased out. A charge ends by itself when its exchange starts (the sim begins it at the wind-up), when he falls or at its cap.
 func _agency_layer(S: SimState, f, T: float) -> void:
+	if not _ag_sq.is_empty():
+		if T > float(_ag_sq.t0) + float(_ag_sq.dur) + 0.1:
+			_ag_sq = {}
+		elif T >= float(_ag_sq.t0):
+			_entry_layer(float(_ag_sq.t0), float(_ag_sq.dur), String(_ag_sq.id), T, DT, float(_ag_sq.wt))
 	if _ag_t0 < 0.0 or not AnimData.pose_exists(_ag_hold):
 		return
 	var cfg: Dictionary = AnimData.agency

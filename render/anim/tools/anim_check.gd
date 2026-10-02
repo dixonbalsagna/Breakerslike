@@ -365,7 +365,7 @@ func _test_agency() -> void:
 	_expect(seen > 0.1 and gone, "agency test: the knockback pose %s (%.3f rad mid-slide) and %s after it" % ["did not play" if seen <= 0.1 else "played", seen, "was gone" if gone else "stayed"])
 	# the embed and the taunt: sequences, the taunt cut
 	af.on_agency("embed", 2.0, {"dur": 1.0})
-	_expect(String(af._seq.get("id", "")) == "ag.embed" and absf(float(af._seq.dur) - 1.0) < 0.001, "agency test: the embed sequence did not start for the held-down time")
+	_expect(String(af._ag_sq.get("id", "")) == "ag.embed" and absf(float(af._ag_sq.dur) - 0.88) < 0.001, "agency test: the embed sequence did not start for the held-down time")
 	af.on_agency("taunt_start", 3.0, {})
 	_expect(String(af._seq.get("id", "")) == "ag.taunt", "agency test: the taunt did not start")
 	af.on_agency("taunt_end_cut", 3.2, {})
@@ -383,6 +383,17 @@ func _test_agency() -> void:
 	f.state = "free"
 	ac.on_agency("charge_feint", 6.0, {})
 	_expect(held and ended and ac._ag_hold == "ag.hold.charge_peel" and ac._ag_t1 > 6.0, "agency test: the charge held %s, ended on a fall %s, the feint took the peel %s" % [held, ended, ac._ag_hold == "ag.hold.charge_peel"])
+	# every way a charge or a taunt ends: no pose runs to its cap
+	for end_kind in ["dodge_cancel", "challenge_answered"]:
+		var ae := AnimFighter.new(0)
+		ae.on_agency("charge_light", 7.0, {})
+		ae.on_agency(end_kind, 7.4, {})
+		_expect(ae._ag_t1 >= 7.4 and ae._ag_t1 < 7.5, "agency test: a charge was not ended by %s" % end_kind)
+	for cut_kind in ["taunt_end_cut", "taunt_end_accepted", "taunt_end_takeoff_light", "taunt_end_takeoff_heavy"]:
+		var at := AnimFighter.new(0)
+		at.on_agency("taunt_start", 8.0, {})
+		at.on_agency(cut_kind, 8.1, {})
+		_expect(at._seq.is_empty(), "agency test: a taunt was not ended by %s" % cut_kind)
 	# reduced motion plays at 60%
 	var red_was: bool = RenderAnim.reduced_motion
 	RenderAnim.reduced_motion = true
@@ -399,7 +410,7 @@ func _test_agency() -> void:
 	ao.on_agency("knockback", 1.0, {"kind": "slideShort", "dur": 0.5})
 	ao.on_agency("embed", 1.0, {"dur": 1.0})
 	RenderAnim.agency_poses = true
-	_expect(ao._ag_t0 < 0.0 and ao._seq.is_empty(), "agency test: the events played with the agency poses off")
+	_expect(ao._ag_t0 < 0.0 and ao._seq.is_empty() and ao._ag_sq.is_empty(), "agency test: the events played with the agency poses off")
 	print("agency test: knockback mid-slide %.3f rad, embed, taunt cut, charge held and ended on a fall, feint peel, reduced motion %.2f of %.2f, off plays nothing" % [seen, w_red, ar2._ag_w])
 
 

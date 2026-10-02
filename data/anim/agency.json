@@ -1,6 +1,6 @@
 {
  "schema": "anim.agency/1",
- "_about": "The agency slice's events as poses (render/anim/anim_fighter.gd, on_agency; waves/agency1). knockback: a rival sent back on his feet (kind slideShort, slideLong, drift, bump from the sim's `knockback` event): the held pose mixed in for as long as the event says (its dur), eased in and out. embed: World's `embed` event: the sequence plays over the held-down ticks. taunt: the cue taunt_start plays the shrug over the flight (cut by taunt_end_cut). charge: the cues charge_light and charge_heavy hold the flight pose until the exchange starts, the charge is feinted (charge_feint: the peel for `ticks`), a fall or `max_ticks` ends it. weight is the share of the pose mixed in over whatever he is doing; in and out are the ease times (s). Render only, outside the sim's data hash.",
+ "_about": "The agency slice's events as poses (render/anim/anim_fighter.gd, on_agency; waves/agency1). knockback: a rival sent back on his feet (kind slideShort, slideLong, drift, bump from the sim's `knockback` event): the held pose mixed in for as long as the event says (its dur), eased in and out. embed: World's `embed` event: the sequence plays over the held-down ticks. taunt: the cue taunt_start plays the shrug over the flight (cut by taunt_end_cut). charge: the cues charge_light and charge_heavy hold the flight pose until the exchange starts, the charge is feinted (charge_feint: the peel for `ticks`), a fall or `max_ticks` ends it. cut_kinds: the cues that end the taunt at once (cut by his dodge, answered, or taken off into a charge); end_kinds: the cues that end a charge at once (the dodge-cancel, a meeting in the middle). The exchange starting ends a charge by itself (read from the sim). weight is the share of the pose mixed in over whatever he is doing; in and out are the ease times (s). Render only, outside the sim's data hash.",
  "knockback": {
   "slideShort": {
    "hold": "ag.hold.kb_short",
@@ -35,7 +35,10 @@
   "seq": "ag.taunt",
   "weight": 0.7,
   "cut_kinds": [
-   "taunt_end_cut"
+   "taunt_end_cut",
+   "taunt_end_accepted",
+   "taunt_end_takeoff_light",
+   "taunt_end_takeoff_heavy"
   ]
  },
  "charge": {
@@ -59,6 +62,10 @@
    "in": 0.06,
    "out": 0.2,
    "ticks": 24
-  }
+  },
+  "end_kinds": [
+   "dodge_cancel",
+   "challenge_answered"
+  ]
  }
 }

@@ -15,3 +15,10 @@ What is in it (docs/animation/pose-pipeline.md 9.22):
 For Orb: whether the taunt reads as a challenge rather than a gesture (it is one beat, at 92% over the flight), whether the heavy charge's two-forearm line reads as a shield, and whether the embed's lying pose and the stir say "driven in".
 
 Not wired because the sim does not send it: the answerer's pose (`challenge_answered`) and the taunt's credit cues. `--no-agency-poses` switches all of it off; reduced motion plays it at 60%.
+
+## Real matches (the live sim, slice 3)
+
+`match-reel.gif` (all five windows in one, the poses off on the left and on the right) and one GIF each: `match-slide.gif` (a knockback on his feet, seed 4), `match-embed.gif` (driven into the crater, held, the stir, the get-up, seed 16), `match-embed_taunt_charge.gif` (the same window following the taunter: a taunt that takes off into a heavy charge), `match-taunt_answered.gif` (a taunt answered, both rush, seed 13), `match-light_charge.gif` and `match-heavy_charge.gif` (seed 1). The frame follows whoever the agency layer is playing; the caption names the pose. `render/anim/tools/match_close.gd`.
+
+In six AI matches the light charges held 27 to 69 ticks (median 36) and the heavy 17 to 93 (median 65); none ran to its cap. A charge now ends on the exchange starting, a fall, a dodge-cancel, a meeting (`challenge_answered`), a feint (the peel), or the cap; a taunt ends on its cut, on being answered or on taking off into a charge.
+

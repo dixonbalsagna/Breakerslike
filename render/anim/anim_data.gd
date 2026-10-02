@@ -72,7 +72,10 @@ static func load_all() -> void:
 	ground = _read("ground.json")
 	intro = _read("intro.json")
 	agency = _read("agency.json")
-	agency["cue_kinds"] = ["taunt_start", "taunt_end_cut", "charge_light", "charge_heavy", "charge_feint"]
+	var ck: Array = ["taunt_start", "charge_light", "charge_heavy", "charge_feint"]   # the cues the agency layer listens to: these, and the ones that end a taunt or a charge
+	ck.append_array(agency.get("taunt", {}).get("cut_kinds", []))
+	ck.append_array(agency.get("charge", {}).get("end_kinds", []))
+	agency["cue_kinds"] = ck
 	last_stand = _read("laststand.json")
 	if live_flag_early() and FileAccess.file_exists(DIR + "waves/wave1.live.json"):
 		live = _read("waves/wave1.live.json")
