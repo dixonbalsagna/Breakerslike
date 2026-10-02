@@ -58,6 +58,11 @@ var speedlines_enabled: bool = VfxLook.SPEEDLINES_DEFAULT   # speed lines alone 
 var speed := VfxSpeed.new()
 var rocks_enabled: bool = VfxLook.ROCKS_DEFAULT   # prototype: rocks hang about a tier 3 or 4 fighter (rocks.gd)
 var rocks := VfxRocks.new()
+var blast_enabled: bool = VfxLook.BLAST_DEFAULT   # craters are bigger to look at by the causer's tier: shock ring, rim chunks, dust dome, a second fall, settling dust (blast.gd)
+var blast_powerup_enabled: bool = VfxLook.BLAST_POWERUP_DEFAULT   # ... also for ground-level power-up craters (off until Legal clears it: they come with the charge's marks)
+var blast := VfxBlast.new()
+var pressure_enabled: bool = VfxLook.PRESSURE_DEFAULT   # a ring of shoved air at a dash, a hard stop or a hard turn, by tier (pressure.gd)
+var pressure := VfxPressure.new()
 var earth_enabled: bool = VfxLook.EARTH_DEFAULT   # material chunks for `debris`, cel flames for `fire`, and the ground-contact events (docs/vfx/earth-plan.md)
 var earth := VfxEarth.new()
 var debris := VfxDebris.new()
@@ -104,6 +109,8 @@ func reset(S: SimState, p_seed: int) -> void:
 	react.reset()
 	speed.reset(seed)
 	rocks.reset(seed)
+	blast.reset()
+	pressure.reset()
 	earth.debris = debris
 	earth.reset()
 	water.debris = debris
@@ -220,7 +227,7 @@ func _consume(S: SimState, events: Array) -> void:
 				earth.entrance_now = true
 				earth.on_entrance_land(S, e)
 	_sync_cracks(S)
-	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled or rocks_enabled:
+	if destruction_enabled or cracks_enabled or embers_enabled or water_enabled or react_enabled or earth_enabled or rocks_enabled or blast_enabled:
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		water.begin_tick()
@@ -293,6 +300,8 @@ func _consume(S: SimState, events: Array) -> void:
 						earth.on_crater_ejecta(e)
 					if react_enabled:
 						react.on_crater(S, e, self)
+					if blast_enabled:
+						blast.on_crater(S, e, debris, fx_now(S), blast_powerup_enabled)
 				"beamSplash":
 					if water_enabled:
 						_on_beam_splash(S, float(e.x))
@@ -305,6 +314,8 @@ func _consume(S: SimState, events: Array) -> void:
 	ticks += 1
 	for i in range(mini(trails.size(), S.fighters.size())):
 		trails[i].step(S, S.fighters[i], dt, _rng_trail, quality, reduced_motion)
+	if pressure_enabled:
+		pressure.step(S, trails, xform.forms, quality, reduced_motion)
 
 
 # ------------------------------------------------------------------------------ buildings: hits, chains and falls

@@ -187,6 +187,8 @@ func _run() -> void:
 	_trails()
 	_intro()
 	_rocks()
+	_blast()
+	_pressure()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -685,6 +687,7 @@ func _react() -> void:
 	var hw3 := VfxHub.new()
 	hw3.react_enabled = false
 	hw3.earth_enabled = false
+	hw3.blast_enabled = false   # the blast amplification is its own flag: it would add its own debris
 	hw3.reset(S, 6)
 	place.call(4.0)
 	for k in range(200):
@@ -1434,6 +1437,7 @@ func _rocks() -> void:
 	_tick(S, hform, [VfxMock.ev("transform", {"actor": 0, "tier": 4.0, "source": "ai", "dur": 3.0, "version": "full"})])
 	_check(hform.rocks.level[0] < hform.rocks.prev[0] + 0.001 and hform.rocks.level[0] <= 1.0, "a transformation of that slot takes them down")
 	var hoff := VfxHub.new()
+	hoff.rocks_enabled = false
 	hoff.reset(S, 6)
 	place.call(4.0)
 	for k in range(90):
@@ -1460,6 +1464,55 @@ func _rocks() -> void:
 	var ha := VfxHub.new()
 	ha.reset(S, 6)
 	_check(ha.rocks.pieces[0][3].ang == h3.rocks.pieces[0][3].ang and ha.rocks.pieces[0][3].ang != h3.rocks.pieces[1][3].ang, "the same seed gives the same cloud, each fighter his own")
+	# Legal's conditions (RL-057): few, small, uneven, each drifting its own way, never a ring, never spiralling, never rising in a column.
+	_check(VfxHub.new().rocks_enabled == VfxLook.ROCKS_DEFAULT and VfxLook.ROCKS_DEFAULT, "the flag is on by default")
+	_check(VfxRocks.count_for(4, 1.0) <= 10 and VfxRocks.MAX_PIECES <= 12, "few: at most 10 shown at tier 4, 12 in the pool")
+	var big: float = 0.0
+	for s2 in range(2):
+		for pc in ha.rocks.pieces[s2]:
+			big = maxf(big, pc.size)
+	_check(big * VfxRocks.p("rocks", "t4_size") <= 0.6 * VfxLook.BH, "small: no piece over %.0f units, %.2f of a fighter's height (largest %.0f)" % [0.6 * VfxLook.BH, 0.6, big * VfxRocks.p("rocks", "t4_size")])
+	var dr: Array = []
+	var pos_n: int = 0
+	var neg_n: int = 0
+	var inrange: bool = true
+	for pc in ha.rocks.pieces[0].slice(0, 10):
+		dr.append(snappedf(absf(pc.drift), 0.0001))
+		if pc.drift > 0.0:
+			pos_n += 1
+		else:
+			neg_n += 1
+		if absf(pc.drift) < VfxRocks.p("rocks", "drift_min") - 1e-6 or absf(pc.drift) > VfxRocks.p("rocks", "drift_max") + 1e-6:
+			inrange = false
+	var uniq: Dictionary = {}
+	for d in dr:
+		uniq[d] = true
+	_check(inrange and pos_n > 0 and neg_n > 0 and uniq.size() == dr.size(), "each drifts its own way: both directions (%d and %d), all ten speeds differ, all slow (%.2f to %.2f rad/s)" % [pos_n, neg_n, VfxRocks.p("rocks", "drift_min"), VfxRocks.p("rocks", "drift_max")])
+	var bh: float = VfxLook.BH
+	var bob: float = VfxRocks.p("rocks", "bob_bh") * bh
+	var steady: bool = true
+	var level: bool = true
+	var low: float = 99.0
+	var high: float = -99.0
+	for pc in ha.rocks.pieces[0].slice(0, 10):
+		var a0: Vector3 = VfxRocks.at(pc, 0.0, bh, bob)
+		var r0: float = sqrt(a0.x * a0.x + (a0.z / 0.35) * (a0.z / 0.35))
+		var ymin: float = 1e9
+		var ymax: float = -1e9
+		for k in range(0, 601, 5):
+			var tt: float = float(k) / 10.0           # a minute of drift
+			var ak: Vector3 = VfxRocks.at(pc, tt, bh, bob)
+			var rk: float = sqrt(ak.x * ak.x + (ak.z / 0.35) * (ak.z / 0.35))
+			if absf(rk - r0) > 0.5:
+				steady = false
+			ymin = minf(ymin, ak.y)
+			ymax = maxf(ymax, ak.y)
+		if ymax - ymin > 2.0 * bob + 0.5:
+			level = false
+		low = minf(low, ymin / bh)
+		high = maxf(high, ymax / bh)
+	_check(steady, "never spiralling: every piece keeps its own distance from him over a minute of drift")
+	_check(level and high <= VfxRocks.p("rocks", "h_max_bh") + VfxRocks.p("rocks", "bob_bh") + 1e-3, "never rising in a column: each stays at its own height (a bob of %.2f only), the highest %.2f heights up" % [VfxRocks.p("rocks", "bob_bh"), high])
 	var saved: Dictionary = VfxRocks._data
 	VfxRocks._data = {}
 	var fallback: bool = VfxRocks.p("rocks", "count_t4") == 10.0 and VfxRocks.p("rocks", "min_tier") == 3.0
@@ -1471,6 +1524,184 @@ func _rocks() -> void:
 			same = false
 			print("    differs: rocks.%s" % k)
 	_check(same, "data/vfx/power.json and the built-in defaults agree")
+	SimCore.dispose(S)
+
+
+## Blast amplification (idea 2, `blast_enabled`): a crater is bigger to look at by the causer's tier.
+func _blast() -> void:
+	print("blast amplification")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f = S.fighters[0]
+	_check(VfxBlast.mult_for(1) == 0.0 and VfxBlast.mult_for(2) < VfxBlast.mult_for(3) and VfxBlast.mult_for(3) < VfxBlast.mult_for(4), "no extra at tier 1, more at each tier above")
+	_check(VfxLook.BLAST_DEFAULT and not VfxLook.BLAST_POWERUP_DEFAULT, "on by default, but not for power-up craters (they come with the charge marks)")
+	var crater := func(owner: float, cause: String, special: float): return VfxMock.ev("crater", {"x": plains, "y": g, "r": 200.0, "depth": 60.0, "energy": 8.0, "cause": cause, "owner": owner, "special": special, "rim": 20.0, "z": 0.0})
+	# One crater, then two and a half seconds of ticks: how many bits the pool took, with the amplification and without it.
+	var run := func(tier: float, on: bool, ev: Array, setup: Callable) -> VfxHub:
+		var h := VfxHub.new()
+		h.blast_enabled = on
+		h.reset(S, 6)
+		f.x = plains
+		f.y = g
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		f.beamCharge = null
+		f.hidden = false
+		f.tier = tier
+		setup.call()
+		_tick(S, h, ev)
+		for k in range(150):
+			_tick(S, h, [])
+		return h
+	var none := func(): pass
+	var spawned: Array = []
+	var rings: Array = []
+	for t in [1.0, 2.0, 3.0, 4.0]:
+		var base: VfxHub = run.call(t, false, [crater.call(0.0, "impact", 0.0)], none)   # the same tier without it: the rubble lifts and the ejecta are in both
+		var h: VfxHub = run.call(t, true, [crater.call(0.0, "impact", 0.0)], none)
+		spawned.append(h.debris.spawned - base.debris.spawned)
+		rings.append(h.blast.rings)
+	_check(spawned[0] == 0 and spawned[1] > 0 and spawned[2] > spawned[1] and spawned[3] > spawned[2], "more bits to the pool at each tier (extra %d, %d, %d, %d)" % [spawned[0], spawned[1], spawned[2], spawned[3]])
+	_check(rings[0] == 0 and rings[1] == 1 and rings[2] == 1 and rings[3] == 2, "one shock ring at tiers 2 and 3, a second behind it at tier 4 (%s)" % str(rings))
+	var h4: VfxHub = run.call(4.0, true, [crater.call(0.0, "impact", 0.0)], none)
+	_check(h4.debris.jobs.is_empty(), "the pebble fall and the settling dust have all come due and run within two seconds")
+	_check(h4.blast.chunks >= 8, "tier 4 throws a good handful of rim chunks (%d)" % h4.blast.chunks)
+	var hp: VfxHub = run.call(4.0, true, [crater.call(0.0, "powerup", 0.0)], none)
+	var hpb: VfxHub = run.call(4.0, false, [crater.call(0.0, "powerup", 0.0)], none)
+	_check(hp.blast.made == 0 and hp.debris.spawned == hpb.debris.spawned, "a power-up crater gets none by default (Legal stacking rule)")
+	var hpo := VfxHub.new()
+	hpo.blast_powerup_enabled = true
+	hpo.reset(S, 6)
+	f.tier = 4.0
+	_tick(S, hpo, [crater.call(0.0, "powerup", 1.0)])
+	_check(hpo.blast.made == 1, "the power-up flag lets it through")
+	var hch: VfxHub = run.call(4.0, true, [crater.call(0.0, "impact", 0.0)], func(): f.state = "charging")
+	_check(hch.blast.made == 0, "none from a fighter who is charging")
+	var hno: VfxHub = run.call(4.0, true, [crater.call(-1.0, "impact", 0.0)], none)
+	_check(hno.blast.made == 0, "none for a crater nobody caused (an entrance crater)")
+	var hgap: VfxHub = run.call(4.0, true, [crater.call(0.0, "impact", 0.0), crater.call(0.0, "impact", 1.0)], none)
+	_check(hgap.blast.made == 1 and hgap.blast.skipped == 1, "two craters in one tick make one amplification (the rate limit)")
+	var hred := VfxHub.new()
+	hred.force_reduced = true
+	hred.reduced_motion = true
+	hred.reset(S, 6)
+	f.tier = 4.0
+	_tick(S, hred, [crater.call(0.0, "impact", 0.0)])
+	_check(hred.blast.rings == 0 and hred.blast.made == 1, "reduced motion keeps the debris and drops the shock rings")
+	var saved: Dictionary = VfxBlast._data
+	VfxBlast._data = {}
+	var fallback: bool = VfxBlast.p("blast", "mult_t4") == 1.7
+	VfxBlast._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for k in VfxBlast.DEFAULTS["blast"].keys():
+		if not saved.has("blast") or not saved["blast"].has(k) or float(saved["blast"][k]) != float(VfxBlast.DEFAULTS["blast"][k]):
+			same = false
+			print("    differs: blast.%s" % k)
+	_check(same, "data/vfx/power.json (blast) and the built-in defaults agree")
+	SimCore.dispose(S)
+
+
+## Pressure rings (idea 4, `pressure_enabled`): a ring of shoved air at a dash, a hard stop or a hard turn, by tier.
+func _pressure() -> void:
+	print("pressure rings")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f = S.fighters[0]
+	var o = S.fighters[1]
+	o.x = SimWrap.wrap(plains + 9000.0)
+	o.y = WorldTerrain.groundY(S, o.x)
+	_check(VfxPressure.mult_for(1) == 0.0 and VfxPressure.mult_for(2) < VfxPressure.mult_for(3) and VfxPressure.mult_for(3) < VfxPressure.mult_for(4), "no ring at tier 1, bigger at each tier above")
+	_check(VfxLook.PRESSURE_DEFAULT, "on by default (a ring of air is not one of Legal's seven marks)")
+	# A scripted flight: at rest 40 ticks, a dash to the right at 14.4 fighter heights a second for 40 ticks, a hard reversal for 40, then at rest.
+	var fly := func(tier: float, quality: int, reduced: bool, setup: Callable, steps: Array) -> VfxHub:
+		var h := VfxHub.new()
+		h.quality = quality
+		h.reduced_motion = reduced
+		h.reset(S, 6)
+		f.x = plains
+		f.y = g + 300.0
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		f.rush = null
+		f.hidden = false
+		f.beamCharge = null
+		f.tier = tier
+		setup.call()
+		for st in steps:
+			for k in range(int(st[0])):
+				f.x = SimWrap.wrap(f.x + float(st[1]))
+				_tick(S, h, [])
+		return h
+	var none := func(): pass
+	var script: Array = [[40, 0.0], [40, 18.0], [40, -18.0], [40, 0.0]]
+	var h1: VfxHub = fly.call(1.0, VfxLook.Q_HIGH, false, none, script)
+	var h2: VfxHub = fly.call(2.0, VfxLook.Q_HIGH, false, none, script)
+	var h3: VfxHub = fly.call(3.0, VfxLook.Q_HIGH, false, none, script)
+	var h4: VfxHub = fly.call(4.0, VfxLook.Q_HIGH, false, none, script)
+	_check(h1.pressure.made == 0, "tier 1: none")
+	_check(h2.pressure.made_start == 1 and h2.pressure.made_turn == 1 and h2.pressure.made_stop == 1, "tier 2: a ring at the dash, the hard turn and the hard stop (%d, %d, %d)" % [h2.pressure.made_start, h2.pressure.made_turn, h2.pressure.made_stop])
+	_check(h4.pressure.ring_count == 6 and h3.pressure.ring_count == 3, "tier 4 adds a second ring to each (%d rings against %d at tier 3)" % [h4.pressure.ring_count, h3.pressure.ring_count])
+	# Size by tier: read the first ring at each tier.
+	var first := func(tier: float) -> VfxPressure.Ring:
+		var h := VfxHub.new()
+		h.reset(S, 6)
+		f.x = plains
+		f.y = g + 300.0
+		f.state = "free"
+		f.rush = null
+		f.hidden = false
+		f.tier = tier
+		for st in [[40, 0.0], [4, 18.0]]:
+			for k in range(int(st[0])):
+				f.x = SimWrap.wrap(f.x + float(st[1]))
+				_tick(S, h, [])
+		return h.pressure.rings[0] if not h.pressure.rings.is_empty() else null
+	var r2: VfxPressure.Ring = first.call(2.0)
+	var r3: VfxPressure.Ring = first.call(3.0)
+	var r4: VfxPressure.Ring = first.call(4.0)
+	_check(r2 != null and r3 != null and r4 != null and r2.r1 < r3.r1 and r3.r1 < r4.r1, "the ring grows with the tier, not the speed (%.0f, %.0f, %.0f units)" % [r2.r1 if r2 else 0.0, r3.r1 if r3 else 0.0, r4.r1 if r4 else 0.0])
+	_check(r4 != null and absf(r4.dx) > 0.99, "it lies across his line of travel (narrow axis along the dash)")
+	var hl: VfxHub = fly.call(4.0, VfxLook.Q_LOW, false, none, script)
+	_check(hl.pressure.ring_count == 3, "no second ring at quality low (%d)" % hl.pressure.ring_count)
+	var hr: VfxHub = fly.call(4.0, VfxLook.Q_HIGH, true, none, script)
+	_check(hr.pressure.ring_count == 3, "no second ring with reduced motion (%d)" % hr.pressure.ring_count)
+	var hq: VfxHub = fly.call(4.0, VfxLook.Q_HIGH, false, func(): f.state = "launched", script)
+	_check(hq.pressure.made == 0, "none for a launched fighter (a hit is not a dash)")
+	var hh: VfxHub = fly.call(4.0, VfxLook.Q_HIGH, false, func(): f.hidden = true, script)
+	_check(hh.pressure.made == 0, "none while hidden")
+	var slow: Array = [[40, 0.0], [80, 8.0], [40, 0.0]]       # 6.4 fighter heights a second: under the dash threshold
+	var hs: VfxHub = fly.call(4.0, VfxLook.Q_HIGH, false, none, slow)
+	_check(hs.pressure.made == 0, "none for ordinary movement under the dash speed")
+	var hbusy: VfxHub = fly.call(4.0, VfxLook.Q_HIGH, false, none, [[40, 0.0], [40, 18.0], [10, 0.0], [10, 18.0], [10, 0.0], [10, 18.0], [10, 0.0]])
+	_check(hbusy.pressure.made_start + hbusy.pressure.made_stop <= 3, "stutter-stepping is rationed by the cooldown (%d rings)" % hbusy.pressure.made)
+	var hoff := VfxHub.new()
+	hoff.pressure_enabled = false
+	hoff.reset(S, 6)
+	f.x = plains
+	f.tier = 4.0
+	for st in script:
+		for k in range(int(st[0])):
+			f.x = SimWrap.wrap(f.x + float(st[1]))
+			_tick(S, hoff, [])
+	_check(hoff.pressure.made == 0, "flag off: none")
+	var saved: Dictionary = VfxPressure._data
+	VfxPressure._data = {}
+	var fallback: bool = VfxPressure.p("pressure", "mult_t4") == 1.5
+	VfxPressure._data = saved
+	_check(fallback, "missing data falls back to the defaults")
+	var same: bool = true
+	for k in VfxPressure.DEFAULTS["pressure"].keys():
+		if not saved.has("pressure") or not saved["pressure"].has(k) or float(saved["pressure"][k]) != float(VfxPressure.DEFAULTS["pressure"][k]):
+			same = false
+			print("    differs: pressure.%s" % k)
+	_check(same, "data/vfx/power.json (pressure) and the built-in defaults agree")
 	SimCore.dispose(S)
 
 

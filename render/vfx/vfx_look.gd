@@ -67,7 +67,10 @@ const STANDING_AURA_DEFAULT: bool = true   # Orb: the aura shows while charging 
 const REACT_DEFAULT: bool = true         # the world reacts from tier 3 (rule of cool row 12)
 const FLICKER_DEFAULT: bool = true       # the aura flickers when worn (rule of cool row 1)
 const SPEEDLINES_DEFAULT: bool = true    # Orb picked impact treatment B: speed lines alone on every launch and landed heavy
-const ROCKS_DEFAULT: bool = false        # levitating rocks round a tier 3 or 4 fighter: a prototype (docs/vfx/power-language.md), off until Orb has seen it
+const ROCKS_DEFAULT: bool = true         # levitating rocks round a tier 3 or 4 fighter (docs/vfx/power-language.md); Legal cleared them under five conditions (RL-057)
+const BLAST_DEFAULT: bool = true         # a crater is bigger to look at by the causer's tier (docs/vfx/power-language.md idea 2)
+const BLAST_POWERUP_DEFAULT: bool = false   # ... and for ground-level power-up craters: off until Legal clears it (they come with the charge's crouch and scream)
+const PRESSURE_DEFAULT: bool = true      # rings of shoved air at a dash, a hard stop or a hard turn, by tier (idea 4)
 const EARTH_DEFAULT: bool = true         # tumbling material chunks, cel flames and the ground-contact effects
 ## Cracks are a pure function of the sim's records (S.craters, S.slides) plus the match seed (render/vfx/crack_gen.gd),
 ## so a seek, a snapshot or a late join draws the same ones. Lengths and widths are in crater radii r or trench half

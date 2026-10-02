@@ -2,7 +2,7 @@
 
 Owner: VFX Director. 2026-10-02. Brief from Orb via the EP: at maximum transformation the fighters feel almost a little too fast, so find other ways for the picture to say "stronger". Orb's own pointers: rocks levitating around a powered-up fighter, and the craters that transformations and beam explosions blow out, both of which "look really cool". Presentation only: everything here reads sim state and writes nothing, no `S.rng`, the gameplay hash is unchanged.
 
-Fifteen to twenty ideas, each with the tier it starts at, its cost on the Compatibility renderer (WebGL2 on the web build), and whether it fits Legal's stacking rule. **Top five are marked ★.** The levitating rocks (idea 1) are built, behind a flag, with pictures: see "The prototype" below.
+Fifteen to twenty ideas, each with the tier it starts at, its cost on the Compatibility renderer (WebGL2 on the web build), and whether it fits Legal's stacking rule. **Top five are marked ★.** Three are built: the levitating rocks (idea 1, cleared by Legal and on by default), blast amplification (idea 2, on by default) and pressure rings (idea 4, on by default; its drawing is pending, see its section). Pictures below.
 
 ## Legal's rule, as it bears on this list
 
@@ -52,7 +52,7 @@ Order I would build them in: 2, 4, 3, 5, then re-screen 1 with a picture.
 
 ## The prototype: levitating rocks (idea 1)
 
-**Flag.** `VfxHub.rocks_enabled`, default `false` (`VfxLook.ROCKS_DEFAULT`). Off, the effect does nothing and costs nothing. `hash_check.gd` turns it on to prove the gameplay hash is untouched.
+**Flag.** `VfxHub.rocks_enabled`, default `true` since Legal's clearance (RL-057, 2026-10-02; `VfxLook.ROCKS_DEFAULT`). Off, the effect does nothing and costs nothing.
 
 **Look.** A tier 3 fighter has 5 pieces, a tier 4 fighter has 10 and each piece is 25% bigger; quality low and medium thin them to 35% and 70%, and reduced motion halves the count and stops the bobbing. They are the same chunk shape and lit earth shading as the debris's rubble, in the dust colours of the biome under him. Each sits at its own distance (0.8 to 2.6 fighter heights), its own height (just under his feet to 1.9 fighter heights up), and drifts round him at 0.05 to 0.22 radians a second in its own direction, so the cloud is never an even ring and never turns as one. A slow bob (0.07 of a height at 0.35 Hz). They rise out of the ground one at a time over 0.8 s as he reaches the state and sink back in 0.5 s when he leaves.
 
@@ -75,8 +75,54 @@ Real sim fighters on the desert, staged on the exported web build and photograph
 
 What the pictures show, honestly: at tier 4 the cloud of chunks about each fighter is clearly readable and different from the rubble's brief scatter, because the pieces hang rather than fly. At tier 3 it reads as a few loose pieces. At this framing the fighters are small and the chunks (11 to 30 units) are small too; a close camera makes them read far better. Stills cannot show the slow drift. If Orb wants them more present, `size_max` and `count_t4` are the two numbers.
 
+### Legal's five conditions (RL-057), and how each is kept
+
+| Condition | Where it is kept and tested |
+| :--- | :--- |
+| Few, small, uneven, each drifting its own way, never a ring, never spiralling, never rising in a column | `effects_check.gd` `_rocks()`: at most 10 shown and 12 in the pool; no piece over 0.6 of a fighter's height (the largest is 37 units against the 45 allowed); the ten drift speeds all differ, both directions occur, all between 0.05 and 0.22 rad/s; the spacing is uneven (62%); every piece keeps its own distance over a minute of drift (`VfxRocks.at`, a pure function of the clock); each stays at its own height with a 0.07-height bob only |
+| Every stand-down kept | Charging, a beam charge, transformation, hidden, down, high above the ground, over water, moving fast: each has a check (as before) |
+| Rocks, cracks, dust and wind are one mark | With the rocks on, the world effects (rubble lifts, standing cracks, blast dust) are all mark 4 and they share the stand-down gate, so at most one more of the seven marks can be on screen with them: a charge's crouch or scream is excluded by the gate itself |
+| No sky change with them | Nothing here touches the sky |
+| A re-check in motion at a close camera before ship | Frame strip below (tier 4, both fighters close together, six frames about a quarter of a second apart, ticks 345 to 413): ![](img/rocks-drift-1.jpg) ![](img/rocks-drift-2.jpg) ![](img/rocks-drift-3.jpg) ![](img/rocks-drift-4.jpg) ![](img/rocks-drift-5.jpg) ![](img/rocks-drift-6.jpg) A real clip needs a Godot window (not allowed in this session); the frames come from the web build in the browser pane |
+
+Motes (idea 14) are cleared by Legal if scattered and sideways, never an upward column, never white, gold or red; not built yet. Desaturation (idea 18) stays unbuilt.
+
 ### Open points for the EP
 
-- **Legal re-screen.** The rocks are the idea closest to the wording of mark 4. They are uneven, few, slow, tied to the ground and never at a charge, so I believe they sit inside row 12, but that is Legal's call, and a picture is attached.
-- **Tools schema.** `data/vfx/power.json` is new and the validator warns "no schema".
-- **Flag.** Default off; turning it on is one constant, `VfxLook.ROCKS_DEFAULT`, once Legal and Orb have seen it.
+- **Tools schema.** `data/vfx/power.json` is new and the validator warns "no schema" (now holds `rocks`, `blast` and `pressure`).
+
+## Blast amplification (idea 2, built)
+
+`render/vfx/blast.gd` (`VfxBlast`, `hub.blast`), flag `VfxHub.blast_enabled` (default **on**), numbers in `data/vfx/power.json` `blast`. A crater (the sim's `crater` event) is bigger to look at the higher the tier of the fighter who caused it (`owner`). Tier 1 adds nothing; tier 2 a little (0.45 of the full effect); tier 3 the full effect (1.0); tier 4 1.7, with a second ring. It is scaled again by the bowl's own size (0.6 to 2.2 of a 160-unit bowl), and sits on top of earth.gd's ejecta, which was already scaled by energy.
+
+| Part | What it is |
+| :--- | :--- |
+| Shock ring | A flat ring on the ground from 0.75 of the bowl's radius out to about 2 radii (2.5 at tier 4) in half a second; tier 4 sends a second, smaller one 0.12 s later. Not with reduced motion |
+| Rim chunks | Up to 18 chunks of the ground's own earth thrown from the rim, bigger at higher tiers; 30% are lobbed so high that they come down about a second later |
+| Dust dome and skirt | Puffs: a third rise as a column off the bowl, the rest run along the ground |
+| The second fall | Half a second after the blast, small pebbles drop out of the air over the bowl |
+| Settling | Over the next 0.4 to 1.6 s, dust slides down the inner slopes toward the middle, one puff at a time |
+
+Everything is a spawn into the shared debris pool (no new draw call, no new random stream: it draws from `vfx.dust` and its jobs are timed on the effects clock). At most one amplification a fighter every 0.25 s.
+
+**Legal's stacking rule.** A crater from a blow or a beam is a one-off event of mark 4 (rubble, ground, wind), never a held state, and the fighter who caused it is not charging. **Ground-level power-up craters (cause `powerup`) are the at-risk case**: they come at the end of a charge, next to the crouch and the scream, so rubble and a ring there would be a third mark. They keep what they had; a separate flag, `blast_powerup_enabled`, default **off**, lets them through once Legal clears it. A fighter who is charging gets none, and a crater nobody caused (an entrance crater) gets none.
+
+Pictures: a crater dug between the fighters as a tier-N fighter's blow digs it (energy 8 scaled by 25% a tier), 20 ticks after the dig, on the desert; rocks off so the difference shows. Tier 1 is not pictured: it adds nothing (asserted by `effects_check.gd`), and looks like any "before".
+
+| Tier | Before (flag off) | After (on) |
+| :-- | :---: | :---: |
+| 2 | ![](img/blast-tier2-before.jpg) | ![](img/blast-tier2-after.jpg) |
+| 3 | ![](img/blast-tier3-before.jpg) | ![](img/blast-tier3-after.jpg) |
+| 4 | ![](img/blast-tier4-before.jpg) | ![](img/blast-tier4-after.jpg) |
+
+What the pictures show, honestly: tier 2 is a few more puffs and chunks; tier 3 adds a clear dome of dust over the bowl and thicker rim piles; tier 4 adds the biggest chunks and a fuller dome. Stills do not show the ring (half a second) or the pebble fall and the settling. The crater itself (the bowl, and its size from the tier's energy) is the sim's and Rendering's and is unchanged.
+
+Checks: `effects_check.gd` `_blast()` (tier ladder of extra bits, the ring counts, the jobs all run, the power-up and charging gates, no owner, the rate limit, reduced motion, the data fallback), `hash_check.gd` (72 craters amplified across its matches, hash unchanged).
+
+## Pressure rings (idea 4, logic built, drawing pending)
+
+`render/vfx/pressure.gd` (`VfxPressure`, `hub.pressure`), flag `VfxHub.pressure_enabled` (default **on**), numbers in `data/vfx/power.json` `pressure`. When a fighter breaks into a dash (9 fighter-heights a second from rest), stops hard (to under 3 after being fast) or turns hard (a reversal at speed), a ring of shoved air is made at the spot: narrow along his line of travel, a thin ellipse across it, in his lane colour, growing and fading over 12 to 14 ticks. Size by tier, not speed: tier 1 none, tier 2 radius 1.5 fighter heights, tier 3 1.8, tier 4 2.2, tier 4 with a second ring 4 ticks behind. None for a fighter who is launched, down, charging, in a rush, hidden or in his transformation; none at quality low's second ring or in reduced motion's. At most one ring event a fighter every half second, 8 alive.
+
+**Legal's stacking rule.** A ring of air is none of the seven marks (not wind streaming past, rubble or ground cracking), so it is on by default. It follows the aura rule: thin, lane colour (`VfxAura.lane_color`), no white, gold or red.
+
+**Not finished: the drawing.** The ring state is made and tested (`effects_check.gd` `_pressure()`: the three triggers, the tier ladder, the second ring, the gates, the cooldown, the data fallback; `hash_check.gd` counts 495 rings across its matches, about 27 a minute for both fighters together, second rings included) but the quads are not drawn yet: the edit to `transform_view.gd` and `vfx_layer.gd` that draws them was refused by the harness's permission check in this session, so I left it. The drawing is a short block in `VfxTransformView.update` (one SHAPE_RING quad per ring, an ellipse of `2 * squash * r` along his direction by `2 * r` across, in the shared draw call) and one condition in `VfxLayer._update` (`transform_view` visible and updated when `hub.pressure_enabled`). No pictures for it until it is drawn.

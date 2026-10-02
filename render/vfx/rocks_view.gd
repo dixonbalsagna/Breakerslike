@@ -66,10 +66,10 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, half_w: float) -
 			var act: float = smoothstep(lo, lo + 0.5, lvl)
 			if act < 0.01:
 				continue
-			var ang: float = pc.ang + pc.drift * t
-			var px: float = rel + cos(ang) * pc.r * bh * act
-			var py: float = pose.y + (pc.h * bh + sin(TAU * VfxRocks.p("rocks", "bob_hz") * t + pc.bob_ph) * bob_amp) * act
-			var pz: float = fz + sin(ang) * pc.r * bh * 0.35
+			var off: Vector3 = VfxRocks.at(pc, t, bh, bob_amp)
+			var px: float = rel + off.x * act
+			var py: float = pose.y + off.y * act
+			var pz: float = fz + off.z * act
 			var col: Color = tones[pc.tone]
 			col.a = VfxRocks.p("rocks", "alpha") * smoothstep(0.0, 0.5, act)
 			var sx: float = pc.size * size_k * (0.6 + 0.4 * act)

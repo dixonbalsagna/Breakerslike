@@ -8,5 +8,18 @@
     "drift_min": 0.05, "drift_max": 0.22, "bob_bh": 0.07, "bob_hz": 0.35,
     "size_min": 11, "size_max": 30, "t4_size": 1.25,
     "ease_in_s": 0.8, "ease_out_s": 0.5, "near_ground_bh": 6.0, "max_speed_bh": 40.0, "alpha": 1.0
+  },
+  "blast": {
+    "mult_t1": 0.0, "mult_t2": 0.45, "mult_t3": 1.0, "mult_t4": 1.7,
+    "r_ref": 160.0, "rs_min": 0.6, "rs_max": 2.2, "gap_s": 0.25,
+    "ring_life": 0.5, "ring_r0": 0.75, "ring_r1": 1.7, "ring_r1_t": 0.5, "ring2_delay": 0.12,
+    "chunks": 4.0, "lob": 0.3, "pebbles": 6.0, "pebble_delay": 0.5, "dome": 5.0, "settle": 4.0, "settle_from": 0.4, "settle_to": 1.6,
+    "chunk_min": 10.0, "chunk_max": 22.0
+  },
+  "pressure": {
+    "mult_t1": 0.0, "mult_t2": 0.6, "mult_t3": 1.0, "mult_t4": 1.5,
+    "fast_bh": 9.0, "rest_bh": 3.0, "start_window": 24, "stop_window": 18, "stop_hold": 4, "turn_dot": -0.3, "cooldown": 30,
+    "r0_bh": 0.5, "r1_bh": 1.1, "r1_t_bh": 0.7, "squash": 0.4, "life_start": 12, "life_stop": 14, "alpha": 0.55, "thick": 0.05,
+    "second_delay": 4, "second_scale": 0.8, "alive_max": 8
   }
 }

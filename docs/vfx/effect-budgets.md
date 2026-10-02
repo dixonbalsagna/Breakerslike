@@ -64,3 +64,7 @@ Chunks, flames, dust puffs and smoke all live in the debris pool (460), so no dr
 ## Levitating rocks prototype (2026-10-02, behind `rocks_enabled`, default off)
 
 One MultiMesh draw (shard shader), at most 12 quads a fighter (24 in all), no debris pool use. Headless CPU for the layer with 17 pieces on screen: 81 microseconds a frame. Counts scale with quality (0.7, 0.35) and halve in reduced motion, which also stops the bobbing. Degrade order: after the speed lines, before the rubble count. Not measured: the web build and an old laptop.
+
+## Blast amplification and pressure rings (2026-10-02)
+
+Blast: spawns into the debris pool only (no draw call), at most 18 chunks, 20 dust puffs, 20 pebbles, 12 settling puffs and 2 rings a crater, at most one a fighter every 0.25 s, so a busy crater is the pool's per-tick budget at worst; thinned with quality (0.7, 0.35, halved in reduced motion, which also drops the rings). Degrade order: pebbles and settling dust first, then the dome, then the chunks. Pressure rings: 8 alive at most, one SHAPE_RING quad each in the transformation's existing draw call once drawn (CAP 220), no pool. Hash check, 8 AI matches: 72 craters amplified, 495 rings (about 27 a minute for both fighters together). Cost not separately measured; not measured: the web build and an old laptop.

@@ -87,6 +87,14 @@ static func count_for(tier: int, q: float) -> int:
 	return clampi(int(round(n * q)), 1, MAX_PIECES)
 
 
+## Where a piece hangs at clock t (seconds), relative to the fighter's feet: x and z from the angle it has drifted to at its own fixed
+## distance (so it circles slowly and never spirals in or out), y a fixed height plus a small bob (so it never climbs). Legal's
+## conditions on the rocks (RL-057) are read off this function in effects_check.gd. bob_amp is in world units, bh one fighter height.
+static func at(pc: Piece, t: float, bh: float, bob_amp: float) -> Vector3:
+	var ang: float = pc.ang + pc.drift * t
+	return Vector3(cos(ang) * pc.r * bh, pc.h * bh + sin(TAU * p("rocks", "bob_hz") * t + pc.bob_ph) * bob_amp, sin(ang) * pc.r * bh * 0.35)
+
+
 ## Once per consume(), on unfrozen ticks. forms: the transformations in play; speed_bh: per slot, the fighter's speed in fighter
 ## heights a second (the trail's measure).
 func step(S: SimState, forms: Array, speed_bh: Array) -> void:
