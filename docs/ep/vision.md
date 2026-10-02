@@ -523,3 +523,7 @@ Orb asked for all directors to be briefed, iteration to start, and a questionnai
 4. **Beams:** no final calls yet. "I just didn't like the cooldown, I want the energy combat system to be implemented before I make any more decisions on energy beams, I want to personally experience how the expansion of ranged blasts change the gameplay". Build energy and ranged combat first; the signature limit stays provisional.
 5. **Escape control:** "I need to feel how this works in game... lets get something that works now and then work on it when we have more combat systems in place". Build a provisional version.
 6. **Top-tier speed:** no yes or no. Instead: "think of how many more ways there are to visually communicate more intense powers and higher strength levels. rocks levitating around a powered-up individual look cool".
+
+### Orb on the energy blasts, 2026-10-02 (after watching AI matches)
+
+"i like the new energy blasts". Wanted: blasts "erupt into flame and smoke, explosive particles"; "deflecting energy attacks shouldn't reflect back at the opponent but deflect them off in a random direction with a payoff of seeing it hit the ground elsewhere and explode." Orb asked for a mock-up animation before anything goes into the build; the EP showed one in chat. Not briefed for building until Orb confirms the mock-up.
