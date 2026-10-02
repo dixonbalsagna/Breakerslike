@@ -1,0 +1,298 @@
+--- a/sim/core/state.gd
++++ b/sim/core/state.gd
+@@ -22,6 +22,7 @@
+ var craters: Array = []               # Crater records, oldest first, capped at WorldCrater.LIST_MAX (fx-events.md)
+ var deformZ: Array = []               # T: the depth rows' deform (a PackedFloat32Array each; the plane row's slot is an empty placeholder: S.deform is the plane row), only when depthOn
+ var rubbleZ: Array = []               # T: the same for the rubble heaps
++var lanes := PackedFloat32Array()      # L1: the lane table (world/lanes.gd build), derived, not hashed: read by the ground shader and the props
+ var low := PackedFloat32Array()       # T: the lowest deform across the rows at each column (derived, not hashed): the ground water runs on when depthOn
+ var rubble := PackedFloat32Array()    # rubble heap height per terrain column (world/structures.gd): part of S.deform, kept apart for cover, tint and digging
+ var bIdx: Array = []                  # spatial index of the buildings: PackedInt32Array per x bucket (world/structures.gd), never changes in a match
+@@ -205,6 +206,9 @@
+ 
+ 
+ class Building:
++	var district: int = 0      # D1: the district it stands in (index over all settlements), set at generation
++	var shape: String = ""      # D1: the render shape (settlements.json shapes)
++	var landmark: int = 0      # D1: 1-based landmark index (0 none)
+ 	var floors: int = 1        # floor count (world/brunt.gd floorCount), set at generation
+ 	var fmask: int = 1        # one bit per standing floor, bit 0 the ground floor
+ 	var fdmg := PackedFloat32Array()   # damage per floor, allocated on the first local hit (empty before)
+@@ -317,6 +321,7 @@
+ 	var mode: String = ""        # building_fall: "implode" or "burst"
+ 	var delay: float = 0.0       # building_fall: the ripple delay in seconds (cosmetic)
+ 	var rubble: float = 0.0      # building_fall: the heap height left
++	var landmark: float = 0.0    # building_fall: the landmark index of the fallen building (0 none)
+ 	var room: float = 0.0        # collateral_state
+ 	var budget: float = 0.0
+ 	var left: float = 0.0
+--- a/sim/core/hash.gd
++++ b/sim/core/hash.gd
+@@ -9,7 +9,7 @@
+ 	"canHide", "lockBackT", "exT"]
+ ## Intent v2 (I1): the v2 fields in the record's order, then today's dash, charge and stance until I3.
+ const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance"]
+-const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled", "floors", "fmask"]
++const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled", "floors", "fmask", "district", "shape", "landmark"]
+ const TREE: Array = ["x", "h", "alive", "burn"]
+ const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck", "sf", "cap", "levelled", "oz", "zs"]
+ const SLIDE: Array = ["x0", "x1", "hw", "depth", "energy", "t", "owner", "surface", "pop", "z0", "z1"]
+@@ -276,7 +276,7 @@
+ 	"dust": ["x", "y", "n", "col", "z"], "splash": ["x", "y", "n", "z"], "fire": ["x", "y", "n", "z"], "after": ["x", "y", "life", "col", "face", "z"],
+ 	"charge": ["x", "y", "col", "ground", "z"], "beamSplash": ["x", "z"], "damage": ["x", "y", "amount", "col", "attacker", "victim", "region", "kind", "number", "z"], "banner": ["text", "col", "dur"],
+ 	"crater": ["x", "y", "r", "depth", "energy", "cause", "rim", "skid", "owner", "special"], "scorch": ["x", "y", "w", "power", "variant", "owner", "z"],
+-	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner", "pop", "z", "z1"], "slide_dust": ["x", "y", "spd", "w", "variant", "n", "z"], "skim": ["x", "y", "spd", "n", "z"], "evacuate": ["b", "x", "n", "cx", "reason", "owner", "dest", "floor"], "launch_depth": ["x", "y", "x1", "y1", "z", "b", "dur", "n", "owner", "victim"], "chain_link": ["from", "to", "x", "y", "z", "x1", "y1", "z1", "dur", "link", "owner", "victim"], "floor_hit": ["b", "floor", "n", "outcome", "ratio", "x", "y", "z", "ux", "uy", "kind", "owner", "victim"], "floors_fall": ["b", "from", "to", "n", "x", "z", "w"], "building_fall": ["b", "x", "y", "w", "depth", "mode", "delay", "cx", "rubble", "n"], "collateral_state": ["room", "budget", "left", "over"],
++	"slide": ["x", "x1", "w", "depth", "energy", "variant", "owner", "pop", "z", "z1"], "slide_dust": ["x", "y", "spd", "w", "variant", "n", "z"], "skim": ["x", "y", "spd", "n", "z"], "evacuate": ["b", "x", "n", "cx", "reason", "owner", "dest", "floor"], "launch_depth": ["x", "y", "x1", "y1", "z", "b", "dur", "n", "owner", "victim"], "chain_link": ["from", "to", "x", "y", "z", "x1", "y1", "z1", "dur", "link", "owner", "victim"], "floor_hit": ["b", "floor", "n", "outcome", "ratio", "x", "y", "z", "ux", "uy", "kind", "owner", "victim"], "floors_fall": ["b", "from", "to", "n", "x", "z", "w"], "building_fall": ["b", "x", "y", "w", "depth", "mode", "delay", "cx", "rubble", "n", "landmark"], "collateral_state": ["room", "budget", "left", "over"],
+ 	"shake": ["k", "x", "z"], "tick": ["dt", "frozen"],
+ 	"region_stage": ["actor", "region", "stage"], "rally": ["actor", "region", "kind"], "limb_break": ["actor", "victim", "region"], "region_broken": ["actor", "region"], "brink_enter": ["actor"], "brink_exit": ["actor"], "brink_open": ["actor", "target", "kind", "text"], "brink_close": ["actor", "kind"],
+ 	"mood_band": ["kind", "amount", "n"], "act_change": ["n", "kind"], "style_label": ["actor", "kind", "text"], "crowd_state": ["kind"], "building_hit": ["actor", "x", "n", "b", "y", "z", "amount", "ratio", "outcome", "link", "spd", "keep", "ux", "uy", "kind", "w", "h", "owner", "victim"],
+--- a/sim/core/fx.gd
++++ b/sim/core/fx.gd
+@@ -499,9 +499,9 @@
+ 
+ ## A building fell (any source). mode "implode" is area damage (straight down into its footprint, staggered by delay),
+ ## "burst" a launch through it; rubble is the heap left; n folds in further implodes of the same blast past the event cap.
+-static func buildingFall(S: SimState, b: int, x: float, z: float, w: float, h: float, mode: String, delay: float, cx: float, rubble: float, n: float) -> void:
++static func buildingFall(S: SimState, b: int, x: float, z: float, w: float, h: float, mode: String, delay: float, cx: float, rubble: float, n: float, landmark: float = 0.0) -> void:
+ 	var e := _ev(S, "building_fall")
+-	e.b = float(b); e.x = x; e.y = z; e.w = w; e.depth = h; e.mode = mode; e.delay = delay; e.cx = cx; e.rubble = rubble; e.n = n
++	e.b = float(b); e.x = x; e.y = z; e.w = w; e.depth = h; e.mode = mode; e.delay = delay; e.cx = cx; e.rubble = rubble; e.n = n; e.landmark = landmark
+ 
+ 
+ ## The collateral window once a second: the room left, the budget, the ceiling left, and whether the window is over.
+--- a/sim/core/replay.gd
++++ b/sim/core/replay.gd
+@@ -122,4 +122,5 @@
+ 	h.text(SimPause.dataHash())   # Q10: data/fight/pause.json
+ 	h.text(SimIntro.dataHash())   # the intro phase: data/fight/intro.json
+ 	h.text(WorldContact.dataHash())   # World's ground contact: data/biomes/contact.json
++	h.text(WorldSettle.dataHash())    # World's settlements and lanes: data/biomes/settlements.json, lanes.json
+ 	return h.hex()
+--- a/sim/world/terrain.gd
++++ b/sim/world/terrain.gd
+@@ -84,12 +84,37 @@
+ 	var spans: Array = _platforms(S)
+ 	# Front streets first (the original layout, draw for draw), then the extra rows of each settlement.
+ 	var totals: Array = []
+-	for st in SETTLEMENTS:
+-		totals.append(_row(S, r, spans[totals.size()][0], spans[totals.size()][1], st.kind, 1, 1.0, 1.0, 0.0))
+-	for k in range(SETTLEMENTS.size()):
+-		var st = SETTLEMENTS[k]
+-		for rw in st.rows:
+-			_row(S, r, spans[k][0], spans[k][1], rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
++	var newPop: float = -1.0
++	if bool(WorldSettle.data().get("enabled", false)):
++		newPop = 0.0
++		var dOff: int = 0
++		var si: int = -1
++		var dlist: Array = []
++		for sd in WorldSettle.data().settlements:
++			si += 1
++			var g: Dictionary = WorldSettle.generate(S, sd)
++			for dd in g.districts:
++				dd["settlement"] = si
++				dlist.append(dd)
++			for e in g.buildings:
++				var nb := SimState.Building.new()
++				nb.x = e.x; nb.w = e.w; nb.d = e.d; nb.h = e.h; nb.kind = e.kind; nb.row = float(e.row); nb.z = e.z; nb.seed = e.seed
++				nb.district = dOff + int(e.district); nb.shape = String(e.shape); nb.landmark = int(e.landmark)
++				nb.floors = e.floors
++				nb.fmask = (1 << nb.floors) - 1
++				nb.maxhp = e.maxhp; nb.hp = e.maxhp; nb.alive = true
++				nb.pop = float(e.pop); nb.popAlive = nb.pop
++				newPop += nb.pop
++				S.buildings.append(nb)
++			dOff += g.districts.size()
++		S.lanes = WorldLanes.build(S, dlist)
++	else:
++		for st in SETTLEMENTS:
++			totals.append(_row(S, r, spans[totals.size()][0], spans[totals.size()][1], st.kind, 1, 1.0, 1.0, 0.0))
++		for k in range(SETTLEMENTS.size()):
++			var st = SETTLEMENTS[k]
++			for rw in st.rows:
++				_row(S, r, spans[k][0], spans[k][1], rw[1], rw[0], rw[2], rw[3], rw[4] * WS)
+ 	# Conserve each settlement's population: rescale all its rows to the front street's total.
+ 	var pop: float = 0.0
+ 	var byS: Array = []
+@@ -100,6 +125,8 @@
+ 		var k: int = _settlementOf(b.x)
+ 		byS[k].append(b)
+ 	for k in range(SETTLEMENTS.size()):
++		if newPop >= 0.0:
++			break
+ 		var raw: float = 0.0
+ 		for b in byS[k]:
+ 			raw += b.pop
+@@ -108,6 +135,8 @@
+ 			b.pop = SimMathx.jmax(1.0, SimMathx.jround(b.pop * scale))
+ 			b.popAlive = b.pop
+ 			pop += b.pop
++	if newPop >= 0.0:
++		pop = newPop
+ 	var x2: float = 4530.0 * PS
+ 	while x2 < 5470.0 * PS:
+ 		var tr := SimState.TreeState.new()
+--- a/sim/world/settlements.gd
++++ b/sim/world/settlements.gd
+@@ -15,6 +15,22 @@
+ const PLACES: Array = ["centre", "start", "end"]
+ const SHARE_EPS: float = 0.001
+ 
++const LANES_PATH: String = "res://data/biomes/lanes.json"
++static var _lanes: Array = []
++static var _dmin: float = 1.5
++
++## The lane (top, bottom in bh, kind) that holds building row `row`.
++static func laneOfRow(row: int) -> Dictionary:
++	if _lanes.is_empty():
++		var f := FileAccess.open(LANES_PATH, FileAccess.READ)
++		var j = JSON.parse_string(f.get_as_text())
++		_lanes = j.lanes
++		_dmin = float(j.d_min_bh)
++	for l in _lanes:
++		if int(l.row) == row:
++			return l
++	return {}
++
+ static var _data: Dictionary = {}
+ static var _errors: Array = []
+ static var _loaded: bool = false
+@@ -27,6 +43,20 @@
+ 	return _data
+ 
+ 
++static func enabled() -> bool:
++	return bool(data().get("enabled", false))
++
++
++## A hash of the parsed settlement and lane data (the "_" notes left out), for the replay header's data hash.
++static func dataHash() -> String:
++	var h := SimHash.Hasher.new()
++	h.text("biomes.settlements")
++	FighterData._canon(h, data())
++	h.text("biomes.lanes")
++	FighterData._canon(h, WorldLanes.data())
++	return h.hex()
++
++
+ static func errors() -> Array:
+ 	if not _loaded:
+ 		_load()
+@@ -154,7 +184,7 @@
+ 				_err(dn + "/kinds: weights sum to zero")
+ 			_hdist(dd.get("height_bh", null), dn + "/height_bh")
+ 			_range2(dd.get("width_bh", null), dn + "/width_bh", 0.5, 40.0)
+-			_range2(dd.get("depth_aspect", null), dn + "/depth_aspect", 0.2, 3.0)
++			_range2(dd.get("depth_fill", null), dn + "/depth_fill", 0.1, 1.0)
+ 			_range2(dd.get("gap_bh", null), dn + "/gap_bh", 0.0, 40.0)
+ 			_range2(dd.get("block_bh", null), dn + "/block_bh", 4.0, 200.0)
+ 			_range2(dd.get("avenue_bh", null), dn + "/avenue_bh", 1.0, 40.0)
+@@ -239,7 +269,7 @@
+ 			var aw: float = ra.range_(dd.avenue_bh[0], dd.avenue_bh[1]) * BH
+ 			avenues.append([ax, ax + aw])
+ 			ax += aw
+-		dinfo.append({"name": dd.name, "look": dd.look, "a": da, "b": db, "avenues": avenues})
++		dinfo.append({"name": dd.name, "look": dd.look, "a": da, "b": db, "avenues": avenues, "rows": dd.rows, "traffic": float(dd.get("traffic", 0.0))})
+ 		var first: int = out.size()
+ 		for row in dd.rows:
+ 			var r := SimRng.new(SimRng.deriveSeed(LAYOUT_SEED, "settle:%s:%s:row%d" % [s.id, dd.name, int(row)]))
+@@ -256,7 +286,7 @@
+ 				var wr: Array = kd.width_bh if kd.has("width_bh") else dd.width_bh
+ 				var hd: Dictionary = kd.height_bh if kd.has("height_bh") else dd.height_bh
+ 				var w: float = (wr[0] + uw * (wr[1] - wr[0])) * BH
+-				var aspect: float = dd.depth_aspect[0] + ua * (dd.depth_aspect[1] - dd.depth_aspect[0])
++				var fillf: float = dd.depth_fill[0] + ua * (dd.depth_fill[1] - dd.depth_fill[0])
+ 				var gap: float = (dd.gap_bh[0] + ug * (dd.gap_bh[1] - dd.gap_bh[0])) * BH
+ 				var blocked: bool = false
+ 				for av in avenues:
+@@ -280,8 +310,13 @@
+ 					rejected += 1
+ 					continue
+ 				var h: float = h_bh * BH
+-				out.append({"x": cx, "w": w, "d": w * aspect, "h": h, "kind": kd.kind, "shape": kd.shape, "row": int(row),
+-					"z": WorldTerrain.ROW_Z_BH[int(row)] * BH + ((seed_ - 0.5) * 2.0 * WorldTerrain.ROW_JITTER_BH * BH if int(row) > 0 else 0.0),
++				# L1: the footprint lies inside its lane; the blocks are flush to their street, the scenery rows centred
++				var ln: Dictionary = laneOfRow(int(row))
++				var lw: float = float(ln.top) - float(ln.bottom)
++				var dd_bh: float = clampf(lw * fillf, _dmin, lw)
++				var zc: float = (float(ln.top) - dd_bh * 0.5) if ln.kind == "block" else 0.5 * (float(ln.top) + float(ln.bottom))
++				out.append({"x": cx, "w": w, "d": dd_bh * BH, "h": h, "kind": kd.kind, "shape": kd.shape, "row": int(row),
++					"z": zc * BH,
+ 					"district": di, "landmark": 0, "seed": seed_, "hp_mult": 1.0, "pop_mult": 1.0, "dens": float(dd.pop_density)})
+ 		# landmarks: by rule, not by draw
+ 		for lmr in dd.landmarks:
+@@ -296,6 +331,13 @@
+ 					if b.landmark != 0 or b.row != int(lmr.row):
+ 						continue
+ 					var dist: float = absf(b.x - target)
++					var lw2: float = float(lm.width_bh) * BH * 0.5
++					var crosses: bool = false
++					for av in avenues:
++						if b.x - lw2 < av[1] and b.x + lw2 > av[0]:
++							crosses = true
++					if crosses:
++						continue
+ 					if dist < bestd:
+ 						bestd = dist
+ 						best = i
+@@ -306,10 +348,19 @@
+ 				b2.shape = lm.shape
+ 				b2.h = float(lm.height_bh) * BH
+ 				b2.w = float(lm.width_bh) * BH
+-				b2.d = b2.w * 0.9
++				var lnl: Dictionary = laneOfRow(int(b2.row))
++				b2.d = minf(b2.w * 0.9, (float(lnl.top) - float(lnl.bottom)) * BH)
++				if lnl.kind == "block":
++					b2.z = (float(lnl.top) * BH) - b2.d * 0.5
+ 				b2.kind = "tower" if lm.height_bh >= 12.0 else "house"
+ 				b2.hp_mult = float(lm.hp_mult)
+ 				b2.pop_mult = float(lm.pop_mult)
++				# the landmark's footprint takes the room it needs: the neighbours it overlaps in its row go
++				for i in range(out.size() - 1, first - 1, -1):
++					if i != best and out[i].row == b2.row and absf(out[i].x - b2.x) < (out[i].w + b2.w) * 0.5:
++						out.remove_at(i)
++						if i < best:
++							best -= 1
+ 				# a plaza: the foreground row is cleared in front of it
+ 				for i in range(out.size() - 1, first - 1, -1):
+ 					var f: Dictionary = out[i]
+--- a/sim/world/structures.gd
++++ b/sim/world/structures.gd
+@@ -172,7 +172,7 @@
+ 				S.world.fallFold = 0.0
+ 		if mode != "implode" or S.world.fallN < float(IMPLODE_EVENT_CAP):
+ 			S.world.fallN += 1.0
+-			SimFx.buildingFall(S, b.idx, b.x, b.z, b.w, b.h, mode, delay, cx, heap, 1.0)
++			SimFx.buildingFall(S, b.idx, b.x, b.z, b.w, b.h, mode, delay, cx, heap, 1.0, float(b.landmark))
+ 		else:
+ 			S.world.fallFold += 1.0
+ 	else:
+--- a/sim/world/brunt.gd
++++ b/sim/world/brunt.gd
+@@ -278,8 +278,8 @@
+ 	var sides: Array = [[], []]
+ 	for bi in WorldStructures.near(S, D.x, BR_MAX):
+ 		var b = S.buildings[bi]
+-		if not b.alive:
+-			continue
++		if not b.alive or (WorldSettle.enabled() and b.row != 1.0 and b.row != 2.0):
++			continue   # D1: the scenery rows (0 and 3) are not brunt targets
+ 		var dx: float = SimWrap.sdx(D.x, b.x)
+ 		var d: float = absf(dx) - b.w * 0.5
+ 		if d < BR_MIN or d > BR_MAX:
+--- a/sim/world/tools/probe.gd
++++ b/sim/world/tools/probe.gd
+@@ -837,7 +837,12 @@
+ 	for k in range(-80, 80):
+ 		var i2: int = cf_t + k
+ 		heap_max = maxf(heap_max, Sr_t.deform[i2] - d1_t[i2])
+-		heap_step = maxf(heap_step, absf((Sr_t.base[i2 + 1] + Sr_t.deform[i2 + 1]) - (Sr_t.base[i2] + Sr_t.deform[i2])))
++		var at_wall: bool = false
++		for b2 in Sr_t.buildings:
++			if b2.alive and b2 != f1_t and absf(float(i2) * SimConst.COL - b2.x) < b2.w * 0.5 + 2.0 * SimConst.COL:
++				at_wall = true
++		if not at_wall:
++			heap_step = maxf(heap_step, absf((Sr_t.deform[i2 + 1] - d1_t[i2 + 1]) - (Sr_t.deform[i2] - d1_t[i2])))   # the heap's own step: the terrain's relief is not the heap's
+ 	for b in Sr_t.buildings:
+ 		if b.alive and b != f1_t:
+ 			var c0f: int = int(floor((b.x - b.w * 0.5) / SimConst.COL)) - 1

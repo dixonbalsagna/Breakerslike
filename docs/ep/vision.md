@@ -470,3 +470,9 @@ Orb's picks.
 - **Voice:** "get the voice line packet ready for me to edit so we can start working on the tone and style standards for our characters going forward."
 - Orb asked for an ETA on the depth axis (fight lanes) work.
 - The EP is to keep working through the absence with the permissions it has.
+
+## Orb's direction on return, 2026-10-01 (evening)
+
+- **Art direction.** "the mask aesthetic, broken masks should be part of an upcoming character, not the game's overall art style." The masks are parked as a seed for a future fighter. Orb likes the fighters' faces, and the silhouettes "kind of grew on me"; both are to be refined. The Cyborg is "the least compelling of the launch fighters", so the refinement starts with him. Orb wants to dig into this on return.
+- **Animation and rigging.** "in many of the stills and gifs of the fighters, I see lots of limbs bent unnaturally, knees bending the wrong way during kicks, elbows turning inward." If it would carry over to the launch fighters "it needs to be quashed immediately". Animation's brief: joint limits enforced at the root, a lint over every pose and live matches, and a rule for new rigs (docs/animation/joint-limits.md).
+- **Pause.** Orb is reviewing the backlog; work is brought to a resting place. The list of everything waiting for Orb is docs/ep/orb-review-list.md. Orb wants to revisit the sound profiles.

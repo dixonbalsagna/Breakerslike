@@ -1,0 +1,811 @@
+{
+  "schema": "biomes.settlements/1",
+  "_about": "Settlements, districts and landmarks (docs/world/districts-plan.md). Lengths in fighter heights (bh = 75 units); spans in the original planet's coordinates (9,600 around). Districts are listed west to east and take their share of the settlement's trimmed span in order. Read by sim/world/settlements.gd; not yet used by the generator (D1 window).",
+  "enabled": true,
+  "pop0": 1800,
+  "pop_height_exp": 0.3,
+  "shapes": [
+    "shaft",
+    "stepped",
+    "spire",
+    "slab",
+    "block",
+    "warehouse",
+    "chimney",
+    "house",
+    "shop",
+    "hall",
+    "shed",
+    "crane",
+    "lighthouse",
+    "chapel",
+    "crown",
+    "terrace",
+    "sawtooth",
+    "thatch",
+    "quay",
+    "mast"
+  ],
+  "landmarks": [
+    {
+      "key": "bell_tower",
+      "width_bh": 5,
+      "shape": "spire",
+      "height_bh": 150,
+      "hp_mult": 1.8,
+      "pop_mult": 1.5
+    },
+    {
+      "key": "chimney_stack",
+      "width_bh": 3,
+      "shape": "chimney",
+      "height_bh": 45,
+      "hp_mult": 1.5,
+      "pop_mult": 0.5
+    },
+    {
+      "key": "lighthouse",
+      "width_bh": 4,
+      "shape": "lighthouse",
+      "height_bh": 40,
+      "hp_mult": 1.5,
+      "pop_mult": 0.5
+    },
+    {
+      "key": "village_hall",
+      "width_bh": 8,
+      "shape": "hall",
+      "height_bh": 9,
+      "hp_mult": 1.6,
+      "pop_mult": 2.0
+    },
+    {
+      "key": "hill_chapel",
+      "width_bh": 5,
+      "shape": "chapel",
+      "height_bh": 14,
+      "hp_mult": 1.5,
+      "pop_mult": 1.5
+    }
+  ],
+  "settlements": [
+    {
+      "id": "netmend",
+      "archetype": "harbour_village",
+      "span": [
+        1260,
+        1760
+      ],
+      "pop_share": 0.1,
+      "districts": [
+        {
+          "name": "harbour",
+          "look": "harbour",
+          "share": 0.5,
+          "rows": [
+            0,
+            1
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "shed",
+              "weight": 0.6
+            },
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 0.3
+            },
+            {
+              "kind": "tower",
+              "shape": "crane",
+              "weight": 0.1,
+              "height_bh": {
+                "median": 18,
+                "spread": 0.2,
+                "min": 12,
+                "max": 25
+              },
+              "width_bh": [
+                1.5,
+                2.5
+              ]
+            }
+          ],
+          "height_bh": {
+            "median": 5,
+            "spread": 0.35,
+            "min": 2,
+            "max": 10,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            4,
+            8
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            1.5,
+            5
+          ],
+          "block_bh": [
+            18,
+            30
+          ],
+          "avenue_bh": [
+            5,
+            7
+          ],
+          "row_h": [
+            0.6,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.4,
+          "landmarks": [
+            {
+              "key": "lighthouse",
+              "count": 1,
+              "place": "start",
+              "row": 1
+            }
+          ]
+        },
+        {
+          "name": "village_core",
+          "look": "village_harbour",
+          "share": 0.5,
+          "rows": [
+            0,
+            1,
+            2
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 0.85
+            },
+            {
+              "kind": "house",
+              "shape": "shop",
+              "weight": 0.15
+            }
+          ],
+          "height_bh": {
+            "median": 4.5,
+            "spread": 0.2,
+            "min": 3,
+            "max": 7,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            3,
+            5
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            2,
+            6
+          ],
+          "block_bh": [
+            16,
+            26
+          ],
+          "avenue_bh": [
+            5,
+            7
+          ],
+          "row_h": [
+            0.6,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.6,
+          "landmarks": []
+        }
+      ]
+    },
+    {
+      "id": "bellgate",
+      "archetype": "city",
+      "span": [
+        2370,
+        3830
+      ],
+      "pop_share": 0.7,
+      "districts": [
+        {
+          "name": "suburb_west",
+          "look": "suburb",
+          "share": 0.1,
+          "rows": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 0.85
+            },
+            {
+              "kind": "house",
+              "shape": "shop",
+              "weight": 0.15
+            }
+          ],
+          "height_bh": {
+            "median": 4.5,
+            "spread": 0.2,
+            "min": 3,
+            "max": 6,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            2.5,
+            4
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            1.5,
+            4
+          ],
+          "block_bh": [
+            20,
+            30
+          ],
+          "avenue_bh": [
+            6,
+            8
+          ],
+          "row_h": [
+            0.6,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.5,
+          "landmarks": []
+        },
+        {
+          "name": "industrial",
+          "look": "industrial",
+          "share": 0.12,
+          "rows": [
+            1,
+            2
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "warehouse",
+              "weight": 0.85
+            },
+            {
+              "kind": "tower",
+              "shape": "chimney",
+              "weight": 0.15,
+              "height_bh": {
+                "median": 18,
+                "spread": 0.2,
+                "min": 12,
+                "max": 25
+              },
+              "width_bh": [
+                1.5,
+                2.5
+              ]
+            }
+          ],
+          "height_bh": {
+            "median": 6,
+            "spread": 0.3,
+            "min": 3,
+            "max": 10,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            6,
+            14
+          ],
+          "depth_fill": [
+            0.8,
+            1.0
+          ],
+          "gap_bh": [
+            2,
+            5
+          ],
+          "block_bh": [
+            30,
+            50
+          ],
+          "avenue_bh": [
+            6,
+            8
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.1,
+          "landmarks": [
+            {
+              "key": "chimney_stack",
+              "count": 1,
+              "place": "end",
+              "row": 1
+            }
+          ]
+        },
+        {
+          "name": "mid_rise_west",
+          "look": "mid_rise",
+          "share": 0.14,
+          "rows": [
+            1,
+            2,
+            3
+          ],
+          "kinds": [
+            {
+              "kind": "tower",
+              "shape": "slab",
+              "weight": 0.7
+            },
+            {
+              "kind": "tower",
+              "shape": "block",
+              "weight": 0.3
+            }
+          ],
+          "height_bh": {
+            "median": 25,
+            "spread": 0.35,
+            "min": 12,
+            "max": 45,
+            "centre_bump": 0.2
+          },
+          "width_bh": [
+            4,
+            8
+          ],
+          "depth_fill": [
+            0.7,
+            1.0
+          ],
+          "gap_bh": [
+            0.8,
+            2
+          ],
+          "block_bh": [
+            26,
+            40
+          ],
+          "avenue_bh": [
+            8,
+            10
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.15,
+            1.3
+          ],
+          "pop_density": 0.7,
+          "landmarks": []
+        },
+        {
+          "name": "downtown",
+          "look": "downtown",
+          "share": 0.32,
+          "rows": [
+            1,
+            2,
+            3
+          ],
+          "kinds": [
+            {
+              "kind": "tower",
+              "shape": "shaft",
+              "weight": 0.45
+            },
+            {
+              "kind": "tower",
+              "shape": "stepped",
+              "weight": 0.4
+            },
+            {
+              "kind": "tower",
+              "shape": "spire",
+              "weight": 0.15
+            }
+          ],
+          "height_bh": {
+            "median": 62,
+            "spread": 0.4,
+            "min": 35,
+            "max": 260,
+            "centre_bump": 0.7
+          },
+          "width_bh": [
+            2,
+            5
+          ],
+          "depth_fill": [
+            0.7,
+            1.0
+          ],
+          "gap_bh": [
+            0.2,
+            0.9
+          ],
+          "block_bh": [
+            30,
+            48
+          ],
+          "avenue_bh": [
+            10,
+            14
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.1,
+            1.2
+          ],
+          "pop_density": 1.0,
+          "landmarks": [
+            {
+              "key": "bell_tower",
+              "count": 1,
+              "place": "centre",
+              "row": 1
+            }
+          ]
+        },
+        {
+          "name": "mid_rise_east",
+          "look": "mid_rise",
+          "share": 0.14,
+          "rows": [
+            1,
+            2,
+            3
+          ],
+          "kinds": [
+            {
+              "kind": "tower",
+              "shape": "slab",
+              "weight": 0.7
+            },
+            {
+              "kind": "tower",
+              "shape": "block",
+              "weight": 0.3
+            }
+          ],
+          "height_bh": {
+            "median": 25,
+            "spread": 0.35,
+            "min": 12,
+            "max": 45,
+            "centre_bump": 0.2
+          },
+          "width_bh": [
+            4,
+            8
+          ],
+          "depth_fill": [
+            0.7,
+            1.0
+          ],
+          "gap_bh": [
+            0.8,
+            2
+          ],
+          "block_bh": [
+            26,
+            40
+          ],
+          "avenue_bh": [
+            8,
+            10
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.15,
+            1.3
+          ],
+          "pop_density": 0.7,
+          "landmarks": []
+        },
+        {
+          "name": "suburb_east",
+          "look": "suburb",
+          "share": 0.18,
+          "rows": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 0.85
+            },
+            {
+              "kind": "house",
+              "shape": "shop",
+              "weight": 0.15
+            }
+          ],
+          "height_bh": {
+            "median": 4.5,
+            "spread": 0.2,
+            "min": 3,
+            "max": 6,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            2.5,
+            4
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            1.5,
+            4
+          ],
+          "block_bh": [
+            20,
+            30
+          ],
+          "avenue_bh": [
+            6,
+            8
+          ],
+          "row_h": [
+            0.6,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.5,
+          "landmarks": []
+        }
+      ]
+    },
+    {
+      "id": "outskirts",
+      "archetype": "village",
+      "span": [
+        3880,
+        4480
+      ],
+      "pop_share": 0.12,
+      "districts": [
+        {
+          "name": "village_core",
+          "look": "village_workshop",
+          "share": 0.6,
+          "rows": [
+            1,
+            2
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 0.85
+            },
+            {
+              "kind": "house",
+              "shape": "shop",
+              "weight": 0.15
+            }
+          ],
+          "height_bh": {
+            "median": 4.5,
+            "spread": 0.2,
+            "min": 3,
+            "max": 7,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            3,
+            5
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            2,
+            6
+          ],
+          "block_bh": [
+            16,
+            26
+          ],
+          "avenue_bh": [
+            5,
+            7
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.6,
+          "landmarks": [
+            {
+              "key": "village_hall",
+              "count": 1,
+              "place": "centre",
+              "row": 1
+            }
+          ]
+        },
+        {
+          "name": "suburb",
+          "look": "suburb",
+          "share": 0.4,
+          "rows": [
+            1,
+            2
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 1.0
+            }
+          ],
+          "height_bh": {
+            "median": 4.5,
+            "spread": 0.2,
+            "min": 3,
+            "max": 6,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            3,
+            5
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            3,
+            7
+          ],
+          "block_bh": [
+            18,
+            28
+          ],
+          "avenue_bh": [
+            5,
+            7
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.5,
+          "landmarks": []
+        }
+      ]
+    },
+    {
+      "id": "far_village",
+      "archetype": "village",
+      "span": [
+        7640,
+        7960
+      ],
+      "pop_share": 0.08,
+      "districts": [
+        {
+          "name": "village_core",
+          "look": "village_hill",
+          "share": 1.0,
+          "rows": [
+            1,
+            2
+          ],
+          "kinds": [
+            {
+              "kind": "house",
+              "shape": "house",
+              "weight": 0.9
+            },
+            {
+              "kind": "house",
+              "shape": "shop",
+              "weight": 0.1
+            }
+          ],
+          "height_bh": {
+            "median": 4.5,
+            "spread": 0.2,
+            "min": 3,
+            "max": 7,
+            "centre_bump": 0.0
+          },
+          "width_bh": [
+            3,
+            5
+          ],
+          "depth_fill": [
+            0.5,
+            0.8
+          ],
+          "gap_bh": [
+            2,
+            6
+          ],
+          "block_bh": [
+            16,
+            26
+          ],
+          "avenue_bh": [
+            5,
+            7
+          ],
+          "row_h": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "pop_density": 0.6,
+          "landmarks": [
+            {
+              "key": "hill_chapel",
+              "count": 1,
+              "place": "start",
+              "row": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "looks": [
+    "harbour",
+    "village_harbour",
+    "suburb",
+    "industrial",
+    "mid_rise",
+    "downtown",
+    "village_workshop",
+    "village_hill"
+  ]
+}
