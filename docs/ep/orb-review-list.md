@@ -56,3 +56,8 @@ Written by the EP on 2026-10-01. Paths are from the project folder. The fuller s
 ## Housekeeping
 
 - Delete the empty folder C:\AppData (made by mistake by a director session).
+
+## Added 2026-10-02
+
+- The sky reaction at tiers 3 and 4 (the "strange aura" Orb saw): fixed to a gap in the clouds with a lit edge. It is now subtle, and shows nothing under clear sky. Before and after: docs/rendering/img/sky-gb002-high-before.png and sky-gb002-high-after.png. Decide whether it is now too faint (a stronger lit edge, or clouds gathering round the fighter).
+- Cyborg directions and the refine sheets: art/concepts/refine/README.md.
