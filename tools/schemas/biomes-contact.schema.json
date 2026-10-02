@@ -16,6 +16,7 @@
     "area",
     "spin",
     "slope",
+    "furrow",
     "surfaces",
     "water",
     "biomeSurface",
@@ -597,6 +598,55 @@
           "type": "number",
           "minimum": 0,
           "description": "The most a tumble down a slope may speed up, as a multiple of its first-contact speed."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "furrow": {
+      "type": "object",
+      "description": "The furrow a skid or tumble carves (docs/world/ground-contact.md): a trench along its path with a berm at its end.",
+      "required": [
+        "depthMul",
+        "tumble",
+        "dMaxMul",
+        "tierMul",
+        "bermMul",
+        "pathMul"
+      ],
+      "properties": {
+        "depthMul": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A multiplier on the furrow's depth by speed."
+        },
+        "tumble": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of a skid's furrow a tumble carves."
+        },
+        "dMaxMul": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "A multiplier on the deepest a furrow may be dug."
+        },
+        "tierMul": {
+          "type": "number",
+          "minimum": 0,
+          "description": "How much deeper per tier step."
+        },
+        "bermMul": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A multiplier on the berm raised at the end of the furrow."
+        },
+        "pathMul": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A multiplier on the length of the furrow's path."
         }
       },
       "additionalProperties": false,

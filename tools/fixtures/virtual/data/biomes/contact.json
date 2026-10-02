@@ -65,6 +65,14 @@
   "slope": {
     "speedCap": 1.25
   },
+  "furrow": {
+    "depthMul": 1.5,
+    "tumble": 0.5,
+    "dMaxMul": 1,
+    "tierMul": 0.15,
+    "bermMul": 2,
+    "pathMul": 1
+  },
   "surfaces": {
     "paving": {
       "brake": 0.8,

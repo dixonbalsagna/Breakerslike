@@ -30914,6 +30914,321 @@
         "rule": "minimum",
         "pointer": "/knockBack/slideTicks"
       }
+    },
+    {
+      "id": "biomes-contact-furrow-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-valid",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow": {
+              "depthMul": 1.5,
+              "tumble": 0.5,
+              "dMaxMul": 1,
+              "tierMul": 0.15,
+              "bermMul": 2,
+              "pathMul": 1
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-furrow-note-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-furrow-unknown-key",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/width": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/furrow/width"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-depth-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow/depthMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/furrow"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-tumble-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow/tumble"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/furrow"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-d-max-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow/dMaxMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/furrow"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-tier-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow/tierMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/furrow"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-berm-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow/bermMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/furrow"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-path-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/furrow/pathMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/furrow"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-depth-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/depthMul": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/furrow/depthMul"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-depth-zero-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/depthMul": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-furrow-tumble-range",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/tumble": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/furrow/tumble"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-tumble-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/tumble": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/furrow/tumble"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-tumble-edges-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/tumble": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-furrow-d-max-positive",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/dMaxMul": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/furrow/dMaxMul"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-tier-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/tierMul": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/furrow/tierMul"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-berm-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/bermMul": -2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/furrow/bermMul"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-path-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/pathMul": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/furrow/pathMul"
+      }
+    },
+    {
+      "id": "biomes-contact-furrow-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/furrow/pathMul": "long"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/furrow/pathMul"
+      }
     }
   ],
   "text": [
