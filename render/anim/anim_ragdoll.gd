@@ -287,12 +287,12 @@ func hit(dx: float, dy: float, force: float, region: int, u: float, u2: float) -
 		om[i] += f * (hit_k[i] if i < hit_k.size() else 1.0) * (hit_kx[k] * dx * (1.0 + hit_vx[i] * vv) + hit_ky[k] * dy + hit_kc[k] * cv)
 
 
-## Adds the motion to the solved pose, shown at weight w.
-func apply(q: Array[Quaternion], w: float) -> void:
+## Adds the motion to the solved pose, shown at weight w; `scale` (one factor a degree of freedom, optional) lets a limb move less (a broken arm hangs heavy).
+func apply(q: Array[Quaternion], w: float, scale: PackedFloat32Array = PackedFloat32Array()) -> void:
 	if w <= 0.001:
 		return
 	for i in range(N):
-		var t: float = th[i] * w
+		var t: float = th[i] * w * (scale[i] if scale.size() == N else 1.0)
 		if absf(t) < 0.0005:
 			continue
 		var axis: Vector3 = Vector3(1, 0, 0) if is_x[i] == 1 else Vector3(0, 0, 1)

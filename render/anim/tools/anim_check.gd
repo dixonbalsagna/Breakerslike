@@ -177,7 +177,10 @@ func _test_wounds() -> void:
 	var hi_w := -9.0
 	var sag0: AnimPose = AnimData.pose("wound.sag")
 	var d_worn_best := 99.0   # the stance of b nearest the sagging pose over the frames he stands in it (a launch or a rise has other targets)
-	for i in range(600):
+	var frames := 0
+	# at least 600 frames, and on until 40 calm ones were seen (a match that keeps the broken fighter busy has few; a cap of 4000 ends a stuck one)
+	while frames < 600 or (calm < 40 and frames < 4000):
+		frames += 1
 		main.frame(DT)
 		if b.state == "free" and afb._part == "" and afb._rise_t0 < 0.0 and afb.version > 0:
 			var dw := 0.0
@@ -185,7 +188,8 @@ func _test_wounds() -> void:
 				var i0: int = AnimRig.index[nm0]
 				dw += afb._tq[i0].angle_to(sag0.q[i0])
 			d_worn_best = minf(d_worn_best, dw)
-		if afa._part == "" and a.state == "free" and afa.version > 0:
+		# a calm frame: nothing thrown, no pose sequence and the ragdoll at rest (a fighter still rolling out of a tumble is not standing calm)
+		if afa._part == "" and a.state == "free" and afa.version > 0 and afa._seq.is_empty() and afa._rd.out_w < 0.5:
 			calm += 1
 			if afa.q[fo].angle_to(limp.q[fo]) < 0.3:
 				hanging += 1
@@ -223,6 +227,24 @@ func _test_wounds() -> void:
 	_expect(float(ranges[0]) > float(ranges[1]) * 1.2, "wound test: the worn fighter's chest moves %.3f, the fresh one's %.3f" % [ranges[0], ranges[1]])
 	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f (controlled)" % [hanging, calm, afa.debug["wound_bad"], ranges[0], ranges[1]])
 	RenderAnim.wave1_live = live_was
+
+
+## A broken arm hangs heavy while the body is thrown about: with the same kicks, a broken arm swings a third as far as the good one beside it.
+func _test_heavy_arm() -> void:
+	var swing: Array = []
+	for broken in [false, true]:
+		var af := AnimFighter.new(0)
+		af._arm_broken = broken
+		af._hang_right = true
+		af._rd.reset()
+		for i in range(AnimRagdoll.N):
+			af._rd.th[i] = 0.5
+		var q1: Array[Quaternion] = AnimPose.identity_q()
+		af._rd.apply(q1, 1.0, af._rd_scale())
+		var ix: Dictionary = AnimRig.index
+		swing.append([q1[ix["upper_arm_r"]].angle_to(Quaternion.IDENTITY), q1[ix["upper_arm_l"]].angle_to(Quaternion.IDENTITY)])
+	_expect(float(swing[1][0]) < float(swing[0][0]) * 0.5 and absf(float(swing[1][1]) - float(swing[0][1])) < 0.001, "heavy arm test: the broken arm swings %.2f against %.2f (the good arm %.2f and %.2f)" % [swing[1][0], swing[0][0], swing[1][1], swing[0][1]])
+	print("heavy arm test: a broken arm swings %.2f rad where the same arm unbroken swings %.2f; the good arm is untouched" % [swing[1][0], swing[0][0]])
 
 
 ## The active ragdoll (overhaul unit A): the same match at one tick a frame and at two ticks a frame ends with the same ragdoll state
@@ -981,6 +1003,7 @@ func _run() -> void:
 			print("seed %d %s: %d ticks, %d part frames, %d contact frames, worst contact error %.5f rad, solve %.1f us each (%d solves), hash %s" % [seed, mode, main.host.ticks, parts, frames, cerr, float(RenderAnim.solve_usec) / maxf(1.0, RenderAnim.solve_count), RenderAnim.solve_count, hashes[mode]])
 		_expect(hashes["off"] == hashes["snappy"] and hashes["off"] == hashes["fluid"] and hashes["off"] == hashes["mix"], "seed %d: the gameplay hash differs with the mannequin (off %s, mix %s, snappy %s, fluid %s)" % [seed, hashes["off"], hashes["mix"], hashes["snappy"], hashes["fluid"]])
 	await _test_wounds()
+	_test_heavy_arm()
 	await _test_ragdoll()
 	_test_slope()
 	_test_hits()

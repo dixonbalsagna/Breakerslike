@@ -701,7 +701,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		_contact_ik(S, f)
 	# 5c. the active ragdoll: the body's own motion on top of the pose (the pose is in charge while a blow is thrown)
 	if _rd.out_w > 0.001:
-		_rd.apply(q, _rd.out_w * (0.3 if (_part != "" or _ci_w > 0.001) else 1.0))
+		_rd.apply(q, _rd.out_w * (0.3 if (_part != "" or _ci_w > 0.001) else 1.0), _rd_scale())
 	# 5d00. flight overhaul (unit G): the burst and the brake poses, the bank, the shudder of a nearby impact
 	if RenderAnim.layer("flight"):
 		_flight_layers(T, f)
@@ -1568,6 +1568,21 @@ func _rd_amp() -> float:
 ## One sim tick of the ragdoll, from the fighter's own state (never random, never written back). Velocity and acceleration are
 ## taken in the body frame: the body is rotated by the sim's rot, mirrored by the visual facing. A launch, a slam, a skid, a
 ## brace before the ground and a tuck in a spin are all this one controller.
+## How much each ragdoll degree of freedom may move: a broken arm hangs heavy, so its three (upper arm, its sideways swing and forearm) move at a third
+## while the body tumbles or settles (a limp arm does not whip like a good one); every other one is free.
+func _rd_scale() -> PackedFloat32Array:
+	if not _arm_broken:
+		return PackedFloat32Array()
+	var sc := PackedFloat32Array()
+	sc.resize(AnimRagdoll.N)
+	for i in range(AnimRagdoll.N):
+		sc[i] = 1.0
+	var base: int = 5 if _hang_right else 2
+	for j in range(3):
+		sc[base + j] = 0.33
+	return sc
+
+
 func _rd_tick(S: SimState, f, dt: float) -> void:
 	if f.state == "intro" and RenderAnim.intro_poses:
 		return   # the fall is scripted: nothing in the ragdoll should answer its speed

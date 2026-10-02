@@ -3,9 +3,9 @@ extends SceneTree
 ## the sim's rot and mirrored by the visual facing, with a ground line and a velocity tick), so a launch, a tumble, a skid or
 ## a slam can be judged at full size whatever the match camera does. Raw RGB frames for tools/gif.mjs. Needs a window.
 ##   godot --path . --script res://render/anim/tools/ragdoll_lab.gd -- --out=a.rgb [--seed=4] [--fighter=1] [--from=205]
-##       [--count=140] [--step=1] [--size=220] [--ko=LOSER] [--noragdoll] [--reduced] [--slope [--noground]]
+##       [--count=140] [--step=1] [--size=220] [--ko=LOSER] [--noragdoll] [--reduced] [--broken] [--slope [--noground]]
 ## --slope instead stands a stub fighter at a series of places across a crater wall on the real terrain (the ground is drawn), with --noground for the feet left as posed.
-## --noragdoll draws the same ticks with the overhaul layers off (the before of a before and after); --reduced turns reduced motion on.
+## --broken breaks the fighter's arm from the first frame drawn (a look test of the heavy arm). --noragdoll draws the same ticks with the overhaul layers off (the before of a before and after); --reduced turns reduced motion on.
 
 const DT := 1.0 / 60.0
 
@@ -19,6 +19,7 @@ var size: int = 220
 var ko_loser: int = -1
 var slope: bool = false
 var noground: bool = false
+var broken: bool = false
 var main: Node
 
 
@@ -42,6 +43,8 @@ func _initialize() -> void:
 			ko_loser = int(a.substr(5))
 		elif a == "--slope":
 			slope = true
+		elif a == "--broken":
+			broken = true
 		elif a == "--noground":
 			noground = true
 		elif a == "--noragdoll":
@@ -111,6 +114,10 @@ func _run() -> void:
 		S.fighters[ko_loser].stateT = 0.0
 		S.fighters[ko_loser].vx = 0.0
 		S.fighters[ko_loser].vy = 0.0
+	if broken:
+		var at: int = int(S.fighters[who].wd.stageAt[2])
+		S.fighters[who].wear = [0, 0, at, 0]
+		S.fighters[who].stage = [0, 0, 3, 0]
 	var fa := FileAccess.open(out, FileAccess.WRITE)
 	fa.store_32(size)
 	fa.store_32(size)
