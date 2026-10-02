@@ -69,7 +69,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 	var rec := {"seed": seed, "arm": arm, "names": [fs[0].name, fs[1].name], "attacks": {"light": 0, "heavy": 0, "sig": 0}, "ambush": 0,
 		"launches": {}, "melee": {}, "beams": [], "parries": [0, 0], "chains": [], "hides": [0, 0], "found": 0, "seam": 0, "maxMove": 0.0,
 		"bad": "", "koAt": -1.0, "winner": -1, "maxTier": [1, 1], "lowSec": 0.0, "lowCas": 0.0, "casByTier": [0.0, 0.0, 0.0, 0.0, 0.0],
-		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "firstContact": {}, "liftsSeen": {}, "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
+		"fightSec": {}, "dmgVictim": [0.0, 0.0], "batteredIn": 0.0, "breathWear": 0.0, "casTimeline": [], "slides": [], "landings": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "landingsAll": {"brunt": 0, "water": 0, "slide": 0, "slam": 0, "bounce": 0, "stop": 0, "wall": 0, "caught": 0, "other": 0}, "cues": {}, "firstContact": {}, "liftsSeen": {}, "reachFlat": [], "reach": {"n": 0, "far": 0, "maxD": 0.0, "tall": 0, "tallFlat": 0, "maxDy": 0.0}, "heavyLanded": [0, 0], "heavyClashWins": [0, 0], "slideShort": 0, "slideShortPl": 0, "lips": 0, "journeys": {"durSeen": false, "halted": 0, "tumbleSeen": 0, "jn": 0, "tumbledEnd": 0, "jbounced": 0, "jbounces": 0, "n": 0, "capped": 0, "long": 0, "anyBounce": 0, "bounced": 0, "bounces": 0, "tumbled": 0, "lips": 0}, "impactCraters": 0, "skims": 0, "longHaul": 1500.0 * SimConst.TRAV_LAUNCH, "dmgByRegion": {}, "underSec": 0.0, "tierT": [0.0, -1.0, -1.0, -1.0, -1.0], "flights": [], "hiddenSec": [0.0, 0.0], "exLens": [], "exGaps": [], "fxCounts": {}, "events": [], "fronts": 0}
 	var prev_x: Array = [fs[0].x, fs[1].x]
 	var was_launched: Array = [false, false]
 	var ended: Array = [false, false]   # a flight ended this tick: its open launch takes the class of the contact if no event named one
@@ -176,7 +176,7 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				for fl in open_fl:
 					if fl.v == v0 and fl.cls == "":
 						fl.cls = "other"   # launched again before any contact
-				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": "", "endk": "", "n": (int(e.n) if e.get("n") != null else -1), "je": null, "x0": 0.0, "hx0": false}
+				var nf := {"v": v0, "cls": "", "pl": false, "bn": 0, "lip": 0, "tum": false, "kc": "", "endk": "", "tumSeen": false, "n": (int(e.n) if e.get("n") != null else -1), "je": null, "x0": 0.0, "hx0": false}
 				open_fl.append(nf)
 				last_fl[v0] = nf
 				new_fl.append(nf)
@@ -217,6 +217,11 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 			elif e.type == "tumble_end":
 				if str(e.get("how")) != "air" and last_fl[int(e.actor)] != null:
 					last_fl[int(e.actor)].tum = true   # the journey ended from a tumble (it stopped or he recovered early)
+				# balance-targets 23: a tumble is seen when the roll lasts 18 ticks or more (tumble_end.dur, from World's next window); without the field the row stays pending
+				if e.get("dur") != null:
+					rec.journeys.durSeen = true
+					if float(e.get("dur")) >= 18.0 and last_fl[int(e.actor)] != null:
+						last_fl[int(e.actor)].tumSeen = true
 			elif e.type == "beam_outcome":   # step 2b (ADR 0008): the signature's outcome, decided at its fire beat; the oldest unresolved beam of this actor takes it
 				for bm in rec.beams:
 					if bm.out == "" and (bm.who == int(e.actor) or bm.who < 0):
@@ -259,6 +264,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 					var slope: float = absf(WorldTerrain.groundY(S, gx + 40.0) - WorldTerrain.groundY(S, gx - 40.0)) / 80.0
 					if slope <= 0.15:
 						rec.reach.tallFlat += 1
+						# for World and Encounter: the tick, the heights of both fighters and of the ground under each, and both states
+						rec.reachFlat.append({"tick": S.tick, "t": snappedf(S.T, 0.01), "dy": snappedf(rdy, 0.1), "dx": snappedf(rdx, 0.1), "attY": snappedf(fa.y, 0.1), "vicY": snappedf(fv.y, 0.1), "attGround": snappedf(WorldTerrain.groundY(S, fa.x), 0.1), "vicGround": snappedf(WorldTerrain.groundY(S, fv.x), 0.1), "attState": str(fa.state), "vicState": str(fv.state), "kind": str(e.get("kind")), "exTag": str(rex.tag), "slope": snappedf(slope, 0.001)})
 			# Game Design's pitch measures: heavies that landed (a heavy blow dealing damage; a guarded one is kind guard and does not count) and heavy clashes won (a decisive exchange of kind clash), by the fighter who dealt or won it
 			if e.type == "damage" and str(e.get("kind")) == "heavy" and e.number and e.amount > 0.0 and int(e.attacker) >= 0 and int(e.attacker) < 2:
 				rec.heavyLanded[int(e.attacker)] += 1
@@ -353,6 +360,10 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 					rec.journeys.long += 1
 				if jc == "tumble":
 					rec.journeys.tumbledEnd += 1
+				if jc == "stop" or jc == "tumble" or jc == "recover" or jc == "capped":
+					rec.journeys.halted += 1   # the journeys the seen-tumble share is taken over
+					if fl.tumSeen:
+						rec.journeys.tumbleSeen += 1
 				if int(fl.je.bounces) > 0:
 					rec.journeys.jbounced += 1
 					rec.journeys.jbounces += int(fl.je.bounces)

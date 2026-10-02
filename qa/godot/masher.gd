@@ -38,6 +38,10 @@ func _init() -> void:
 	var losses: int = 0
 	var timeouts: int = 0
 	var lens: Array = []
+	var by_masher: int = 0      # launches the masher caused (the AI was the victim)
+	var on_masher: int = 0      # launches the AI caused (the masher was the victim)
+	var caught_ai: int = 0      # the AI was launched and the follow-up reached it before it landed (an air catch)
+	var caught_masher: int = 0
 	for i in range(n):
 		var seed: int = base + i
 		var slot: int = fixed_slot if fixed_slot >= 0 else (0 if seed % 2 == 1 else 1)
@@ -55,7 +59,25 @@ func _init() -> void:
 			var ins: Array = [null, null]
 			ins[slot] = it
 			# step() returns false in hit-stop or a pause: the press was not consumed, so it is held for the next call (a real player keeps the button down)
-			if SimCore.step(S, ins):
+			var prev0: String = S.fighters[0].state
+			var prev1: String = S.fighters[1].state
+			var stepped: bool = SimCore.step(S, ins)
+			for ev in S.out.fx:
+				if ev.type == "launch":
+					if int(ev.actor) == slot:
+						on_masher += 1
+					else:
+						by_masher += 1
+			S.out.fx.clear()
+			S.out.feed.clear()
+			for fi in range(2):
+				var pv: String = prev0 if fi == 0 else prev1
+				if pv == "launched" and S.fighters[fi].state == "locked":
+					if fi == slot:
+						caught_masher += 1
+					else:
+						caught_ai += 1
+			if stepped:
 				live += 1
 				if pending:
 					pending = false
@@ -70,5 +92,5 @@ func _init() -> void:
 			wins += 1
 		SimCore.dispose(S)
 	lens.sort()
-	print(JSON.stringify({"masher": true, "level": level if level != "" else "data", "gap": gap, "forms": forms, "n": n, "wins": wins, "losses": losses, "timeouts": timeouts, "medianSec": snappedf(lens[lens.size() >> 1], 0.1)}))
+	print(JSON.stringify({"masher": true, "level": level if level != "" else "data", "gap": gap, "forms": forms, "n": n, "wins": wins, "losses": losses, "timeouts": timeouts, "medianSec": snappedf(lens[lens.size() >> 1], 0.1), "launchesByMasher": snappedf(float(by_masher) / n, 0.01), "launchesOnMasher": snappedf(float(on_masher) / n, 0.01), "airCatchesOfAI": snappedf(float(caught_ai) / n, 0.01), "airCatchesOfMasher": snappedf(float(caught_masher) / n, 0.01)}))
 	quit(0)

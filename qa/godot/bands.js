@@ -220,7 +220,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
         mixOf('slam: the journey ends in a crater (8 to 18%)', slamC, 0.08, 0.18, L);
         mixOf('caught in the air (the follow-up before the journey ends; 10 to 25%)', r => r.landings.caught, 0.10, 0.25, L);
         }
-        { const c = S.clusterShare(D, r => r.journeys.anyBounce || 0, L); R.rate('5c.bounced', '§5c', 'Launches with at least one bounce (15 to 30%; the boundary is 40 degrees)', { v: c.p, ci: c.ci, lo: 0.15, hi: 0.30 }); }
+        { const c = S.clusterShare(D, r => r.journeys.anyBounce || 0, L); R.rate('5c.bounced', '§5c', 'Launches with at least one bounce (20 to 40%, balance-targets 23; the boundary is 40 degrees)', { v: c.p, ci: c.ci, lo: 0.20, hi: 0.40 }); }
         { const fc = k => sum(D.map(r => (r.firstContact || {})[k] || 0)); R.add({ id: '5c.firstContacts', ref: '§5c', what: 'First contacts: skids at least as common as bounces', status: fc('slide') >= fc('bounce') ? 'PASS' : 'FAIL', value: `skid or tumble ${fc('slide')}, bounce ${fc('bounce')}, slam ${fc('slam')}, stop ${fc('stop')}`, band: 'skids at least bounces', note: '' }); }
       }
       mixOf('water (skim or splash first; 2 to 10%, re-based at §21)', r => r.landings.water, 0.02, 0.10, L);
@@ -243,7 +243,11 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
       if (g6 && J('jbounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced journey, mean (1.2 to 2.0)', { v: J('jbounces') / J('jbounced'), lo: 1.2, hi: 2.0, unit: 'num' });
       else if (hasEvent(A, 'bounce') && J('bounced') > 0) R.point('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', { v: J('bounces') / J('bounced'), lo: 1.3, hi: 2.2, unit: 'num' });
       else R.pending('5c.bounces', '§5c', 'Bounces per bounced launch, mean (1.3 to 2.2)', 'switches on with World G5 (a `bounce` event per bounce)');
-      if (g6 && J('jn') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (journey_end end tumble; 30 to 60%)', { v: J('tumbledEnd') / J('jn'), ci: wl(J('tumbledEnd'), J('jn')), lo: 0.30, hi: 0.60 });
+      if (g6) {
+        // balance-targets 23: journeys with a tumble that is seen (tumble_end.dur of 18 ticks or more) as a share of journeys ending stop, tumble, recover or capped; pending until World adds the field
+        if (D.some(r => r.journeys.durSeen) && J('halted') > 0) R.rate('5c.tumble', '§5c', 'Halted journeys with a tumble that is seen (tumble_end of 18 ticks or more; 30 to 60%)', { v: J('tumbleSeen') / J('halted'), ci: wl(J('tumbleSeen'), J('halted')), lo: 0.30, hi: 0.60 });
+        else R.pending('5c.tumble', '§5c', 'Halted journeys with a tumble that is seen (tumble_end of 18 ticks or more; 30 to 60%)', 'switches on when World adds tumble_end.dur (a roll of 18 ticks or more is seen)');
+      }
       else if (hasEvent(A, 'tumble_end') && J('n') > 0) R.rate('5c.tumble', '§5c', 'Journeys that end in a tumble (a tumble_end that stops him or he recovers from; 30 to 60%)', { v: J('tumbled') / J('n'), ci: wl(J('tumbled'), J('n')), lo: 0.30, hi: 0.60 });
       else R.pending('5c.tumble', '§5c', 'Journeys that end in a tumble (30 to 60%)', 'switches on with World G5 (a `tumble_end` event with how stop, recover or air)');
       if (hasEvent(A, 'tech_offer') && hasEvent(A, 'tech')) { const o = sum(D.map(r => r.fxCounts.tech_offer || 0)), k = sum(D.map(r => r.fxCounts.tech || 0)); R.rate('5c.tech', '§5c', 'Early recoveries as a share of the chances, medium AI (20 to 40%)', { v: k / o, ci: wl(k, o), lo: 0.20, hi: 0.40 }); }
@@ -270,7 +274,7 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     if (all.length) {
       const n = sum(all.map(r => r.reach.n)), far = sum(all.map(r => r.reach.far)), tall = sum(all.map(r => r.reach.tall)), flat = sum(all.map(r => r.reach.tallFlat)), maxD = Math.max(...all.map(r => r.reach.maxD)), maxDy = Math.max(...all.map(r => r.reach.maxDy));
       R.add({ id: '10.reach', ref: '§10', what: 'Damaging melee strikes within 68 units of horizontal reach (hard test, 100%)', status: far === 0 ? 'PASS' : 'FAIL', value: `${far} of ${n} strikes beyond 68 units; longest ${maxD.toFixed(1)}`, band: '100% within 68', note: 'lights, heavies and guarded hits, at the damage event, every arm' });
-      R.add({ id: '10.reach.height', ref: '§10', what: 'A height difference beyond 68 units only on sloped ground (hard test)', status: flat === 0 ? 'PASS' : 'FAIL', value: `${tall} strikes with more than 68 units of height difference, ${flat} of them on flat ground; largest ${maxDy.toFixed(1)}`, band: 'none on flat ground (slope at most 0.15)', note: 'the slope is read over 80 units at the victim' });
+      R.add({ id: '10.reach.height', ref: '§10', what: 'A height difference beyond 68 units only on sloped ground (hard test)', status: flat === 0 ? 'PASS' : 'FAIL', value: `${tall} strikes with more than 68 units of height difference, ${flat} of them on flat ground; largest ${maxDy.toFixed(1)}`, band: 'none on flat ground (slope at most 0.15)', note: 'the slope is read over 80 units at the victim' + (flat ? '; cases (arm:seed, tick): ' + arms.flatMap(a2 => A[a2].filter(r => (r.reachFlat || []).length).map(r => a2 + ':' + r.seed + ' tick ' + r.reachFlat[0].tick + ' attacker ' + r.reachFlat[0].attState + ' at ' + r.reachFlat[0].attY + ' over ground ' + r.reachFlat[0].attGround + ', victim ' + r.reachFlat[0].vicState + ' at ' + r.reachFlat[0].vicY + ' over ground ' + r.reachFlat[0].vicGround)).slice(0, 6).join('; ') : '') });
     } else R.pending('10.reach', '§10', 'Damaging melee strikes within 68 units of reach', 'records without the reach tally');
   }
 
