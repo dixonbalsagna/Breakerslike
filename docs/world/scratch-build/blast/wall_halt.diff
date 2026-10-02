@@ -1,0 +1,28 @@
+--- a/sim/world/contact.gd
++++ b/sim/world/contact.gd
+@@ -61,6 +61,7 @@
+ static var K_AIRDRAG: float = 0.55      # the horizontal drag base per second after a journey's first contact (0.55 is the launch's own flight)
+ static var K_GAINCAP: float = 0.0        # a journey never goes faster than this times its first-contact speed, on the ground or after a contact (0 off)
+ static var K_FUR: Array = [1.0, 0.0, 1.0, 0.0, 1.0, 1.0]
++static var K_WALLHALT: float = 0.0       # a skid that meets a wall under this speed halts: no stop-impact (counted as halted)
+ static var K_GMUL: float = 1.0           # gravity after a journey's first contact, times 1000
+ static var K_RUBBLE_MIN: float = 8.0
+ static var K_PAVE_DUG: float = -3.0
+@@ -186,6 +187,7 @@
+ 	K_AREA_SLAM = float(D.get("area", {}).get("slam", 1.0))
+ 	K_AREA_TOUCH = float(D.get("area", {}).get("touch", 0.5))
+ 	K_GMUL = float(D.bounce.get("gravityMul", 1.0))
++	K_WALLHALT = float(D.leave.get("wallHaltBelow", 0.0))
+ 	var fu: Dictionary = D.get("furrow", {})
+ 	K_FUR = [float(fu.get("depthMul", 1.0)), float(fu.get("tumble", 0.0)), float(fu.get("dMaxMul", 1.0)), float(fu.get("tierMul", 0.0)), float(fu.get("bermMul", 1.0)), float(fu.get("pathMul", 1.0))]
+ 	K_GAINCAP = float(D.get("slope", {}).get("speedCap", 0.0))
+@@ -449,6 +451,9 @@
+ 	# ground that rises like a wall stops him with a stop-impact
+ 	if rise > K_WALL and vN2 > K_STOP:
+ 		b.done = true
++		if vN2 < K_WALLHALT:
++			b.end = "stop"   # a slow skid against a wall just halts: no stop-impact
++			return
+ 		b.end = "wall"
+ 		ev.append({"k": "wall", "x": b.x, "y": b.y, "speed": vN2})
+ 		return

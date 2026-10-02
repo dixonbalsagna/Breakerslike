@@ -1,0 +1,3 @@
+# Shots' ground blast (hitWorld) and the wall levers (docs/world/ground-contact.md section 23)
+
+`blast.gd` (to `sim/world/blast.gd`) + `blast.json` (to `data/biomes/blast.json`, schema `biomes.blast/1`, Tools') + `blastcheck.gd` (the checks, run from a copy of the tree). To wire: in `sim/core/shots.gd` the body of `hitWorld(S, sh, cause)` becomes `WorldBlast.shotHit(S, sh.owner, sh.kind, sh.x, sh.y, sh.z, sh.vx, sh.vy, cause)` (Simulation's file: a grant) and `replay.gd`'s `dataHash()` gets `h.text(WorldBlast.dataHash())`. `wall_halt.diff`: the `leave.wallHaltBelow` lever in `stepContact` (data: `leave.wallHaltBelow` 600 and `leave.wall` 1.0 in contact.json).
