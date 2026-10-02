@@ -39723,6 +39723,464 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-flight-live-valid",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/schema": "anim.flight/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-flight-key-required",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "del": [
+            "/pivot_y"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-flight-schema-version",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/schema": "anim.flight/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-flight-unknown-key",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-flight-underscore-key-ok",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-flight-speed-length",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/speed": [
+              300
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/speed"
+      }
+    },
+    {
+      "id": "anim-flight-speed-too-long",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/speed": [
+              300,
+              700,
+              900
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/speed"
+      }
+    },
+    {
+      "id": "anim-flight-speed-negative",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/speed": [
+              -1,
+              700
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/speed/0"
+      }
+    },
+    {
+      "id": "anim-flight-speed-type",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/speed": [
+              300,
+              "fast"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/speed/1"
+      }
+    },
+    {
+      "id": "anim-flight-speed-order",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/speed": [
+              700,
+              300
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flight-order",
+        "pointer": "/speed/0"
+      }
+    },
+    {
+      "id": "anim-flight-speed-equal",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/speed": [
+              500,
+              500
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flight-order",
+        "pointer": "/speed/0"
+      }
+    },
+    {
+      "id": "anim-flight-spin-order",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/spin": [
+              4.5,
+              3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flight-order",
+        "pointer": "/spin/0"
+      }
+    },
+    {
+      "id": "anim-flight-spin-negative",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/spin": [
+              -1,
+              4.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/spin/0"
+      }
+    },
+    {
+      "id": "anim-flight-steep-order",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/steep": [
+              1.3,
+              0.7
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flight-order",
+        "pointer": "/steep/0"
+      }
+    },
+    {
+      "id": "anim-flight-steep-length",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/steep": [
+              0.7
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/steep"
+      }
+    },
+    {
+      "id": "anim-flight-lay-order",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/lay": [
+              0.95,
+              0.7
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:flight-order",
+        "pointer": "/lay/0"
+      }
+    },
+    {
+      "id": "anim-flight-lay-range",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/lay": [
+              0.7,
+              1.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/lay/1"
+      }
+    },
+    {
+      "id": "anim-flight-lay-negative",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/lay": [
+              -0.1,
+              0.9
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/lay/0"
+      }
+    },
+    {
+      "id": "anim-flight-lay-edges-ok",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/lay": [
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-flight-rate-positive",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/rate": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/rate"
+      }
+    },
+    {
+      "id": "anim-flight-skid-rate-positive",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/skid_rate": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/skid_rate"
+      }
+    },
+    {
+      "id": "anim-flight-tilt-range",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/tilt": 120
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/tilt"
+      }
+    },
+    {
+      "id": "anim-flight-tilt-negative",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/tilt": -5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/tilt"
+      }
+    },
+    {
+      "id": "anim-flight-tilt-zero-ok",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/tilt": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-flight-tilt-rate-positive",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/tilt_rate": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/tilt_rate"
+      }
+    },
+    {
+      "id": "anim-flight-pivot-type",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/pivot_y": "middle"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/pivot_y"
+      }
+    },
+    {
+      "id": "anim-flight-pivot-negative-ok",
+      "schema": "anim-flight.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/flight.json",
+          "set": {
+            "/pivot_y": -2
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

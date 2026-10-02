@@ -1010,6 +1010,13 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(pl) && isObj(pl.poses) && allPoses.size) for (const p of Object.keys(pl.poses)) if (!p.startsWith('_') && !allPoses.has(p)) err('data/anim/target_poles.json', `/poses/${esc(p)}`, 'poles-pose', `pose "${p}" is not in poses.json nor a wave\'s poses file`);
   }
 
+  // ---- anim flight: each (from, to) pair rises ----
+  const fl = get('data/anim/flight.json');
+  if (isObj(fl)) for (const k of ['speed', 'spin', 'steep', 'lay']) {
+    const p = fl[k];
+    if (Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number' && p[0] >= p[1]) err('data/anim/flight.json', `/${k}/0`, 'flight-order', `${k} runs from ${p[0]} to ${p[1]}; the lead needs a range that rises`);
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

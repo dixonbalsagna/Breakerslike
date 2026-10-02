@@ -235,6 +235,10 @@
       "schema": "anim-agency.schema.json"
     },
     {
+      "match": "data/anim/flight.json",
+      "schema": "anim-flight.schema.json"
+    },
+    {
       "match": "data/anim/target_poles.json",
       "schema": "anim-target-poles.schema.json"
     },
