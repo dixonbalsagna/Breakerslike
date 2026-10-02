@@ -1,0 +1,26 @@
+{
+  "_about": "Validator fixture, not game data.",
+  "schema": "fight.shots/1",
+  "cap": 32,
+  "arriveTicks": 45,
+  "chest": 40,
+  "bodyR": 40,
+  "kinds": {
+    "bolt": {
+      "speed": 60,
+      "r": 14,
+      "power": 1,
+      "dmg": 6,
+      "lifeTicks": 120
+    },
+    "lob": {
+      "speed": 40,
+      "r": 24,
+      "power": 2,
+      "dmg": 20,
+      "lifeTicks": 36,
+      "lobTicks": 36,
+      "lobArc": 300
+    }
+  }
+}

@@ -198,6 +198,67 @@ static func transform(S: SimState, f, tier: float, source: String, dur: float, v
 	e.gather = float(SimPause.gatherOf(version)) / float(SimPause.TPS)
 
 
+## The agency pass. knockback: victim was sent back by attacker, not launched; kind is Combat's piece (a short slide, a
+## long slide, a bump, a drift), amount the distance in units, dur its length in seconds and n the tick it ends.
+## exchange_end: actor's exchange ended; kind is continue (both stay in reach), knockback or launch. flow: actor's flow
+## count is now n. The director sends all three.
+static func knockback(S: SimState, f, by, kind: String, dist: float, endTick: int) -> void:
+	var e := _ev(S, "knockback")
+	e.victim = float(S.fighters.find(f)); e.attacker = float(S.fighters.find(by)) if by != null else -1.0
+	e.kind = kind; e.amount = dist; e.n = endTick; e.dur = float(endTick - S.tick) / 60.0
+	e.x = f.x; e.y = f.y; e.z = f.z
+
+
+static func exchangeEnd(S: SimState, f, kind: String) -> void:
+	var e := _ev(S, "exchange_end")
+	e.actor = float(S.fighters.find(f)); e.kind = kind
+
+
+static func flow(S: SimState, f, n: int) -> void:
+	var e := _ev(S, "flow")
+	e.actor = float(S.fighters.find(f)); e.n = n
+
+
+## World's embed (ground-contact.md): actor is driven into the ground at x, y (the crater's floor), z; depth and r are
+## the bowl's, energy the impact's, dur the seconds he stays down and n his launch number. World's contact model sends it.
+static func embed(S: SimState, f, x: float, y: float, depth: float, r: float, energy: float, dur: float, n: int) -> void:
+	var e := _ev(S, "embed")
+	e.actor = float(S.fighters.find(f)); e.x = x; e.y = y; e.z = f.z
+	e.depth = depth; e.r = r; e.energy = energy; e.dur = dur; e.n = n
+
+
+## Shots (sim/core/shots.gd). shot_fire: a shot leaves actor (its owner) at x, y, z: kind, id, its speed, its power
+## (amount), its volley's group (link), its direction (ux, uy) and the slot it seeks (target, -1 for none). shot_hit: it
+## met victim at x, y, z; amount is the damage and outcome what happened (hit by the plain rule; the director's blasts
+## send guard, deflect and the rest). shot_clash: two opposing shots traded amount of power at x, y, z (id and b are
+## the two ids). shot_end: the shot is gone, at x, y, z; cause is hit, clash, ground, water or life.
+static func shotFire(S: SimState, sh) -> void:
+	var e := _ev(S, "shot_fire")
+	e.actor = float(sh.owner); e.kind = sh.kind; e.id = sh.id; e.x = sh.x; e.y = sh.y; e.z = sh.z
+	e.target = float(sh.tgt); e.amount = sh.power; e.link = sh.group
+	var d: float = SimDetMath.hypot(sh.vx, sh.vy)
+	e.spd = d
+	if d > 0.0:
+		e.ux = sh.vx / d
+		e.uy = sh.vy / d
+
+
+static func shotHit(S: SimState, sh, f, outcome: String) -> void:
+	var e := _ev(S, "shot_hit")
+	e.actor = float(sh.owner); e.victim = float(S.fighters.find(f)); e.kind = sh.kind; e.id = sh.id
+	e.x = sh.x; e.y = sh.y; e.z = sh.z; e.amount = sh.dmg; e.outcome = outcome; e.link = sh.group
+
+
+static func shotClash(S: SimState, a, b, x: float, y: float, power: float) -> void:
+	var e := _ev(S, "shot_clash")
+	e.id = a.id; e.b = float(b.id); e.x = x; e.y = y; e.z = (a.z + b.z) * 0.5; e.amount = power
+
+
+static func shotEnd(S: SimState, sh, cause: String) -> void:
+	var e := _ev(S, "shot_end")
+	e.id = sh.id; e.kind = sh.kind; e.x = sh.x; e.y = sh.y; e.z = sh.z; e.cause = cause
+
+
 ## The last stand: actor reached the brink for the first time this match; one signature is free and off cooldown for dur
 ## seconds of his free time. last_stand_end: the window closed; kind is used (he fired) or expired.
 static func lastStandReady(S: SimState, f, dur: float) -> void:

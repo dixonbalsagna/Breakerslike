@@ -33,6 +33,8 @@ var waterTick: float = 0.0            # unfrozen ticks since the match started; 
 var buildings: Array = []
 var trees: Array = []
 var beams: Array = []
+var shots: Array = []                 # Shot records in flight, in the order they were fired (sim/core/shots.gd), at most SimShots.cap
+var shotSeq: int = 0                  # the last shot id given this match
 var mood := MoodState.new()           # M1 (sim/core/mood.gd): the fight's mood, the act and the outputs
 var pause := PauseState.new()         # Q10 (sim/core/pause.gd): the pausing set pieces' bank and the running pause
 var intro := IntroState.new()         # the intro phase (sim/core/intro.gd): the pre-clock ticks of a match that asks for it
@@ -61,6 +63,7 @@ class ActState:
 	var assist: int = 0           # SimAct.ASSISTS bit flags, from the setup
 	var formReady: bool = false   # a tier is ready and waits for the transform (ladder.json manualTierUp)
 	var burstFired: bool = false  # the burst already fired on this power press
+	var flow: int = 0             # the agency pass: the flow count that timed presses build (the director owns its rule; SimAct.setFlow)
 	var breakIn: int = -1         # the break: ticks until a transformation's tier-up lands (SimPause gather), -1 for none
 	var dirI: PackedInt32Array = PackedInt32Array()   # the director's per-fighter integers (DirInterrupt: lockouts, openings, staleness); it sizes and owns them
 
@@ -254,6 +257,32 @@ class Beam:
 	var levelled: int = 0        # ... and how many it has levelled so far
 
 
+## An energy blast in flight (sim/core/shots.gd). Timers are whole live ticks.
+class Shot:
+	var id: int = 0           # unique in the match, in firing order
+	var owner: int = 0        # the slot whose shot it is (a deflect changes it)
+	var kind: String = ""     # a kind in data/fight/shots.json
+	var mode: int = 0         # SimShots.LINE, SEEK or LOB
+	var x: float = 0.0        # wrapped
+	var y: float = 0.0
+	var z: float = 0.0        # depth; 0 until the depth switch-on
+	var vx: float = 0.0       # units a second (a seeking or lobbed shot's is its last tick's movement, for the view)
+	var vy: float = 0.0
+	var tgt: int = -1         # SEEK: the slot it flies to
+	var left: int = 0         # ticks left: to the arrival (SEEK, LOB) or of life (LINE)
+	var total: int = 0        # ... of how many
+	var x0: float = 0.0       # LOB: where it started ...
+	var y0: float = 0.0
+	var px: float = 0.0       # ... and the point it falls on
+	var py: float = 0.0
+	var power: float = 1.0    # what it trades with: opposing shots that meet each lose the other's power
+	var dmg: float = 0.0      # what a plain hit does
+	var group: int = 0        # shared by the shots of one volley (0: none), so a volley counts once
+	var deflected: int = 0    # times it was sent back
+	var fresh: bool = true    # fired this tick: it moves from the next
+	var dead: bool = false    # ended this tick: removed at the end of the shots' step
+
+
 class FeedLine:
 	var t: float = 0.0
 	var tag: String = ""
@@ -352,6 +381,7 @@ class FxEvent:
 	var template: String = ""    # attack: the exchange's template tag
 	var ambush: bool = false     # attack: an ambush attack
 	var chosen: String = ""      # launch_plan: the chosen launch, NONE for a shove
+	var id: int = 0              # shot_fire, shot_hit, shot_clash, shot_end: the shot's id (shot_clash: the first shot's; b is the other's)
 	var version: String = ""     # pause_start, transform: full, short or live (SimPause.VERSIONS)
 	var gather: float = 0.0      # transform: seconds from this event to the break, where the tier_up comes
 	var source: String = ""      # hazard_telegraph, danger: what is coming (brunt, windup, ambush; World adds collapse, landslide, lava)
@@ -454,6 +484,8 @@ class Fighter:
 	var contactT: int = 0            # ticks since the last contact, saturating at 8 (the early-recovery window)
 	var launchN: int = 0             # this fighter's launch number: every contact event carries it
 	var jLips: int = 0               # flights off a lip so far in this journey (journey_end carries it)
+	var embedT: int = 0              # World's embed (ground-contact.md): ticks left driven into the ground
+	var embedCool: float = -1.0e9    # ... and the match time of his last embed (the cooldown counts from it)
 	var hopped: bool = false         # the launch has made its one hop
 	var slideEvt: float = 0.0      # the collateral set-piece token of the running slide (world/collateral.gd)
 	var lastSeen = null      # LastSeen or null

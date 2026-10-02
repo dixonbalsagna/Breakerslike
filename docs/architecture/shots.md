@@ -1,6 +1,6 @@
 # Shots: energy blasts in flight
 
-Owner: Simulation and Engine. Status: designed, built and proven in a scratch copy (2026-10-02, on 541f7de), parked in `docs/architecture/pending/`. Nothing is in the tree. It is what Encounter's slice 3a needs first (`docs/director/agency-plan.md` section 3; rules in `docs/design/agency-pass.md` section 5 and `moveset-rules.md` section 11 i).
+Owner: Simulation and Engine. Status: in the tree since 2026-10-02 (section 11), neutral: nothing fires a shot until Encounter's slice 3a. It is what Encounter's slice 3a needs first (`docs/director/agency-plan.md` section 3; rules in `docs/design/agency-pass.md` section 5 and `moveset-rules.md` section 11 i).
 
 ## 1. What a shot is
 
@@ -112,3 +112,10 @@ About 3.2 µs a shot a tick, and 0.3 µs a pair of opposing shots. The whole tic
 | `autoCharge` | Controls | One more name in `SimAct.ASSISTS` | One line. Neutral |
 
 All but the press log and the intent hash are prepared as one neutral slice (`pending/agency.py`), proven with the shots on b8ea622, and ride with them (EP, 2026-10-02). The press log stays in Encounter's state; the intent hash goes with Encounter's charge slice. As built: `knockback {victim, attacker, kind, amount, dur, n, x, y, z}` (`amount` the distance, `n` the end tick), `exchange_end {actor, kind: continue, knockback or launch}`, `flow {actor, n}` sent by `SimAct.setFlow` when the count changes, `embed` as World listed it, `Fighter.embedT` and `embedCool`, `autoCharge` as the fourth assist.
+
+## 11. As built (2026-10-02, on aee2c6b)
+
+`sim/core/shots.gd` (`SimShots`), `S.shots` and `S.shotSeq`, the step after the beams in `SimCore.step`, `data/fight/shots.json` with Tools' schema, the four shot events, and the agency lines of section 10 (the `knockback`, `exchange_end`, `flow` and `embed` events, `ActState.flow` with `SimAct.setFlow`, `Fighter.embedT` and `embedCool`, `autoCharge`).
+
+**Proofs, in the tree:** the code passes parity on the untouched goldens (9 matches, 184,273 ticks) with the checks "shots" and "agency lines"; with the new state and events hashed, every light digest and tick count is identical, so the one golden file that comes out differs in its full-state checkpoints only. Parity, determinism, the seam sweep, `npm test`, the validator (0 errors), its self-test (2,358 of 2,358), the touch test and the loader check pass.
+

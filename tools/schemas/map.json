@@ -155,6 +155,10 @@
       "schema": "fight-intro.schema.json"
     },
     {
+      "match": "data/fight/shots.json",
+      "schema": "fight-shots.schema.json"
+    },
+    {
       "match": "data/input/feel.json",
       "schema": "input-feel.schema.json"
     },

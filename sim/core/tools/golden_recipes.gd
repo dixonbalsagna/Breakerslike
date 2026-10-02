@@ -63,7 +63,7 @@ static func build() -> Dictionary:
 	g.rally = rallyHash()
 	g.cripple = crippleHash()
 	g.mood = moodHash()
-	g.fightHash = SimMood.dataHash() + SimPause.dataHash() + SimIntro.dataHash()
+	g.fightHash = SimMood.dataHash() + SimPause.dataHash() + SimIntro.dataHash() + SimShots.dataHash()
 	g.intro = introHash()
 	g.wounds = woundsHash()
 	g.checkEvery = CHECK_EVERY

@@ -169,3 +169,18 @@ World's ground contact (G3) sends `left_ground`, `bounce`, `land`, `tumble_end` 
 
 An intro tick is a pre-clock tick: `SimCore.step` returns false and consumes no input, and the clock, the mood and every cooldown stand still. Its `tick` mark says `frozen: false`, so effects run at full speed and the landing's dust settles. A host tells an intro tick from a live one by the step's return value or `S.intro.left`. A match whose setup has no `"intro"` key starts from the intro's end state (the two craters dug, both fighters on the ground) and sends none of the intro's events.
 
+## Shots, and the agency pass
+
+| Event | Fields | When | Who reads it |
+| :--- | :--- | :--- | :--- |
+| `shot_fire` | actor, kind, id, x, y, z, target, spd, amount, link, ux, uy | a shot is fired by `actor`: its kind and id, where it starts, the slot it seeks (-1 for none), its speed and direction, its power (`amount`) and its volley's group (`link`) | VFX (the muzzle), Audio |
+| `shot_hit` | actor, victim, kind, id, x, y, z, amount, outcome, link | the shot met `victim`; `amount` is the damage; `outcome` is `hit` by the plain rule, and the director's blasts send their own (guard, deflect and the rest) | VFX, Audio, Camera, the HUD |
+| `shot_clash` | id, b, x, y, z, amount | two opposing shots (ids `id` and `b`) traded `amount` of power at x, y, z | VFX, Audio |
+| `shot_end` | id, kind, x, y, z, cause | the shot is gone; `cause` is hit, clash, ground, water or life | VFX (it stops drawing the shot) |
+| `knockback` | victim, attacker, kind, amount, dur, n, x, y, z | `victim` was sent back, not launched; `kind` is Combat's piece (a short slide, a long slide, a bump, a drift), `amount` the distance, `dur` its seconds, `n` the tick it ends | Animation, Camera, QA |
+| `exchange_end` | actor, kind | `actor`'s exchange ended: `continue` (both stay in reach), `knockback` or `launch` | QA, Camera |
+| `flow` | actor, n | `actor`'s flow count is now `n` | the HUD's recipe strip, QA |
+| `embed` | actor, x, y, z, depth, r, energy, dur, n | `actor` is driven into the ground: the crater's floor, its depth and radius, the impact's energy, the seconds he stays down, his launch number | Animation, Camera, VFX |
+
+A renderer draws shots in flight from `S.shots` (position, velocity, kind, owner, power), as it reads `S.beams`. `knockback`, `exchange_end` and `flow` are sent by the director and `embed` by World's contact model; until their slices land none of the eight is sent in a match.
+

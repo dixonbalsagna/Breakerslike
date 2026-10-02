@@ -10,8 +10,8 @@ Owner: Simulation and Engine. A list of what is asked of `sim/core` and not yet 
 
 ## For the agency pass (EP, 2026-10-02)
 
-- **Shots** (energy blasts in flight): designed and parked, `shots.md` and `pending/`. Encounter's slice 3a waits for it.
-- The other asks, each small, are sized in `shots.md` section 10: the `knockback` and `exchange_end` events, a flow value per fighter, the press log if it moves to core, Controls' `intent-hash.patch`, World's embed fields and event, `autoCharge` in `SimAct.ASSISTS`.
+- **Done 2026-10-02:** shots (`shots.md`), and the small lines: the `knockback`, `exchange_end`, `flow` and `embed` events, the flow value, the embed fields, `autoCharge`.
+- **Left:** Controls' `intent-hash.patch` (one line in `hash.gd`; with Encounter's charge slice). The press log stays in Encounter's state.
 
 ## At M0 (Combat's moveset milestone), asked through the EP on 2026-10-02
 

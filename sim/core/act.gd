@@ -11,7 +11,7 @@ class_name SimAct
 
 const NEVER: int = -100000
 ## Setup "assists" names, as bit flags in act.assist: they let the sim act where an input is absent (Simple layout, mobile).
-const ASSISTS: Array = ["autoBurst", "specialAuto", "perfectBlockAssist"]
+const ASSISTS: Array = ["autoBurst", "specialAuto", "perfectBlockAssist", "autoCharge"]
 ## Request weights in the queue.
 const LIGHT: int = 0
 const HEAVY: int = 1
@@ -40,6 +40,13 @@ static func setup(S: SimState, su: Dictionary) -> void:
 
 static func assisted(f, name: String) -> bool:
 	return (f.act.assist & (1 << ASSISTS.find(name))) != 0
+
+
+## The flow count (the agency pass, 2c): the director sets it; a change is sent as a flow event, for the HUD and QA.
+static func setFlow(S: SimState, f, n: int) -> void:
+	if f.act.flow != n:
+		f.act.flow = n
+		SimFx.flow(S, f, n)
 
 
 ## Once per tick for a v2 fighter, from SimControl.control after the intent is in and gated: the cooldowns count down, and

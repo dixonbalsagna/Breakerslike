@@ -31229,6 +31229,86 @@
         "rule": "type",
         "pointer": "/furrow/pathMul"
       }
+    },
+    {
+      "id": "shots-needs-kinds",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/kinds"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "shots-cap-fraction",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/cap": 32.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/cap"
+      }
+    },
+    {
+      "id": "shots-speed-zero",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/speed": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/kinds/bolt/speed"
+      }
+    },
+    {
+      "id": "shots-kind-unknown-key",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/bolt/homing": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/kinds/bolt/homing"
+      }
+    },
+    {
+      "id": "shots-kind-needs-power",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/kinds/bolt/power"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/kinds/bolt"
+      }
     }
   ],
   "text": [

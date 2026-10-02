@@ -82,6 +82,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.depthOn = setup.get("depth", false) == true   # fight lanes: off until the director's switch-on (L4); a setup may force it for probes
 	WorldTerrain.initRows(S)   # T: the depth rows exist only when depth is on
 	SimPause.reset(S)        # Q10: the pause bank
+	SimShots.reset(S)        # no shots in flight
 	SimIntro.setup(S, setup) # the intro phase, when the setup asks for it
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
 	S.out.feed.clear()
@@ -120,6 +121,7 @@ static func step(S: SimState, inputs = null) -> bool:
 		SimFighter.stepFighter(S, f, dt)
 	DirExchange.dirUpdate(S, dt)
 	DirBeam.beamStep(S, dt)
+	SimShots.step(S, dt)   # energy blasts in flight: they move, trade, and meet fighters and the ground
 	WorldWater.step(S)
 	SimMood.tick(S)   # M1: reads this tick's events; writes only its own state and events
 	WorldCollateral.tick(S)

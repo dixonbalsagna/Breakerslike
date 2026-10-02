@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/fight-shots",
+  "title": "fight.shots/1 (docs/architecture/shots.md)",
+  "description": "data/fight/shots.json: energy blasts in flight (sim/core/shots.gd): the cap on live shots, the arrival bound of a seeking shot, the fighter's contact size, and each kind's speed (units a tick), radius, trade power, plain damage and flight times. Version field: schema. Policy: closed except keys starting with an underscore; the kinds are an open table of closed records.",
+  "type": "object",
+  "required": [
+    "schema",
+    "cap",
+    "arriveTicks",
+    "chest",
+    "bodyR",
+    "kinds"
+  ],
+  "properties": {
+    "schema": {
+      "const": "fight.shots/1"
+    },
+    "cap": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64,
+      "description": "Live shots at once."
+    },
+    "arriveTicks": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "A seeking shot arrives within this many ticks."
+    },
+    "chest": {
+      "type": "number",
+      "minimum": 0,
+      "description": "A fighter's centre above his feet."
+    },
+    "bodyR": {
+      "type": "number",
+      "minimum": 0,
+      "description": "A fighter's radius for a shot's contact."
+    },
+    "kinds": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "The kinds of shot, by name.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "speed",
+          "r",
+          "power",
+          "dmg",
+          "lifeTicks"
+        ],
+        "properties": {
+          "speed": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Units a tick (a minimum for a seeking shot)."
+          },
+          "r": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Its radius, for contact and trades."
+          },
+          "power": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "What it trades with."
+          },
+          "dmg": {
+            "type": "number",
+            "minimum": 0,
+            "description": "What a plain hit does (a placeholder until the director's blasts set their own)."
+          },
+          "lifeTicks": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "How long a straight shot flies."
+          },
+          "lobTicks": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "A lobbed shot's flight time."
+          },
+          "lobArc": {
+            "type": "number",
+            "minimum": 0,
+            "description": "A lobbed shot's height above the straight line."
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

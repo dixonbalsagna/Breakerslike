@@ -1,0 +1,33 @@
+{
+  "schema": "fight.shots/1",
+  "_about": "Shots: energy blasts in flight (sim/core/shots.gd; docs/architecture/shots.md). cap: live shots at once (a press past it fires nothing). arriveTicks: a seeking shot arrives within this many ticks however far its target is (moveset-rules section 11 i). chest and bodyR: a fighter's centre above his feet and his radius, for a shot's contact. Per kind: speed in units a tick (a minimum for a seeking shot), r its radius (contact and trades), power what it trades with (opposing shots that meet each lose the other's power), dmg what a plain hit does (a placeholder: the director's blasts set their own), lifeTicks how long a straight shot flies, lobTicks and lobArc a lobbed one's flight time and height.",
+  "cap": 32,
+  "arriveTicks": 45,
+  "chest": 40.0,
+  "bodyR": 40.0,
+  "kinds": {
+    "bolt": {
+      "speed": 60.0,
+      "r": 14.0,
+      "power": 1.0,
+      "dmg": 6.0,
+      "lifeTicks": 120
+    },
+    "charged": {
+      "speed": 90.0,
+      "r": 30.0,
+      "power": 3.0,
+      "dmg": 30.0,
+      "lifeTicks": 120
+    },
+    "lob": {
+      "speed": 40.0,
+      "r": 24.0,
+      "power": 2.0,
+      "dmg": 20.0,
+      "lifeTicks": 36,
+      "lobTicks": 36,
+      "lobArc": 300.0
+    }
+  }
+}
