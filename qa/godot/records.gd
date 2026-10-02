@@ -253,6 +253,9 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 				ex_launch = true
 			elif e.type == "exchange_end":
 				ex_end_kind = str(e.get("kind"))
+			elif e.type == "launch_plan":   # agency slice 1: the launch decision names its ending: KNOCK BACK (a heavy that was not earned), STAY (a light: the brawl goes on), else a launch; a chain's last decision wins
+				var lpc: String = str(e.get("chosen"))
+				ex_end_kind = "knockback" if lpc == "KNOCK BACK" else ("continue" if lpc == "STAY" else "launch")
 			if e.type == "cue":   # the director's cues by kind: perfect_block, dodge_cancel, burst (step 3)
 				var cq: String = str(e.get("kind"))
 				rec.cues[cq] = rec.cues.get(cq, 0) + 1

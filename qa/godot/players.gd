@@ -18,6 +18,8 @@ extends SceneTree
 ##                                                   jit adds a uniform jitter of +-jit ticks to every press; mix is a string of
 ##                                                   L and H pressed in turn; between exchanges it requests one every idle ticks
 ##   mix[:mix=LLH][:gap=12][:forms=1]                presses in a fixed pattern, off the beat (a rhythm of its own)
+## Add :stick=1 to any scripted player: a heavy press (and a hold) is made with the stick up and toward the rival, the way Orb's earned
+## launch is thrown (agency slice 1: a heavy pressed with a stick direction that lands clean launches); without it a heavy is a plain heavy.
 ## Player A takes slot 0 on odd seeds and slot 1 on even ones, so spawn side and slot cancel. Prints one JSON line.
 ## Read-only with respect to sim/: it only calls the sim's public functions.
 
@@ -259,6 +261,10 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 					it.heavy = true
 				else:
 					it.light = true
+			if int(p.P.get("stick", "0")) != 0 and (k == 1 or (p.is_holding(lt) and p.hold_kind == 1)):
+				var rival = S.fighters[1 - slot]
+				it.mx = 0.8 * SimMathx.jsign(SimWrap.sdx(S.fighters[slot].x, rival.x))
+				it.my = 0.7
 			if p.is_holding(lt):
 				if p.hold_kind == 1 and "heavyHeld" in it:
 					it.set("heavyHeld", true)

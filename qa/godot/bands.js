@@ -426,18 +426,21 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     const noLong = D.filter(r => !r.exGaps.some(g => g > 10)).length;
     R.rate('10.gap10', '§10', 'Matches with no gap over 10 s', { v: noLong / D.length, ci: wl(noLong, D.length), lo: 0.95 });
     // agency pass section 3 (docs/design/agency-pass.md): how a melee exchange ends: the brawl continues 40 to 50%, a knock-back 20 to 30%, a launch 25 to 35%. Today only the launch is told apart (no knock-back or continue state in the sim); the other two switch on with `exchange_end {actor, kind}` events.
-    { const E = r => r.exEnds || {}, tot = r => sum(Object.values(E(r))), has = D.every(r => r.exEnds);
-      if (has && sum(D.map(tot)) > 0) {
-        const kinds = sum(D.map(r => E(r).knockback || 0)) + sum(D.map(r => E(r).continue || 0)) > 0, ls = S.clusterShare(D, r => E(r).launch || 0, tot);
-        R.rate('10.end.launch', '§10', 'Melee exchanges that end in a launch (25 to 35%, agency pass section 3; it was 40 to 65%)', { v: ls.p, ci: ls.ci, lo: 0.25, hi: 0.35 });
+    { const E = r => r.exEnds || {}, all = r => sum(Object.values(E(r))), has = D.every(r => r.exEnds);
+      // Shares are of the exchanges that reach a launch decision (a launch, a knock-back or a stay): Encounter's measure and the one the agency pass band was written for (28.6 / 22.4 / 49.0 on slice 1). Exchanges with no decision at all are counted apart.
+      const dec = r => (E(r).launch || 0) + (E(r).knockback || 0) + (E(r).continue || 0);
+      if (has && sum(D.map(all)) > 0) {
+        const kinds = sum(D.map(r => (E(r).knockback || 0) + (E(r).continue || 0))) > 0, ls = S.clusterShare(D, r => E(r).launch || 0, kinds ? dec : all);
+        R.rate('10.end.launch', '§10', 'Exchanges that end in a launch, of those that reach a launch decision (25 to 35%, agency pass section 3; it was 40 to 65%)', { v: ls.p, ci: ls.ci, lo: 0.25, hi: 0.35 });
         if (kinds) {
-          const kb = S.clusterShare(D, r => E(r).knockback || 0, tot), ct = S.clusterShare(D, r => E(r).continue || 0, tot);
-          R.rate('10.end.knockback', '§10', 'Melee exchanges that end in a knock-back (20 to 30%)', { v: kb.p, ci: kb.ci, lo: 0.20, hi: 0.30 });
-          R.rate('10.end.continue', '§10', 'Melee exchanges after which the brawl continues, both in reach (40 to 50%)', { v: ct.p, ci: ct.ci, lo: 0.40, hi: 0.50 });
+          const kb = S.clusterShare(D, r => E(r).knockback || 0, dec), ct = S.clusterShare(D, r => E(r).continue || 0, dec);
+          R.rate('10.end.knockback', '§10', 'Exchanges that end in a knock-back, of those that reach a launch decision (20 to 30%)', { v: kb.p, ci: kb.ci, lo: 0.20, hi: 0.30 });
+          R.rate('10.end.continue', '§10', 'Exchanges after which the brawl continues (STAY), of those that reach a launch decision (40 to 50%)', { v: ct.p, ci: ct.ci, lo: 0.40, hi: 0.50 });
+          R.info('10.end.split', '§10', 'Melee exchanges: reach a launch decision / of those launch, knock-back, stay', `${fmt.pct(sum(D.map(dec)) / Math.max(1, sum(D.map(all))))} reach one; ${fmt.pct(ls.p)} / ${fmt.pct(kb.p)} / ${fmt.pct(ct.p)}`, 'the rest end with no launch decision (a light string that never reaches a launch beat)');
         } else {
-          R.info('10.end.rest', '§10', 'Melee exchanges that do not end in a launch (knock-back and continue are not told apart yet)', fmt.pct(1 - ls.p), 'the knock-back (20 to 30%) and continue (40 to 50%) rows switch on with exchange_end events');
-          R.pending('10.end.knockback', '§10', 'Melee exchanges that end in a knock-back (20 to 30%)', 'needs exchange_end events (the agency pass slice)');
-          R.pending('10.end.continue', '§10', 'Melee exchanges after which the brawl continues (40 to 50%)', 'needs exchange_end events (the agency pass slice)');
+          R.info('10.end.rest', '§10', 'Melee exchanges that do not end in a launch (knock-back and continue are not told apart yet)', fmt.pct(1 - ls.p), 'the knock-back (20 to 30%) and continue (40 to 50%) rows switch on with launch_plan KNOCK BACK and STAY (agency slice 1) or exchange_end events');
+          R.pending('10.end.knockback', '§10', 'Exchanges that end in a knock-back (20 to 30%)', 'needs launch_plan KNOCK BACK or exchange_end events (the agency pass slice)');
+          R.pending('10.end.continue', '§10', 'Exchanges after which the brawl continues (40 to 50%)', 'needs launch_plan STAY or exchange_end events (the agency pass slice)');
         }
       } else R.pending('10.end.launch', '§10', 'How melee exchanges end: continue 40 to 50%, knock-back 20 to 30%, launch 25 to 35%', 'records without exchange endings');
     }

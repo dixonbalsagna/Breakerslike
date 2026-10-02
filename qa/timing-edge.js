@@ -16,7 +16,7 @@ const args = process.argv.slice(2), val = (k, d) => { const a = args.find(x => x
 const N = parseInt(val('matches', '40'), 10), JOBS = Math.min(3, parseInt(val('jobs', '3'), 10)), PLAN = val('plan', 'core'), BASE = parseInt(val('seed', '1'), 10);
 
 // Styles (agency-pass section 2): blur = a mash, power = a hold, combo = taps. "Timed" variants follow Game Design's thresholds.
-const F = ':forms=1';   // every scripted player takes its forms: a tier-1 fighter never wins (docs/director/masher-probes.md)
+const F = ':forms=1:stick=1';   // every scripted player takes its forms: a tier-1 fighter never wins (docs/director/masher-probes.md)
 const P = {
   masher: 'masher' + F,                                   // blur, untimed: a press every 8 ticks
   timedMash: 'tapper:win=3:acc=80:mix=L' + F,             // blur, timed: a steady mash within 3 ticks of the beat, 80% of beats
