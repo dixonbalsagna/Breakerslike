@@ -233,8 +233,135 @@ static func _row(S: SimState, r: SimRng, x0: float, x1: float, kind: String, row
 	return pop
 
 
-## Ground height at any x: linear between column samples of the generated base plus crater deformation.
-static func groundY(S: SimState, x: float) -> float:
+# ---------------------------------------------------------------------------------------------- depth rows (slice T)
+## Eight rows of 300 units across the fight band, at z = +300, 0, -300 ... -1,800 (z positive toward the camera). Row PLANE_ROW (z = 0) is
+## S.deform and S.rubble themselves, so everything that reads them is unchanged; the other seven live in S.deformZ and S.rubbleZ. They
+## exist only when S.depthOn (docs/world/fight-lanes-world.md section 10): with it off nothing here runs and the ground is the old model's.
+## A writer works on one row at a time by swapping that row's arrays into S.deform and S.rubble for the length of its write
+## (enterRow/leaveRow), so the existing writers, their relaxation and their footing rules run unchanged on the row.
+const ROWS: int = 8
+const PLANE_ROW: int = 1
+const ROW_Z0: float = 300.0
+const ROW_STEP: float = -300.0
+static var rowZ: float = NAN        # z of the row swapped into S.deform right now; NAN outside a writer
+static var _swapK: int = -1         # the row swapped in (-1: none, or the plane row)
+
+
+static func rowZOf(k: int) -> float:
+	return ROW_Z0 + ROW_STEP * float(k)
+
+
+## The row nearest to depth z (clamped to the band's rows).
+static func rowOfZ(z: float) -> int:
+	return clampi(int(round((z - ROW_Z0) / ROW_STEP)), 0, ROWS - 1)
+
+
+static func initRows(S: SimState) -> void:
+	S.deformZ = []
+	S.rubbleZ = []
+	S.low = PackedFloat32Array()
+	rowZ = NAN
+	_swapK = -1
+	if not S.depthOn:
+		return
+	var NC: int = SimConst.NC
+	for k in range(ROWS):
+		var d := PackedFloat32Array()
+		var r := PackedFloat32Array()
+		if k != PLANE_ROW:
+			d.resize(NC)
+			d.fill(0.0)
+			r.resize(NC)
+			r.fill(0.0)
+		S.deformZ.append(d)
+		S.rubbleZ.append(r)
+	S.low = S.deform.duplicate()
+
+
+## The deform array of row k, wherever it is held right now.
+static func rowArr(S: SimState, k: int) -> PackedFloat32Array:
+	if _swapK >= 0:
+		if k == _swapK:
+			return S.deform
+		if k == PLANE_ROW:
+			return S.deformZ[_swapK]
+	elif k == PLANE_ROW:
+		return S.deform
+	return S.deformZ[k]
+
+
+static func rubArr(S: SimState, k: int) -> PackedFloat32Array:
+	if _swapK >= 0:
+		if k == _swapK:
+			return S.rubble
+		if k == PLANE_ROW:
+			return S.rubbleZ[_swapK]
+	elif k == PLANE_ROW:
+		return S.rubble
+	return S.rubbleZ[k]
+
+
+## Swap row k's arrays into S.deform and S.rubble; returns k, or -1 when depth is off, or -2 when a writer already holds a row.
+static func enterRow(S: SimState, k: int) -> int:
+	if not S.depthOn or S.deformZ.is_empty():
+		return -1
+	if not is_nan(rowZ):
+		return -2
+	rowZ = rowZOf(k)
+	if k != PLANE_ROW:
+		var t: PackedFloat32Array = S.deform
+		S.deform = S.deformZ[k]
+		S.deformZ[k] = t
+		var u: PackedFloat32Array = S.rubble
+		S.rubble = S.rubbleZ[k]
+		S.rubbleZ[k] = u
+		_swapK = k
+	return k
+
+
+static func leaveRow(S: SimState, k: int) -> void:
+	if k < 0:
+		return
+	if k != PLANE_ROW:
+		var t: PackedFloat32Array = S.deform
+		S.deform = S.deformZ[k]
+		S.deformZ[k] = t
+		var u: PackedFloat32Array = S.rubble
+		S.rubble = S.rubbleZ[k]
+		S.rubbleZ[k] = u
+	_swapK = -1
+	rowZ = NAN
+
+
+## Recompute the lowest deform across the rows for the columns c0 - half .. c0 + half (every writer calls this after a write).
+static func lowRefresh(S: SimState, c0: int, half: int) -> void:
+	if not S.depthOn or S.low.size() != SimConst.NC:
+		return
+	var NC: int = SimConst.NC
+	var arrs: Array = [S.deform]
+	for a in S.deformZ:
+		if a.size() == NC:
+			arrs.append(a)
+	var cnt: int = mini(2 * half + 1, NC)
+	var lo: int = c0 - half
+	for q in range(cnt):
+		var i: int = posmod(lo + q, NC)
+		var m: float = 1.0e9
+		for a in arrs:
+			m = minf(m, a[i])
+		S.low[i] = m
+
+
+## The ground water runs on: the lowest ground across the rows when depth is on, the one row otherwise.
+static func lowD(S: SimState) -> PackedFloat32Array:
+	return S.low if S.depthOn and S.low.size() == SimConst.NC else S.deform
+
+
+## Ground height at x on the plane row, or at depth z (the two nearest rows blended, the edge rows holding beyond the band) when
+## depth is on; with depth off z is ignored and the ground is the old model's.
+static func groundY(S: SimState, x: float, z: float = 0.0) -> float:
+	if z != 0.0 and S.depthOn and not S.deformZ.is_empty():
+		return _groundZ(S, x, z)
 	var c: float = SimWrap.wrap(x) / SimConst.COL
 	var fi: float = floor(c)
 	var f: float = c - fi
@@ -243,6 +370,25 @@ static func groundY(S: SimState, x: float) -> float:
 	var a: float = S.base[i] + S.deform[i]
 	var b: float = S.base[j] + S.deform[j]
 	return a + (b - a) * f
+
+
+static func _groundZ(S: SimState, x: float, z: float) -> float:
+	var t: float = clampf((z - ROW_Z0) / ROW_STEP, 0.0, float(ROWS - 1))
+	var k0: int = int(floor(t))
+	var fz: float = t - float(k0)
+	var k1: int = mini(k0 + 1, ROWS - 1)
+	var c: float = SimWrap.wrap(x) / SimConst.COL
+	var fi: float = floor(c)
+	var f: float = c - fi
+	var i: int = int(fi)
+	var j: int = (i + 1) % SimConst.NC
+	var a0: PackedFloat32Array = rowArr(S, k0)
+	var g0: float = (S.base[i] + a0[i]) + ((S.base[j] + a0[j]) - (S.base[i] + a0[i])) * f
+	if fz == 0.0 or k1 == k0:
+		return g0
+	var a1: PackedFloat32Array = rowArr(S, k1)
+	var g1: float = (S.base[i] + a1[i]) + ((S.base[j] + a1[j]) - (S.base[i] + a1[i])) * f
+	return g0 + (g1 - g0) * fz
 
 
 ## The sea basin: water only where the original (base) terrain is below sea level (the prototype's rule). Craters that

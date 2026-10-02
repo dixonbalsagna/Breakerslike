@@ -149,7 +149,62 @@ static func _col(x: float) -> int:
 ## own ladder and is held only by R_MAX). dirx is the impact velocity's signed horizontal share (vx / speed) and vert its
 ## vertical share (|vy| / speed); both only matter for impacts. Returns the record, or null when the spot was already too
 ## dented to take a crater of this size.
-static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false):
+static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false, z: float = NAN):
+	if not S.depthOn:
+		return _dig(S, x, energy, cause, kind, dirx, vert, special)
+	var zz: float = z
+	if is_nan(zz):
+		zz = float(cause.z) if (cause != null and "z" in cause) else 0.0
+	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(zz))
+	var rec = _dig(S, x, energy, cause, kind, dirx, vert, special)
+	WorldTerrain.leaveRow(S, k)
+	if rec != null and k >= 0:
+		_digNeighbours(S, rec, k)
+	return rec
+
+
+## The bowl on the other rows inside its plan radius: the same bowl and rim, the distance taken in plan (so a row 300 units from the
+## centre sees a shallower, narrower slice), written row by row with the same footing rule and relaxation.
+static func _digNeighbours(S: SimState, rec, kc: int) -> void:
+	var NC: int = SimConst.NC
+	var COL: float = SimConst.COL
+	var R: float = rec.r
+	var reach: float = R * (1.0 + RIM_OUT)
+	var c0: int = _col(rec.x)
+	for k in range(WorldTerrain.ROWS):
+		if k == kc:
+			continue
+		var dz: float = absf(WorldTerrain.rowZOf(k) - WorldTerrain.rowZOf(kc))
+		if dz >= reach:
+			continue
+		var half: float = sqrt(reach * reach - dz * dz)
+		var n: int = int(ceil(half / COL)) + 1
+		var kk: int = WorldTerrain.enterRow(S, k)
+		if kk < 0:
+			continue
+		var pinD: PackedByteArray = WorldStructures.pinned(S, c0, n)
+		var minG: float = 1e9
+		for q in range(-n, n + 1):
+			var i: int = (c0 + q + NC) % NC
+			var dxq: float = SimWrap.sdx(rec.x, float(i) * COL)
+			var u: float = sqrt(dxq * dxq + dz * dz) / R
+			var old: float = S.deform[i]
+			var h: float = profile(u, rec.depth, rec.rim)
+			if h > 0.0 and pinD[q + n] == 1:
+				h = 0.0
+			var v: float = maxf(old, h) if (h > 0.0 and old > 0.0) else old + h
+			var nv: float = clampf(v, DEFORM_FLOOR, DEFORM_CEIL)
+			if nv < old and S.rubble[i] > 0.0:
+				S.rubble[i] = maxf(0.0, S.rubble[i] - (old - nv))
+			S.deform[i] = nv
+			minG = minf(minG, S.base[i] + S.deform[i])
+		minG = minf(minG, relax(S, c0, n + REPOSE_PAD))
+		WorldTerrain.lowRefresh(S, c0, n + REPOSE_PAD)
+		WorldTerrain.leaveRow(S, kk)
+		WorldWater.touched(S, c0, n + REPOSE_PAD, minG)
+
+
+static func _dig(S: SimState, x: float, energy: float, cause, kind: String, dirx: float = 0.0, vert: float = 1.0, special: bool = false):
 	if energy <= 0.0:
 		return null
 	var E: float = energy * (SPECIAL_E_MULT if special else 1.0)
@@ -230,13 +285,26 @@ static func dig(S: SimState, x: float, energy: float, cause, kind: String, dirx:
 	SimFx.crater(S, rec)
 	var cols: int = n + int(ceil(absf(skid) / COL)) + REPOSE_PAD
 	minG = minf(minG, relax(S, c0, cols))
+	WorldTerrain.lowRefresh(S, c0, cols)
 	WorldWater.touched(S, c0, cols, minG)
 	return rec
 
 
 ## A beam sample within reach of the ground: carve the groove toward its target depth (never deeper than that however
 ## many samples cross it), raise the permanent burn mark, and emit the scorch event. Half width and depth grow with P.
-static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> void:
+static func scorch(S: SimState, x: float, P: float, variant: String, cause, z: float = NAN) -> void:
+	if not S.depthOn:
+		_scorch(S, x, P, variant, cause)
+		return
+	var zz: float = z
+	if is_nan(zz):
+		zz = float(cause.z) if (cause != null and "z" in cause) else 0.0
+	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(zz))
+	_scorch(S, x, P, variant, cause)
+	WorldTerrain.leaveRow(S, k)
+
+
+static func _scorch(S: SimState, x: float, P: float, variant: String, cause) -> void:
 	var NC: int = SimConst.NC
 	var COL: float = SimConst.COL
 	var vk: Array = SCORCH_VARIANT.get(variant, [1.0, 1.0])
@@ -273,6 +341,7 @@ static func scorch(S: SimState, x: float, P: float, variant: String, cause) -> v
 	SimFx.scorchEvent(S, x, y0, hw * 2.0, P, variant, _slot(S, cause))
 	if carved:
 		minG = minf(minG, relax(S, c0, n + REPOSE_PAD))
+	WorldTerrain.lowRefresh(S, c0, n + REPOSE_PAD)
 	WorldWater.touched(S, c0, n + REPOSE_PAD, minG)
 
 
@@ -350,7 +419,16 @@ static func relax(S: SimState, c0: int, half: int, freezeFrom: int = 0, freezeDi
 ## depth: never deeper than the target, so a trench does not dig shafts however often it is crossed. The ground ahead of
 ## the fighter is untouched, so he rides the undug surface and the trench opens behind and under his feet. paved raises
 ## S.crack over the same columns by the given intensity. Used by the knockback slide.
-static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float) -> void:
+static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float, z: float = 0.0) -> void:
+	if not S.depthOn:
+		_carveSegment(S, xa, xb, depth, paved, crack)
+		return
+	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(z))
+	_carveSegment(S, xa, xb, depth, paved, crack)
+	WorldTerrain.leaveRow(S, k)
+
+
+static func _carveSegment(S: SimState, xa: float, xb: float, depth: float, paved: bool, crack: float) -> void:
 	var NC: int = SimConst.NC
 	var COL: float = SimConst.COL
 	var dx: float = SimWrap.sdx(xa, xb)
@@ -382,11 +460,22 @@ static func carveSegment(S: SimState, xa: float, xb: float, depth: float, paved:
 	var half: int = n / 2 + REPOSE_PAD
 	if carved:
 		minG = minf(minG, relax(S, mid, half, cb, dir))
+	WorldTerrain.lowRefresh(S, mid, half)
 	WorldWater.touched(S, mid, half, minG)
 
 
 ## A small raised lip where a slide ends: two columns ahead in the direction of travel.
-static func berm(S: SimState, x: float, vx: float, hw: float, h: float) -> void:
+static func berm(S: SimState, x: float, vx: float, hw: float, h: float, z: float = 0.0) -> void:
+	if not S.depthOn:
+		_berm(S, x, vx, hw, h)
+		return
+	var k: int = WorldTerrain.enterRow(S, WorldTerrain.rowOfZ(z))
+	_berm(S, x, vx, hw, h)
+	WorldTerrain.lowRefresh(S, _col(x), 4)
+	WorldTerrain.leaveRow(S, k)
+
+
+static func _berm(S: SimState, x: float, vx: float, hw: float, h: float) -> void:
 	var NC: int = SimConst.NC
 	var c0: int = _col(x)
 	var dir: int = 1 if vx >= 0.0 else -1

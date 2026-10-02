@@ -93,6 +93,7 @@ class Body:
 	var vLost: float = 0.0        # speed removed this tick (the wear)
 	var dxStep: float = 0.0       # signed x moved this tick in contact
 	var lips: int = 0
+	var z: float = 0.0            # depth (T: the row the ground is read on when depth is on)
 
 
 # ===================================================================== data
@@ -228,9 +229,9 @@ static func _brake(S: SimState, x: float) -> float:
 	return float(K_BRAKE[surfaceAt(S, x)])
 
 
-static func _gslope(S: SimState, x: float) -> float:
+static func _gslope(S: SimState, x: float, z: float = 0.0) -> float:
 	var e: float = SimConst.COL
-	return (WorldTerrain.groundY(S, x + e) - WorldTerrain.groundY(S, x - e)) / (2.0 * e)
+	return (WorldTerrain.groundY(S, x + e, z) - WorldTerrain.groundY(S, x - e, z)) / (2.0 * e)
 
 
 # ===================================================================== the pure step
@@ -309,7 +310,7 @@ static func moveAir(S: SimState, b: Body, dt: float, ev: Array) -> void:
 static func groundPhase(S: SimState, b: Body, ev: Array) -> void:
 	if b.done:
 		return
-	var g: float = WorldTerrain.groundY(S, b.x)
+	var g: float = WorldTerrain.groundY(S, b.x, b.z)
 	if b.y <= g:
 		_land(S, b, g, ev)
 	if b.y > SimConst.CEILING:
@@ -333,7 +334,7 @@ static func _land(S: SimState, b: Body, g: float, ev: Array) -> void:
 	var vxn: float = b.vx / tv
 	var vyn: float = b.vy
 	var sp: float = SimDetMath.hypot(vxn, vyn)
-	var s: float = _gslope(S, b.x)
+	var s: float = _gslope(S, b.x, b.z)
 	var q: float = sqrt(1.0 + s * s)
 	var vn: float = (vyn - s * vxn) / q
 	var vt: float = (vxn + s * vyn) / q
@@ -422,14 +423,14 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	var tv: float = b.launchT
 	var dir: float = b.dir
 	var vN: float = b.vN
-	var sl: float = (WorldTerrain.groundY(S, b.x + dir * SimConst.COL) - b.y) / SimConst.COL
+	var sl: float = (WorldTerrain.groundY(S, b.x + dir * SimConst.COL, b.z) - b.y) / SimConst.COL
 	var a: float = WorldSlide.MU * _brake(S, b.x) + WorldSlide.KV * vN + WorldSlide.GRAV * sl
 	if b.mode == TUMBLE:
 		a *= K_TUMBRAKE
 	var vN2: float = maxf(0.0, vN - a * dt)
 	var dx: float = dir * (vN + vN2) * 0.5 * tv * dt
 	var x2: float = SimWrap.wrap(b.x + dx)
-	var y2: float = WorldTerrain.groundY(S, x2)
+	var y2: float = WorldTerrain.groundY(S, x2, b.z)
 	var run: float = maxf(absf(dx), 1.0e-6)
 	var rise: float = (y2 - b.y) / run
 	# ground that rises like a wall stops him with a stop-impact
@@ -439,13 +440,13 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 		ev.append({"k": "wall", "x": b.x, "y": b.y, "speed": vN2})
 		return
 	# the leave test: would the next ballistic step end above the ground? he keeps his velocity along the ramp
-	var sprev: float = _gslope(S, b.x) * dir
+	var sprev: float = _gslope(S, b.x, b.z) * dir
 	var vyT: float = sprev * vN2 * K_LIFT
 	var xa: float = SimWrap.wrap(b.x + dir * vN2 * tv * SimDetMath.pow(0.55, dt) * dt)
 	var yb: float = b.y + (vyT - 1000.0 * dt) * dt
 	# past the journey's caps (8 contacts or 4 s) he tumbles to a stop: no more leaving the ground
 	var capNow: bool = b.contacts >= K_MAXC or b.t >= K_MAXT
-	if not capNow and vN2 > 0.0 and yb - WorldTerrain.groundY(S, xa) > K_CLEAR:
+	if not capNow and vN2 > 0.0 and yb - WorldTerrain.groundY(S, xa, b.z) > K_CLEAR:
 		var cause: String = "crest"   # natural ground: a hill's or ridge's crest
 		if S.rubble[int(floor(SimWrap.wrap(b.x) / SimConst.COL)) % SimConst.NC] > 0.0:
 			cause = "heap"
@@ -510,7 +511,7 @@ static func stepBody(S: SimState, b: Body, dt: float, ev: Array) -> void:
 
 ## The body a launch makes: from the launch position and velocity (vx carries the traversal factor launchT), by a launcher of
 ## the given tier; wet is true when the target starts under the sea (doLaunch sets it).
-static func launchBody(x: float, y: float, vx: float, vy: float, launchT: float, tier: float, wet: bool = false) -> Body:
+static func launchBody(x: float, y: float, vx: float, vy: float, launchT: float, tier: float, wet: bool = false, z: float = 0.0) -> Body:
 	var b := Body.new()
 	b.wet = wet
 	b.x = x
@@ -518,6 +519,7 @@ static func launchBody(x: float, y: float, vx: float, vy: float, launchT: float,
 	b.vx = vx
 	b.vy = vy
 	b.launchT = launchT
+	b.z = z
 	b.tier = tier
 	b.tumbleT = -1
 	return b
@@ -569,6 +571,7 @@ static func toBody(S: SimState, f) -> Body:
 	b.dxStep = 0.0
 	b.x = f.x
 	b.y = f.y
+	b.z = f.z
 	b.vx = f.vx
 	b.vy = f.vy
 	b.launchT = f.launchT
@@ -653,7 +656,7 @@ static func _skidEffects(S: SimState, f, by, b: Body, xa: float) -> void:
 	var pav: bool = WorldSlide._paved(f.x)
 	var depth: float = minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * b.vN)
 	if b.mode == SKID:
-		WorldCrater.carveSegment(S, xa, f.x, depth, pav, WorldSlide.CRACK0 + WorldSlide.CRACK_E * sqrt(E))
+		WorldCrater.carveSegment(S, xa, f.x, depth, pav, WorldSlide.CRACK0 + WorldSlide.CRACK_E * sqrt(E), f.z)
 	f.slideAcc += K_WPS * b.vLost
 	var idx: int = int(floor(f.slideD / WorldSlide.SAMPLE))
 	if idx > int(floor((f.slideD - absf(b.dxStep)) / WorldSlide.SAMPLE)):
@@ -716,7 +719,7 @@ static func _apply(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 		lg.dur = float(f.jT) * SimConst.DT
 	elif k == "wall":
 		var E: float = f.slideE
-		WorldCrater.dig(S, f.x, E * WorldSlide.STOP_E, by, "impact", 0.0, 1.0)
+		WorldCrater.dig(S, f.x, E * WorldSlide.STOP_E, by, "impact", 0.0, 1.0, false, f.z)
 		_pay(S, f, by, absf(f.vx) / f.launchT * WorldSlide.STOP_DMG)
 		SimFx.shake(S, 10.0, f.x, f.z)
 
@@ -753,7 +756,7 @@ static func _contact(S: SimState, f, by, b: Body, e: Dictionary) -> void:
 	if k == "slam":
 		var vert: float = absf(f.vy) / maxf(SimDetMath.hypot(f.vx, f.vy), 0.000001)
 		if bool(e.get("dig", true)):
-			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial)
+			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial, f.z)
 	if sea:
 		SimFx.splash(S, f.x, f.y + 10.0, 14, f.z)
 	else:
@@ -805,7 +808,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 		pass
 	elif how in ["tumble", "stop"] and f.slideEvt != 0.0:
 		var hw: float = WorldSlide.HW0 + WorldSlide.HW_E * sqrt(E)
-		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * f.jV0 * 0.25) * WorldSlide.BERM)
+		WorldCrater.berm(S, f.x, f.vx if f.vx != 0.0 else 1.0, hw, minf(WorldSlide.D_MAX, WorldSlide.D0 + WorldSlide.D_V * f.jV0 * 0.25) * WorldSlide.BERM, f.z)
 	if f.slideAcc > 0.0:
 		_pay(S, f, by, f.slideAcc)
 		f.slideAcc = 0.0

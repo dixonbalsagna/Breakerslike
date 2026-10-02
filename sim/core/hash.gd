@@ -185,6 +185,17 @@ static func collect(S: SimState, lane: String, beatDetail: bool = true, V: SimFx
 		_obj(out, b, BEAM)
 	for i in range(S.deform.size()):
 		out.append(S.deform[i])
+	if S.depthOn:   # T: the depth rows (their non-zero columns), only when depth is on, so a match without depth hashes as before
+		for arrs in [S.deformZ, S.rubbleZ]:
+			for k in range(arrs.size()):
+				var row: PackedFloat32Array = arrs[k]
+				var nzr: Array = []
+				for i in range(row.size()):
+					if row[i] != 0.0:
+						nzr.append(i)
+				out.append(float(nzr.size()))
+				for i in nzr:
+					out.append(float(i)); out.append(row[i])
 	# Water and scorch: only the non-zero columns, as (index, value) pairs, so the vectors stay small.
 	var nz: Array = []
 	for i in range(S.water.size()):

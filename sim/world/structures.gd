@@ -51,6 +51,26 @@ static func curH(b) -> float:
 static func baseY(S: SimState, b) -> float:
 	var NC: int = SimConst.NC
 	var COL: float = SimConst.COL
+	if S.depthOn and not S.deformZ.is_empty():   # T: the highest ground over the footprint in x and in depth (the rows inside its interval)
+		var m2: float = -1.0e9
+		var ca: int = int(floor((b.x - b.w * 0.5) / COL))
+		var cb: int = int(floor((b.x + b.w * 0.5) / COL)) + 1
+		var any: bool = false
+		for k in range(WorldTerrain.ROWS):
+			var zk: float = WorldTerrain.rowZOf(k)
+			if zk > b.z - b.d * 0.5 - 0.001 and zk < b.z + b.d * 0.5 + 0.001:
+				any = true
+				var ar: PackedFloat32Array = WorldTerrain.rowArr(S, k)
+				for c in range(ca, cb + 1):
+					var ic: int = posmod(c, NC)
+					m2 = maxf(m2, S.base[ic] + ar[ic])
+		if any:
+			return m2
+		var ar2: PackedFloat32Array = WorldTerrain.rowArr(S, WorldTerrain.rowOfZ(b.z))
+		for c in range(ca, cb + 1):
+			var ic2: int = posmod(c, NC)
+			m2 = maxf(m2, S.base[ic2] + ar2[ic2])
+		return m2
 	var c0: int = int(floor((b.x - b.w * 0.5) / COL))
 	var c1: int = int(floor((b.x + b.w * 0.5) / COL)) + 1
 	var m: float = -1.0e9
@@ -74,6 +94,8 @@ static func pinned(S: SimState, c0: int, half: int) -> PackedByteArray:
 		var b = S.buildings[bi]
 		if not b.alive:
 			continue
+		if not is_nan(WorldTerrain.rowZ) and (WorldTerrain.rowZ < b.z - b.d * 0.5 - 0.001 or WorldTerrain.rowZ > b.z + b.d * 0.5 + 0.001):
+			continue   # T: a building is a footing only for the rows inside its depth interval
 		var k0: int = int(floor((b.x - b.w * 0.5) / COL)) - 1
 		var k1: int = int(floor((b.x + b.w * 0.5) / COL)) + 2
 		for c in range(k0, k1 + 1):
@@ -170,6 +192,23 @@ static func collapse(S: SimState, b, cause, mode: String, cx: float, evt: float)
 ## and is relaxed to the angle of repose. Inside a fresh bowl it is capped so it never quietly rebuilds the crater. Returns the
 ## crest height (the cosmetic heap for a deeper row).
 static func _heap(S: SimState, b) -> float:
+	if not S.depthOn or S.deformZ.is_empty():
+		return _heapRow(S, b, false)
+	# T: the heap goes on the rows strictly inside the footprint's depth interval (never on a street's row, so a carriageway stays
+	# flat), once on each; a footprint with no row inside leaves only the cosmetic heap
+	var H: float = 0.0
+	for k in range(WorldTerrain.ROWS):
+		var zk: float = WorldTerrain.rowZOf(k)
+		if zk > b.z - b.d * 0.5 and zk < b.z + b.d * 0.5:
+			var kk: int = WorldTerrain.enterRow(S, k)
+			H = maxf(H, _heapRow(S, b, true))
+			WorldTerrain.leaveRow(S, kk)
+	if H <= 0.0:
+		H = minf(clampf(RUBBLE_H_FRAC * b.h, RUBBLE_MIN, RUBBLE_MAX), RUBBLE_SLOPE * RUBBLE_SPILL * b.w / RUBBLE_CREST_K)
+	return H
+
+
+static func _heapRow(S: SimState, b, anyRow: bool) -> float:
 	var NC: int = SimConst.NC
 	var COL: float = SimConst.COL
 	var half: float = RUBBLE_SPILL * b.w
@@ -178,7 +217,7 @@ static func _heap(S: SimState, b) -> float:
 	var here: float = S.deform[c0]
 	if here < -0.5 * H:
 		H = minf(H, RUBBLE_BOWL_CAP * (-here))
-	if H <= 0.0 or b.row > RUBBLE_ROW_MAX:
+	if H <= 0.0 or (b.row > RUBBLE_ROW_MAX and not anyRow):
 		return maxf(H, 0.0)
 	var n: int = int(ceil(half / COL))
 	var pin: PackedByteArray = pinned(S, c0, n)
@@ -200,6 +239,7 @@ static func _heap(S: SimState, b) -> float:
 		S.deform[i] = v
 		S.rubble[i] += got
 	WorldCrater.relax(S, c0, n + WorldCrater.REPOSE_PAD)
+	WorldTerrain.lowRefresh(S, c0, n + WorldCrater.REPOSE_PAD)
 	return H
 
 

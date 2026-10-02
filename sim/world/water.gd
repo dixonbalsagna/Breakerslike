@@ -63,7 +63,7 @@ static func depthAt(S: SimState, x: float) -> float:
 static func surfaceAt(S: SimState, x: float) -> float:
 	var i: int = int(floor(SimWrap.wrap(x) / SimConst.COL))
 	var d: float = S.water[i]
-	return S.base[i] + S.deform[i] + d if d >= MIN_DEPTH else DRY
+	return S.base[i] + WorldTerrain.lowD(S)[i] + d if d >= MIN_DEPTH else DRY
 
 
 ## Start of a match: reservoir columns full to sea level, and the shallows connected to them (an unbroken run of ground
@@ -77,7 +77,7 @@ static func init(S: SimState) -> void:
 	S.waterTick = 0.0
 	for i in range(NC):
 		if isReservoir(S, i):
-			S.water[i] = maxf(0.0, SEA_LEVEL - (S.base[i] + S.deform[i]))
+			S.water[i] = maxf(0.0, SEA_LEVEL - (S.base[i] + WorldTerrain.lowD(S)[i]))
 	for dir in [1, -1]:
 		var wet: bool = false
 		for lap in range(2 * NC):   # two laps carry the fill across the seam
@@ -85,7 +85,7 @@ static func init(S: SimState) -> void:
 			if isReservoir(S, i2):
 				wet = true
 			elif wet:
-				var g: float = S.base[i2] + S.deform[i2]
+				var g: float = S.base[i2] + WorldTerrain.lowD(S)[i2]
 				if g < SHORE_WET:
 					S.water[i2] = SEA_LEVEL - g
 				else:
@@ -97,7 +97,11 @@ static func init(S: SimState) -> void:
 static func touched(S: SimState, c0: int, cols: int, minG: float) -> void:
 	var NC: int = SimConst.NC
 	var base: PackedFloat32Array = S.base
-	var dfm: PackedFloat32Array = S.deform
+	var dfm: PackedFloat32Array = WorldTerrain.lowD(S)
+	if S.depthOn:   # the lowest ground over all the rows, in the window
+		for k in range(-cols, cols + 1):
+			var ic: int = (c0 + k + NC) % NC
+			minG = minf(minG, base[ic] + dfm[ic])
 	for k in range(-cols, cols + 1):
 		var i: int = (c0 + k + NC) % NC
 		if base[i] < RESERVOIR_BASE:
@@ -142,7 +146,7 @@ static func step(S: SimState) -> void:
 		return
 	var NC: int = SimConst.NC
 	var base: PackedFloat32Array = S.base
-	var dfm: PackedFloat32Array = S.deform
+	var dfm: PackedFloat32Array = WorldTerrain.lowD(S)
 	var wat: PackedFloat32Array = S.water
 	var wi: int = 0
 	while wi < S.waterWin.size():

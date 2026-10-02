@@ -80,6 +80,7 @@ static func newMatch(S: SimState, seed: int, ai: Dictionary = {}, setup: Diction
 	S.dirS.craterT = PackedFloat64Array()   # Encounter's slice (a) (granted line)
 	SimAct.setup(S, setup)   # I2a: each fighter's action state
 	S.depthOn = setup.get("depth", false) == true   # fight lanes: off until the director's switch-on (L4); a setup may force it for probes
+	WorldTerrain.initRows(S)   # T: the depth rows exist only when depth is on
 	SimPause.reset(S)        # Q10: the pause bank
 	SimIntro.setup(S, setup) # the intro phase, when the setup asks for it
 	SimMood.reset(S)   # M1: the mood, the act and each fighter's style
