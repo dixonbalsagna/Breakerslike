@@ -47,7 +47,7 @@ func _two_humans(seed_: int) -> SimState:
 	return S
 
 
-## A press when the director is free is an exchange on the same tick, whoever presses.
+## A press when the director is free is an exchange (close up) or an approach (from range) on the same tick, whoever presses.
 func _latency() -> void:
 	for slot in range(2):
 		var S: SimState = _two_humans(11)
@@ -57,7 +57,10 @@ func _latency() -> void:
 		var ins: Array = [_intent(), _intent()]
 		ins[slot] = _intent(true)
 		SimCore.step(S, ins)
-		ok(S.dirS.ex != null and S.dirS.ex.A == S.fighters[slot], "latency: slot %d's press starts its exchange on the same tick (0 ticks)" % slot)
+		# From range the press starts an approach (DirBands.pending), not an exchange; close up it starts the exchange. Either
+		# is the press taking effect on the same tick.
+		var started: bool = (S.dirS.ex != null and S.dirS.ex.A == S.fighters[slot]) or DirBands.pending(S.fighters[slot])
+		ok(started, "latency: slot %d's press starts its exchange or its approach on the same tick (0 ticks)" % slot)
 		SimCore.dispose(S)
 
 

@@ -1,6 +1,6 @@
 # Agency, slice 1: the earned launch, the knock-back, the attacker's cancel and the press log
 
-Owner: Encounter Systems Director. Date: 2026-10-02. Status: in the tree on HEAD `9a0b207`; goldens regenerated on a clean copy of that HEAD with only this slice's files (Controls has input work in progress in the tree). Rules: `docs/design/agency-pass.md` §1 to §3 and Orb's questionnaire 14.
+Owner: Encounter Systems Director. Date: 2026-10-02. Status: committed as `e9615b9` (goldens regenerated on `ba8f7b5`). The next slice is `agency-slice-2.md`. Rules: `docs/design/agency-pass.md` §1 to §3 and Orb's questionnaire 14.
 
 Everything here runs only in a profile with a contact block (`dynamic`). The old profiles are unchanged.
 

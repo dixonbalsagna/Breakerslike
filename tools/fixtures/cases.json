@@ -27182,7 +27182,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27215,7 +27217,9 @@
               "groundWithinBh": 0.5,
               "driftTicks": 20,
               "chain": false,
-              "push": 1
+              "push": 1,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27284,7 +27288,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27318,7 +27324,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27353,7 +27361,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27388,7 +27398,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27423,7 +27435,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27458,7 +27472,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27488,7 +27504,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27523,7 +27541,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27558,7 +27578,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27593,7 +27615,9 @@
               "skidUy": -0.1,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27628,7 +27652,9 @@
               "skidUy": 0,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27660,7 +27686,9 @@
               "skidUy": 0.05,
               "groundWithinBh": -1,
               "driftTicks": 20,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27695,7 +27723,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20.5,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27730,7 +27760,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 0,
-              "chain": false
+              "chain": false,
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -27765,7 +27797,9 @@
               "skidUy": 0.05,
               "groundWithinBh": 0.5,
               "driftTicks": 20,
-              "chain": "no"
+              "chain": "no",
+              "slideUnderBh": 4,
+              "slideTicks": 18
             }
           }
         }
@@ -29881,6 +29915,1005 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/bands"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-bands-valid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "reach": 1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/bands/reach"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-enabled-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": "yes",
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/enabled"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-off-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": false,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-close-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 0,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bands/closeBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-mid-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": -1,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bands/midBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-engage-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 0,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bands/engageBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-close-not-below-mid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 12,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/closeBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-close-above-mid",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 20,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/closeBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-engage-above-close",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 4,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/engageBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-engage-equals-close-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 3,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-lunge-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/lunge"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-lunge-speed-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 0,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bands/lunge/speed"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-lunge-ticks-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3.5,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/lunge/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-lunge-ticks-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 0,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bands/lunge/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-lunge-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 30,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/lunge/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-lunge-equal-ticks-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 20,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-far-weight-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/far"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-far-unknown-weight",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                },
+                "medium": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/bands/far/medium"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-far-light-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 100,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/far/light/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-far-heavy-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 100,
+                  "maxTicks": 90
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/far/heavy/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-far-speed-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands": {
+              "enabled": true,
+              "closeBh": 3,
+              "midBh": 12,
+              "engageBh": 2.5,
+              "lunge": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20
+              },
+              "far": {
+                "light": {
+                  "speed": "fast",
+                  "minTicks": 3,
+                  "maxTicks": 20
+                },
+                "heavy": {
+                  "speed": 4000,
+                  "minTicks": 3,
+                  "maxTicks": 20
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/far/light/speed"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-slide-under-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/knockBack/slideUnderBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockBack"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-slide-ticks-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/knockBack/slideTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockBack"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-slide-under-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/slideUnderBh": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/slideUnderBh"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-slide-under-zero-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/slideUnderBh": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-slide-under-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/slideUnderBh": "low"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/slideUnderBh"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-slide-ticks-integer",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/slideTicks": 18.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/slideTicks"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-slide-ticks-positive",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/slideTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/slideTicks"
+      }
     }
   ],
   "text": [

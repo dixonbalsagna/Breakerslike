@@ -52,7 +52,9 @@
     "skidUy": 0.05,
     "groundWithinBh": 0.5,
     "driftTicks": 20,
-    "chain": false
+    "chain": false,
+    "slideUnderBh": 4,
+    "slideTicks": 18
   },
   "earned": {
     "enabled": true,

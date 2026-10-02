@@ -12,7 +12,8 @@
     "reversal",
     "blockedString",
     "arrival",
-    "stale"
+    "stale",
+    "bands"
   ],
   "properties": {
     "schema": {
@@ -360,6 +361,147 @@
         }
       },
       "description": "The attacker's arrival side: with the stick up or down past tiltDead as he presses, his approach passes over (or under) the rival and lands on the far side.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "bands": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "closeBh",
+        "midBh",
+        "engageBh",
+        "lunge",
+        "far"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "The ranged press switch."
+        },
+        "closeBh": {
+          "description": "A press within this many body heights (75 u; centre to centre, the shortest arc and the height together) starts its exchange at once.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "midBh": {
+          "description": "Mid band: to this many body heights; far beyond.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "engageBh": {
+          "description": "A press from farther off starts only the approach, which ends this far from the rival.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lunge": {
+          "type": "object",
+          "required": [
+            "speed",
+            "minTicks",
+            "maxTicks"
+          ],
+          "properties": {
+            "speed": {
+              "description": "Units a second.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "minTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The approach lasts at least this many whole ticks."
+            },
+            "maxTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "And at most this many."
+            }
+          },
+          "description": "The mid band's approach: the distance to cover at `speed`, in whole ticks between minTicks and maxTicks.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "far": {
+          "type": "object",
+          "required": [
+            "light",
+            "heavy"
+          ],
+          "properties": {
+            "light": {
+              "type": "object",
+              "required": [
+                "speed",
+                "minTicks",
+                "maxTicks"
+              ],
+              "properties": {
+                "speed": {
+                  "description": "Units a second.",
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "minTicks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "The approach lasts at least this many whole ticks."
+                },
+                "maxTicks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "And at most this many."
+                }
+              },
+              "description": "The far band's approach for a light press.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "heavy": {
+              "type": "object",
+              "required": [
+                "speed",
+                "minTicks",
+                "maxTicks"
+              ],
+              "properties": {
+                "speed": {
+                  "description": "Units a second.",
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "minTicks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "The approach lasts at least this many whole ticks."
+                },
+                "maxTicks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "And at most this many."
+                }
+              },
+              "description": "The far band's approach for a heavy press.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "description": "The far band, by the press's weight.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "The ranged press (agency-pass.md section 1; sim/director/bands.gd). Orders (engageBh at most closeBh, closeBh below midBh, minTicks at most maxTicks) are checked by tools/lib/xref-fight.js (bands-order).",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

@@ -70,5 +70,29 @@
     "riseBh": 1.3,
     "overShare": 0.6,
     "_note": "The attacker's arrival side: with the stick up or down past tiltDead as he presses, his approach passes over (or under) the rival and lands on the far side. riseBh: how far over, in body heights. overShare: the share of the approach spent reaching the point above him"
+  },
+  "bands": {
+    "enabled": true,
+    "closeBh": 3,
+    "midBh": 12,
+    "engageBh": 2.5,
+    "lunge": {
+      "speed": 4000,
+      "minTicks": 3,
+      "maxTicks": 20
+    },
+    "far": {
+      "light": {
+        "speed": 4000,
+        "minTicks": 6,
+        "maxTicks": 90
+      },
+      "heavy": {
+        "speed": 4000,
+        "minTicks": 6,
+        "maxTicks": 90
+      }
+    },
+    "_note": "The ranged press (agency-pass.md section 1; sim/director/bands.gd). The bands are measured centre to centre, the shortest arc and the height together, in body heights (75 u): close within closeBh, mid to midBh, far beyond. A close press starts its exchange at once. A press from farther off starts only the attacker's approach: it ends engageBh from the rival, on the attacker's own side and at the rival's height, and the exchange is planned then (the wind-up follows). The rival is free until it ends. lunge (the mid band) and far.light, far.heavy (the far band, by the press's weight): the approach lasts the distance to cover at 'speed' (units a second), in whole ticks, at least minTicks and at most maxTicks. Until the far taunt and the held charge are built a far press flies in on a tap, at about the speed it had (4000 u a second; it was 2600 with the wind-up inside the flight); the charge's own flight (light 0.5 to 1.5 s, heavy 0.8 to 2.0 s) comes with the hold. On a slope the end point is brought in until the pair is inside the close band"
   }
 }

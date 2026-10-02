@@ -206,7 +206,7 @@ static func _branch(tp: Dictionary, id: String) -> Dictionary:
 static func _approachTicks(dist: float, heavy: bool = false) -> float:
 	var ap: Dictionary = _prof().approach
 	if heavy and ap.has("minHeavy") and not (ap.has("pursuit") and dist > float(ap.pursuit.beyond)):
-		return maxf(float(ap.minHeavy), floor(SimMathx.jclamp(dist / float(ap.divisor), float(ap.min), float(ap.max)) * TICKS_PER_SEC + 0.5))
+		return maxf(floor(float(ap.minHeavy) * TICKS_PER_SEC + 0.5), floor(SimMathx.jclamp(dist / float(ap.divisor), float(ap.min), float(ap.max)) * TICKS_PER_SEC + 0.5))
 	var sec: float
 	if ap.has("pursuit") and dist > float(ap.pursuit.beyond):
 		var pu: Dictionary = ap.pursuit

@@ -69,5 +69,28 @@
     "windowPerRepeat": 2,
     "windowMax": 4,
     "_note": "the same weight, mode and direction in 'after' exchanges running: each further repeat adds windupPerRepeat ticks to its wind-ups (at most windupMax) and windowPerRepeat ticks to the rival's perfect-block window (at most windowMax). A change of weight, mode or direction clears it"
+  },
+  "bands": {
+    "enabled": true,
+    "closeBh": 3,
+    "midBh": 12,
+    "engageBh": 2.5,
+    "lunge": {
+      "speed": 4000,
+      "minTicks": 3,
+      "maxTicks": 20
+    },
+    "far": {
+      "light": {
+        "speed": 4000,
+        "minTicks": 6,
+        "maxTicks": 90
+      },
+      "heavy": {
+        "speed": 4000,
+        "minTicks": 6,
+        "maxTicks": 90
+      }
+    }
   }
 }

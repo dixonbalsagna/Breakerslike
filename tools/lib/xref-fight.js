@@ -701,6 +701,12 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
     const dcI = itr.dodgeCancel;
     if (isObj(dcI) && typeof dcI.freeGapTicks === 'number' && typeof dcI.cooldownTicks === 'number' && dcI.freeGapTicks > dcI.cooldownTicks) err(IT, '/dodgeCancel/freeGapTicks', 'interrupts-order', `freeGapTicks ${dcI.freeGapTicks} is longer than cooldownTicks ${dcI.cooldownTicks}, so the free cancel would cost more than a paid one`, 'warning');
+    const bd = itr.bands;
+    if (isObj(bd)) {
+      if (typeof bd.closeBh === 'number' && typeof bd.midBh === 'number' && bd.closeBh >= bd.midBh) err(IT, '/bands/closeBh', 'bands-order', `closeBh ${bd.closeBh} is not below midBh ${bd.midBh}, so there would be no mid band`);
+      if (typeof bd.engageBh === 'number' && typeof bd.closeBh === 'number' && bd.engageBh > bd.closeBh) err(IT, '/bands/engageBh', 'bands-order', `engageBh ${bd.engageBh} is above closeBh ${bd.closeBh}, so an approach would end outside the close band`);
+      for (const [path, o] of [['lunge', bd.lunge], ['far/light', isObj(bd.far) ? bd.far.light : undefined], ['far/heavy', isObj(bd.far) ? bd.far.heavy : undefined]]) if (isObj(o) && typeof o.minTicks === 'number' && typeof o.maxTicks === 'number' && o.minTicks > o.maxTicks) err(IT, `/bands/${path}/minTicks`, 'bands-order', `minTicks ${o.minTicks} is above maxTicks ${o.maxTicks}`);
+    }
     const rv = itr.reversal;
     if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);
     const st = itr.stale;

@@ -374,25 +374,35 @@ static func heavyBlow(S: SimState, ex, att) -> bool:
 	return p >= 0 and (p & 1) == SimAct.HEAVY
 
 
-## The knock-back (launch.json knockBack): a short send, not a launch across the map. On the ground it is a low,
-## send with no travel boost that the ground-contact model skids about distBh body heights (dust, a scuff, a trench). In
-## the air, over the sea, or with groundMode "shove", the rival is carried back that far, upright, over driftTicks.
+## The knock-back (launch.json knockBack): a short send, not a launch across the map, distBh body heights by the
+## striker's tier.
+##  - On the ground, slideUnderBh and over: a low send with no travel boost that the ground-contact model skids (dust,
+##    a scuff, a trench). Its plan carries slide "feet" and the distance, for World's slide on the feet.
+##  - On the ground, under slideUnderBh: he slides back upright. The director carries him that far along the ground
+##    over slideTicks. It is not a launch: no journey, no trench.
+##  - In the air, over the sea, or with groundMode "shove": he is carried back that far, upright, over driftTicks.
 static func knock(S: SimState, att, tgt) -> void:
 	var kb: Dictionary = data().knockBack
 	var ti: int = clampi(int(att.tier) - 1, 0, 3)
 	var s: float = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(att.x, tgt.x)), att.face)
 	var g: float = WorldTerrain.groundY(S, tgt.x)
-	if String(kb.groundMode) == "skid" and tgt.y - g <= float(kb.groundWithinBh) * BH and not WorldTerrain.seaAt(S, tgt.x):
+	var dist: float = float(kb.distBh[ti]) * BH
+	var ground: bool = String(kb.groundMode) == "skid" and tgt.y - g <= float(kb.groundWithinBh) * BH and not WorldTerrain.seaAt(S, tgt.x)
+	if ground:
+		SimFx.cue(S, tgt, "slide_brace", "", "")   # Combat's cue for the slide on the feet
+	if ground and float(kb.distBh[ti]) >= float(kb.get("slideUnderBh", 0.0)):
 		var sp: float = float(kb.skidSpeed[ti])
-		doLaunch(S, att, tgt, {"name": "KNOCK BACK", "ux": s, "uy": float(kb.skidUy)}, sp, false)
+		doLaunch(S, att, tgt, {"name": "KNOCK BACK", "ux": s, "uy": float(kb.skidUy), "slide": "feet", "dist": dist}, sp, false)
 		tgt.launchT = 1.0          # no travel boost: a knock-back is a short slide, not a flight across the map
 		tgt.vx = s * sp            # ... and its speed is the data's, whatever the tier scaling of a launch
 		tgt.vy = float(kb.skidUy) * sp
 		return
 	var r := SimState.Rush.new()
-	r.px = SimWrap.wrap(tgt.x + s * float(kb.distBh[ti]) * BH)
-	r.py = SimMathx.jmax(tgt.y, WorldTerrain.groundY(S, r.px))
-	r.end = S.T + float(kb.driftTicks) * SimConst.DT
+	r.px = SimWrap.wrap(tgt.x + s * dist)
+	var g2: float = WorldTerrain.groundY(S, r.px)
+	var slide: bool = ground and not WorldTerrain.seaAt(S, r.px)   # the upright slide ends on the ground; a drift keeps its height
+	r.py = g2 if slide else SimMathx.jmax(tgt.y, g2)
+	r.end = S.T + float(kb.slideTicks if slide else kb.driftTicks) * SimConst.DT
 	tgt.rush = r
 	tgt.vx = 0.0
 	tgt.vy = 0.0

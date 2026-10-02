@@ -40,7 +40,7 @@ static func aiInput(S: SimState, f) -> void:
 	a.t -= SimConst.DT
 	# The attack timer runs only between exchanges and is held at the stance minimum during one, so the cadence is
 	# breathing room after a release.
-	if S.dirS.ex == null:
+	if S.dirS.ex == null and DirBands.who(S) < 0:
 		a.atk -= SimConst.DT
 		# No lull over about 10 s: GAP_URGE seconds after the last exchange, attack within GAP_SOON. The clock is the
 		# exchange's (exT), not the last press: a press at a launched target is refused but still stamps lastAtkT, which
@@ -83,7 +83,7 @@ static func aiInput(S: SimState, f) -> void:
 	var wantsCharge: bool = st == 1.0 and f.ki < 55.0 and dist > 350.0
 	# The roam yields while the opponent is out of lock: a hunter sweeps for it (below) and never leads the fight away from
 	# a target it has lost (QA: the roam ran before the hunt, so a roaming hunter did not search).
-	var lure: float = DirLocation.roam(S, f) if st != 3.0 and not wantsCharge and not o.hidden else 0.0
+	var lure: float = DirLocation.roam(S, f) if st != 3.0 and not wantsCharge and not o.hidden and DirBands.who(S) < 0 else 0.0
 	var sea: bool = WorldTerrain.seaAt(S, f.x)
 	if lure != 0.0:
 		i.mx = lure
@@ -158,7 +158,7 @@ static func aiInput(S: SimState, f) -> void:
 		i.dash = true
 	# A hunter sometimes swings blind at the last-seen spot (it pays the lock-lost cost: 2 ki and a 0.5 s cooldown).
 	# A beat is not spent on a press the director would refuse (the cooldown, or a target in the air): it waits.
-	var ready: bool = S.dirS.cool <= 0.0 and o.state != "launched" and o.state != "locked"
+	var ready: bool = S.dirS.cool <= 0.0 and o.state != "launched" and o.state != "locked" and DirBands.who(S) < 0
 	var blind: bool = a.atk <= 0.0 and ready and o.hidden and st == 0.0 and S.dirS.ex == null and S.rng.next() < BLIND_SWING
 	if a.atk <= 0.0 and ready and (not o.hidden or blind) and st != 3.0 and S.dirS.ex == null:
 		# Each attack beat either attacks or holds (repositions, charges): holding fills the downtime between exchanges.

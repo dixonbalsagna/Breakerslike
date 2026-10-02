@@ -32,6 +32,7 @@ const KIND: Array = ["light", "heavy", "sig"]   # SimAct.LIGHT, HEAVY, SIG
 const STARTED: int = 0
 const DROPPED: int = 1
 const WAIT: int = 2
+const APPROACH: int = 3   # the request began an approach (DirBands): it is spent, and the exchange starts when the approach ends
 
 
 ## An attack press. For a v2 slot it is one request (ADR 0008): it joins the fighter's queue (SimAct, depth queueMax), and
@@ -60,6 +61,8 @@ static var planContext: String = ""
 static var planLaunch: bool = false
 static var planStale: int = 0
 static var planTick: int = -1   # the tick of the request being started (its press in the log), -1 outside _drain
+static var engaging: bool = false   # true while an approach's end starts its exchange (DirBands._engage); not state
+static var planOpen: int = 0        # ... and the opening that approach began with (DirInterrupt.OPEN_*, or 0)
 
 
 ## Starts the oldest queued request the director can take: the older one first; on a tie of age the fighter who did not
@@ -91,7 +94,7 @@ static func _drain(S: SimState) -> void:
 			if r == WAIT:
 				break
 			SimAct.pop(f)
-			if r == STARTED:
+			if r == STARTED or r == APPROACH:
 				return
 
 
@@ -102,14 +105,15 @@ static func _queues(S: SimState) -> void:
 		if not f.act.v2:
 			continue
 		var up: int = f.input.upgrade
-		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG):
+		if up > 0 and not SimAct.upgrade(f, SimAct.HEAVY if up == 1 else SimAct.SIG) and not DirBands.upgrade(S, f, SimAct.HEAVY if up == 1 else SimAct.SIG):
 			SimAct.push(f, SimAct.HEAVY if up == 1 else SimAct.SIG, f.act.mode, 0, S.tick)
 		if up == 1:
 			DirAlchemy.held(f)   # the press log: the newest press was held
 		# A waiting request expires, except the attacker's own links during its exchange, and the defender's answer during
-		# a beam's tell (step 2b: the tell is longer than the expiry).
+		# a beam's tell (step 2b: the tell is longer than the expiry). Nothing expires during an approach: the approaching
+		# fighter's later presses are his links, and the rival's press is his answer, read when the exchange starts.
 		var ex = S.dirS.ex
-		if not (ex != null and (ex.A == f or (ex.kind == "sig" and ex.D == f and ex.branch == ""))):
+		if not (ex != null and (ex.A == f or (ex.kind == "sig" and ex.D == f and ex.branch == ""))) and DirBands.who(S) < 0:
 			SimAct.expire(f, S.tick, QUEUE_LIFE)
 	_drain(S)
 
@@ -119,7 +123,10 @@ static func _queues(S: SimState) -> void:
 static func _start(S: SimState, A, kind: String) -> int:
 	if S.dirS.ex != null or S.game.ko != null:
 		return WAIT
-	var opn: int = DirInterrupt.opening(S, A) if kind != "sig" else 0
+	# An approach is on (DirBands): every request waits for its end, except the rival's signature, which ends it.
+	if not engaging and DirBands.who(S) >= 0 and (kind != "sig" or DirBands.pending(A)):
+		return WAIT
+	var opn: int = planOpen if engaging else (DirInterrupt.opening(S, A) if kind != "sig" else 0)   # an approach carries its opening to the engage
 	if S.dirS.cool > 0.0 and opn == 0:
 		return WAIT
 	if A.stunTicks > 0 and DirInterrupt.on():
@@ -148,6 +155,14 @@ static func _start(S: SimState, A, kind: String) -> int:
 		SimFx.lockLost(S, A, D)
 		SimFx.searching(S, A, D, D.lastSeen.x if D.lastSeen != null else D.x)
 		return DROPPED
+	# The ranged press (agency-pass.md section 1): outside the close band only the attacker's approach starts. Nothing
+	# is decided, and the rival stays free, until it ends; the exchange then starts here again (engaging). An opening
+	# (a riposte, a reversal, a punish) begins its approach through the cooldown and is kept for the engage.
+	if kind != "sig" and not engaging and DirBands.on() and DirBands.band(A, D) != DirBands.CLOSE:
+		DirBands.begin(S, A, D, KIND.find(kind), planEntry, planTick if planTick >= 0 else S.tick, opn)
+		if opn != 0:
+			DirInterrupt.si(A, DirInterrupt.OPEN_UNTIL, 0)
+		return APPROACH
 	if A.hidden:
 		if A.canHide:
 			A.hidden = false
@@ -169,6 +184,8 @@ static func _start(S: SimState, A, kind: String) -> int:
 		else:
 			A.ki -= 45.0
 		A.sigReadyT = S.T + A.sigCooldown
+	if DirBands.pending(D):
+		DirBands.drop(S, D, A.name + "'s signature stops it")
 	var ex := newEx(A, D, kind)
 	A.exT = S.T
 	D.exT = S.T
@@ -412,6 +429,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	_transforms(S)
 	if S.dirS.cool > 0.0:
 		S.dirS.cool -= dt
+	DirBands.tick(S)   # the approach before an exchange: it counts down, and the exchange starts at its end
 	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:
@@ -519,7 +537,7 @@ static func transformSource(f) -> String:
 ## formBreak below). For TRANSFORM_HOLD no exchange starts and the transformer holds still (its stun gate). One
 ## transform a tick.
 static func _transforms(S: SimState) -> void:
-	if S.dirS.ex != null or S.game.ko != null:
+	if S.dirS.ex != null or S.game.ko != null or DirBands.who(S) >= 0:
 		return
 	for f in S.fighters:
 		if not f.act.formReady or (f.state != "free" and f.state != "charging"):

@@ -30,7 +30,10 @@ const LANDED: int = 13      # strikes it has landed in the exchange now running 
 const PHRASE_P: int = 14    # the press that started its exchange or its latest chain link, as the press log packs it
 const TAKEN: int = 15       # blows it has taken unblocked in the exchange now running (a heavy "landing clean")
 const LAST_END: int = 16    # how the last launch beat of its exchange ended: END_LAUNCH, END_KNOCK or END_STAY
-const N: int = 17
+const APPR_LEFT: int = 17  # ticks left of his approach (DirBands): the exchange starts when it reaches 0; 0 when none is on
+const APPR_REQ: int = 18   # ... the press that began it: weight | (entry + 1) << 2 | its opening << 4
+const APPR_TICK: int = 19  # ... and that press's tick (its place in the press log)
+const N: int = 20
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
 const END_STAY: int = 2
@@ -311,7 +314,9 @@ static func _aiBlocks(S: SimState, ex) -> void:
 # ---------------------------------------------------------------- the dodge-cancel
 
 static func dodgeCancel(S: SimState, ex, f) -> bool:
-	if ex == null or ex.kind == "sig" or (f != ex.A and f != ex.D) or DirExchange.finisherPlanned(ex):
+	if ex == null:
+		return DirBands.cancel(S, f)   # his own approach: nothing had started, so it costs nothing
+	if ex.kind == "sig" or (f != ex.A and f != ex.D) or DirExchange.finisherPlanned(ex):
 		return false
 	var c: Dictionary = data().dodgeCancel
 	# The attacker's cancel is free until his first wind-up starts (agency-pass.md section 1): he was flown in by the
@@ -330,18 +335,22 @@ static func dodgeCancel(S: SimState, ex, f) -> bool:
 	ex.loser = -1
 	ex.A.rush = null
 	ex.D.rush = null
-	var o = ex.D if f == ex.A else ex.A
+	dash(f, ex.D if f == ex.A else ex.A, float(c.dash))
+	SimFx.afterimage(S, f)
+	SimFx.cue(S, f, "dodge_cancel", "", "")
+	SimEvents.feed(S, f.name + " DODGE-CANCEL", "the exchange ends with no winner")
+	return true
+
+
+## The cancel's dash: in the held direction, or away from the rival o when none is held.
+static func dash(f, o, speed: float) -> void:
 	var mx: float = f.input.mx
 	var my: float = f.input.my
 	if mx == 0.0 and my == 0.0:
 		mx = -SimDamage.jor(SimMathx.jsign(SimWrap.sdx(f.x, o.x)), f.face)   # no direction held: away from the rival
 	var l: float = SimDetMath.hypot(mx, my)
-	f.vx = mx / l * float(c.dash)
-	f.vy = my / l * float(c.dash)
-	SimFx.afterimage(S, f)
-	SimFx.cue(S, f, "dodge_cancel", "", "")
-	SimEvents.feed(S, f.name + " DODGE-CANCEL", "the exchange ends with no winner")
-	return true
+	f.vx = mx / l * speed
+	f.vy = my / l * speed
 
 
 ## True until the exchange's first wind-up starts: its wind beat is still pending.

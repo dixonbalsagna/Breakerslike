@@ -185,7 +185,9 @@
         "skidUy",
         "groundWithinBh",
         "driftTicks",
-        "chain"
+        "chain",
+        "slideUnderBh",
+        "slideTicks"
       ],
       "properties": {
         "score": {
@@ -237,6 +239,16 @@
         "chain": {
           "type": "boolean",
           "description": "Whether a chain window may open after it."
+        },
+        "slideUnderBh": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The knock-back slides (rather than drifts) when the rival is within this many body heights of the ground."
+        },
+        "slideTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The ticks the slide lasts."
         }
       },
       "description": "The knock-back: a short send that is not a launch across the map (agency-pass.md section 3).",
