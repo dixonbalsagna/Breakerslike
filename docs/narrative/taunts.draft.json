@@ -1,0 +1,1855 @@
+{
+ "schema": "narrative.taunts/1",
+ "_about": "DRAFT, unwired. The shape for the taunt director (docs/narrative/taunt-system.md) and the first batch of lines, all placeholders for Orb's edit (voice-lab/taunts-draft.csv). The ids match the CSV. Not in data/narrative yet: moving it there needs a schema in tools/schemas. Unsearched by Legal.",
+ "ladder": {
+  "_about": "streak = taunts in a row by this fighter since an exchange began for either fighter. A rung is a range of streak values.",
+  "rungs": [
+   {
+    "id": "1",
+    "streak": [
+     1,
+     1
+    ]
+   },
+   {
+    "id": "2-3",
+    "streak": [
+     2,
+     3
+    ]
+   },
+   {
+    "id": "4-6",
+    "streak": [
+     4,
+     6
+    ]
+   },
+   {
+    "id": "7-12",
+    "streak": [
+     7,
+     12
+    ]
+   },
+   {
+    "id": "13+",
+    "streak": [
+     13,
+     9999
+    ]
+   }
+  ],
+  "milestones": [
+   10,
+   25,
+   50,
+   100,
+   250,
+   500
+  ],
+  "milestone_counts": "standoff_count: taunts by both fighters since the last exchange, plus every taunt so far this stand-off",
+  "reset": "An exchange (any hit landed, either way) ends the stand-off: streak and standoff_count return to zero, and the ladder is climbed afresh."
+ },
+ "tempo": {
+  "mashed_if_gap_s_below": 1.4,
+  "paced_if_gap_s_at_least": 2.4,
+  "speech_max_s_single": 1.2
+ },
+ "memory": {
+  "match_ring": 40,
+  "jab_cooldown_taunts": 25,
+  "hook_cooldown_taunts": 12,
+  "tag_cooldown_taunts": 3,
+  "topic_cooldown_taunts": 2,
+  "cross_match": "dialogue_seen.json per-line seen_count, as in dialogue-director.md section 3.3"
+ },
+ "selection": {
+  "weights": {
+   "specific": 3.0,
+   "ladder_rung": 1.0,
+   "answer": 4.0,
+   "milestone": 8.0,
+   "novelty": "1 / (1 + seen_count)"
+  },
+  "generic_floor_p": 0.2,
+  "seed": "match seed plus taunt index, own stream"
+ },
+ "lines": [
+  {
+   "id": "tnt-pro-001",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Come on. I've got all day.",
+   "words": 6,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-pro-002",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Just stretching. Go ahead, take your time.",
+   "words": 7,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "stall"
+   ]
+  },
+  {
+   "id": "tnt-pro-003",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Still smiling. Still here.",
+   "words": 4,
+   "when": {
+    "rung": "2-3"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-pro-004",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "That's two. I'm keeping count, you know.",
+   "words": 7,
+   "when": {
+    "rung": "2-3"
+   }
+  },
+  {
+   "id": "tnt-pro-005",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Okay, now I'm enjoying this.",
+   "words": 5,
+   "when": {
+    "rung": "4-6"
+   }
+  },
+  {
+   "id": "tnt-pro-006",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "I'll keep going if you will.",
+   "words": 6,
+   "when": {
+    "rung": "4-6"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-pro-007",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "We're really doing this, huh.",
+   "words": 5,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-pro-008",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "My feet hurt. Worth it.",
+   "words": 5,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-pro-009",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "At this point we're a landmark.",
+   "words": 6,
+   "when": {
+    "rung": "13+"
+   }
+  },
+  {
+   "id": "tnt-pro-010",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Somebody's going to blink. Not me.",
+   "words": 6,
+   "when": {
+    "rung": "13+"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-pro-011",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "That's ten. Not bad, for no punching.",
+   "words": 7,
+   "when": {
+    "standoff_count": 10
+   }
+  },
+  {
+   "id": "tnt-pro-012",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Twenty-five. And nobody's even hurt.",
+   "words": 5,
+   "when": {
+    "standoff_count": 25
+   }
+  },
+  {
+   "id": "tnt-pro-013",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Fifty! I'll be sore tomorrow. Worth it.",
+   "words": 7,
+   "when": {
+    "standoff_count": 50
+   }
+  },
+  {
+   "id": "tnt-pro-014",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "A hundred. Do I get a trophy, or do you?",
+   "words": 10,
+   "when": {
+    "standoff_count": 100
+   }
+  },
+  {
+   "id": "tnt-pro-015",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "You've got a lot of fight left. Good. I'd feel bad otherwise.",
+   "words": 12,
+   "when": {
+    "standing": "ahead"
+   }
+  },
+  {
+   "id": "tnt-pro-016",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "I'm behind. I'm having a great time.",
+   "words": 7,
+   "when": {
+    "standing": "behind"
+   }
+  },
+  {
+   "id": "tnt-pro-017",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Sorry about the crater. I'll level it out later.",
+   "words": 9,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-pro-018",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Away from the town, okay? Come on out here.",
+   "words": 9,
+   "when": {
+    "collateral": "many"
+   }
+  },
+  {
+   "id": "tnt-pro-019",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Your {part} looks sore. Want to call it?",
+   "words": 8,
+   "when": {
+    "wound": "opp"
+   }
+  },
+  {
+   "id": "tnt-pro-020",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "I can still wave with this arm.",
+   "words": 7,
+   "when": {
+    "wound": "self"
+   }
+  },
+  {
+   "id": "tnt-pro-021",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "You went bigger. So will I.",
+   "words": 6,
+   "when": {
+    "tier": "opp_higher"
+   }
+  },
+  {
+   "id": "tnt-pro-022",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Nice day for the sea. Nobody's hurt out here.",
+   "words": 9,
+   "when": {
+    "biome": "ocean"
+   }
+  },
+  {
+   "id": "tnt-pro-023",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Say something mean. I've missed it.",
+   "words": 6,
+   "when": {
+    "vs": "anti_hero"
+   }
+  },
+  {
+   "id": "tnt-pro-024",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Guard, wave back. It's only polite.",
+   "words": 6,
+   "when": {
+    "vs": "empress"
+   }
+  },
+  {
+   "id": "tnt-pro-025",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "react",
+   "text": "Don't tell me you're hungry. You're always hungry.",
+   "words": 8,
+   "when": {
+    "vs": "cyborg"
+   }
+  },
+  {
+   "id": "tnt-pro-026",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Fine. I'll come to you. Soon.",
+   "words": 6,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-pro-027",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "answer",
+   "text": "That one was good. Do another.",
+   "words": 6,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-pro-028",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Keep your pity. Keep the sandwich, too.",
+   "words": 7,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "pity"
+   ]
+  },
+  {
+   "id": "tnt-pro-029",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Okay, enough. Here I come.",
+   "words": 5,
+   "when": {
+    "ended": "takeoff"
+   }
+  },
+  {
+   "id": "tnt-pro-030",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "short",
+   "text": "Over here!",
+   "words": 2,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-pro-031",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "short",
+   "text": "Well?",
+   "words": 1,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-pro-032",
+   "fighter": "PROTAGONIST",
+   "tier": "whole",
+   "family": "short",
+   "text": "Go on.",
+   "words": 2,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-pro-033",
+   "fighter": "PROTAGONIST",
+   "tier": "hook",
+   "family": "hook",
+   "text": "That was a nice crater.",
+   "words": 5,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-pro-034",
+   "fighter": "PROTAGONIST",
+   "tier": "hook",
+   "family": "hook",
+   "text": "Your cape's crooked.",
+   "words": 3
+  },
+  {
+   "id": "tnt-pro-035",
+   "fighter": "PROTAGONIST",
+   "tier": "hook",
+   "family": "hook",
+   "text": "I'm over here, by the way.",
+   "words": 6
+  },
+  {
+   "id": "tnt-pro-036",
+   "fighter": "PROTAGONIST",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Show me something.",
+   "words": 3
+  },
+  {
+   "id": "tnt-pro-037",
+   "fighter": "PROTAGONIST",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Do you want a turn?",
+   "words": 5
+  },
+  {
+   "id": "tnt-pro-038",
+   "fighter": "PROTAGONIST",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Come and get it.",
+   "words": 4
+  },
+  {
+   "id": "tnt-pro-039",
+   "fighter": "PROTAGONIST",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Friend.",
+   "words": 1
+  },
+  {
+   "id": "tnt-pro-040",
+   "fighter": "PROTAGONIST",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Champ.",
+   "words": 1
+  },
+  {
+   "id": "tnt-ant-001",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "You may begin whenever you wish. It will not help.",
+   "words": 10,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-ant-002",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "I have been waiting. You were late.",
+   "words": 7,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-ant-003",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Still standing there. You were always good at that.",
+   "words": 9,
+   "when": {
+    "rung": "2-3"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-ant-004",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "That is twice. I have not moved either.",
+   "words": 8,
+   "when": {
+    "rung": "2-3"
+   }
+  },
+  {
+   "id": "tnt-ant-005",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "You were never this patient. Fifth. Behind the goons.",
+   "words": 9,
+   "when": {
+    "rung": "4-6"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-ant-006",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Do try something. Anything. I will pretend to be surprised.",
+   "words": 10,
+   "when": {
+    "rung": "4-6"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-ant-007",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "I have stood here so long my regalia has gone out of fashion.",
+   "words": 13,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-ant-008",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "This is beneath us both. Mostly you.",
+   "words": 7,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-ant-009",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "A statue could have won this by now.",
+   "words": 8,
+   "when": {
+    "rung": "13+"
+   }
+  },
+  {
+   "id": "tnt-ant-010",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Last. Behind the furniture, and the floor it stands on.",
+   "words": 10,
+   "when": {
+    "rung": "13+"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-ant-011",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Ten. You were exactly that predictable.",
+   "words": 6,
+   "when": {
+    "standoff_count": 10
+   }
+  },
+  {
+   "id": "tnt-ant-012",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Twenty-five. Even the goons would have left.",
+   "words": 7,
+   "when": {
+    "standoff_count": 25
+   }
+  },
+  {
+   "id": "tnt-ant-013",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Fifty. Tell no one I stayed.",
+   "words": 6,
+   "when": {
+    "standoff_count": 50
+   }
+  },
+  {
+   "id": "tnt-ant-014",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "A hundred. I was never here.",
+   "words": 6,
+   "when": {
+    "standoff_count": 100
+   }
+  },
+  {
+   "id": "tnt-ant-015",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "You were never going to keep up.",
+   "words": 7,
+   "when": {
+    "standing": "ahead"
+   }
+  },
+  {
+   "id": "tnt-ant-016",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "I am behind. Notice how little it matters.",
+   "words": 8,
+   "when": {
+    "standing": "behind"
+   }
+  },
+  {
+   "id": "tnt-ant-017",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "A fine hole. You dug it. You will lie in it.",
+   "words": 11,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-ant-018",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "They ran. You ran after them. Filth.",
+   "words": 7,
+   "when": {
+    "collateral": "many"
+   }
+  },
+  {
+   "id": "tnt-ant-019",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "Your {part} was your best feature. It was.",
+   "words": 8,
+   "when": {
+    "wound": "opp"
+   }
+  },
+  {
+   "id": "tnt-ant-020",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "A scratch. You were always fond of scratches.",
+   "words": 8,
+   "when": {
+    "wound": "self"
+   }
+  },
+  {
+   "id": "tnt-ant-021",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "You have grown. You were small before.",
+   "words": 7,
+   "when": {
+    "tier": "opp_higher"
+   }
+  },
+  {
+   "id": "tnt-ant-022",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "The sea. Fitting. You were always shallow.",
+   "words": 7,
+   "when": {
+    "biome": "ocean"
+   }
+  },
+  {
+   "id": "tnt-ant-023",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "Do you still believe you will fix it?",
+   "words": 8,
+   "when": {
+    "vs": "protagonist"
+   }
+  },
+  {
+   "id": "tnt-ant-024",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "The hat is crooked. I noticed.",
+   "words": 6,
+   "when": {
+    "vs": "empress"
+   }
+  },
+  {
+   "id": "tnt-ant-025",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "react",
+   "text": "I am not hungry. You were.",
+   "words": 6,
+   "when": {
+    "vs": "cyborg"
+   }
+  },
+  {
+   "id": "tnt-ant-026",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "answer",
+   "text": "I do not come when called. I arrive.",
+   "words": 8,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-ant-027",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Insult me better. You were better.",
+   "words": 6,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-ant-028",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Spare me. Your pity was always cheap.",
+   "words": 7,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "pity"
+   ]
+  },
+  {
+   "id": "tnt-ant-029",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Enough. Watch.",
+   "words": 2,
+   "when": {
+    "ended": "takeoff"
+   }
+  },
+  {
+   "id": "tnt-ant-030",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "short",
+   "text": "Well?",
+   "words": 1,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-ant-031",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "short",
+   "text": "Slow.",
+   "words": 1,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-ant-032",
+   "fighter": "ANTIHERO",
+   "tier": "whole",
+   "family": "short",
+   "text": "Again.",
+   "words": 1,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-ant-033",
+   "fighter": "ANTIHERO",
+   "tier": "hook",
+   "family": "hook",
+   "text": "You are standing very still.",
+   "words": 5
+  },
+  {
+   "id": "tnt-ant-034",
+   "fighter": "ANTIHERO",
+   "tier": "hook",
+   "family": "hook",
+   "text": "A nice crater.",
+   "words": 3,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-ant-035",
+   "fighter": "ANTIHERO",
+   "tier": "hook",
+   "family": "hook",
+   "text": "That was a cheap hit.",
+   "words": 5,
+   "when": {
+    "event": "hit_taken"
+   }
+  },
+  {
+   "id": "tnt-ant-036",
+   "fighter": "ANTIHERO",
+   "tier": "jab",
+   "family": "jab",
+   "text": "I was told you would be harder.",
+   "words": 7
+  },
+  {
+   "id": "tnt-ant-037",
+   "fighter": "ANTIHERO",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Do try to impress me.",
+   "words": 5
+  },
+  {
+   "id": "tnt-ant-038",
+   "fighter": "ANTIHERO",
+   "tier": "jab",
+   "family": "jab",
+   "text": "I have seen goons fight better.",
+   "words": 6
+  },
+  {
+   "id": "tnt-ant-039",
+   "fighter": "ANTIHERO",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Filth.",
+   "words": 1
+  },
+  {
+   "id": "tnt-ant-040",
+   "fighter": "ANTIHERO",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Fifth.",
+   "words": 1
+  },
+  {
+   "id": "tnt-emp-001",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Petitioner, the queue begins here.",
+   "words": 5,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-emp-002",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "We are accepting submissions. Guard, take a note.",
+   "words": 8,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "stall"
+   ]
+  },
+  {
+   "id": "tnt-emp-003",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "We are being very patient. Guard, record it.",
+   "words": 8,
+   "when": {
+    "rung": "2-3"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-emp-004",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Another taunt? We keep a tally. In triplicate.",
+   "words": 8,
+   "when": {
+    "rung": "2-3"
+   }
+  },
+  {
+   "id": "tnt-emp-005",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Guard, the petitioner has been standing there a full minute. Minute it.",
+   "words": 12,
+   "when": {
+    "rung": "4-6"
+   }
+  },
+  {
+   "id": "tnt-emp-006",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "How tedious. We were promised violence.",
+   "words": 6,
+   "when": {
+    "rung": "4-6"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-emp-007",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Guard, bring a chair. It is a long session.",
+   "words": 9,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-emp-008",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "We have run out of insults. A first. File it.",
+   "words": 10,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-emp-009",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "We shall have this stand-off declared a province.",
+   "words": 8,
+   "when": {
+    "rung": "13+"
+   }
+  },
+  {
+   "id": "tnt-emp-010",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "At this rate the hat will be out of fashion.",
+   "words": 10,
+   "when": {
+    "rung": "13+"
+   }
+  },
+  {
+   "id": "tnt-emp-011",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "That is ten, petitioner. We have a form for ten.",
+   "words": 10,
+   "when": {
+    "standoff_count": 10
+   }
+  },
+  {
+   "id": "tnt-emp-012",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Twenty-five! We shall have to open a new file.",
+   "words": 9,
+   "when": {
+    "standoff_count": 25
+   }
+  },
+  {
+   "id": "tnt-emp-013",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Fifty. We have stood here so long we have become an annex.",
+   "words": 12,
+   "when": {
+    "standoff_count": 50
+   }
+  },
+  {
+   "id": "tnt-emp-014",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "A hundred. We name this field after ourselves.",
+   "words": 8,
+   "when": {
+    "standoff_count": 100
+   }
+  },
+  {
+   "id": "tnt-emp-015",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "You are behind, petitioner. We are very ahead. Do try to keep up.",
+   "words": 13,
+   "when": {
+    "standing": "ahead"
+   }
+  },
+  {
+   "id": "tnt-emp-016",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "We are behind. It is a clerical error.",
+   "words": 8,
+   "when": {
+    "standing": "behind"
+   }
+  },
+  {
+   "id": "tnt-emp-017",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "A crater! We shall put a fountain in it.",
+   "words": 9,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-emp-018",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "Look at the skyline, guard. We were here.",
+   "words": 8,
+   "when": {
+    "collateral": "many"
+   }
+  },
+  {
+   "id": "tnt-emp-019",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "Your {part}! How quaint. Have it filed.",
+   "words": 7,
+   "when": {
+    "wound": "opp"
+   }
+  },
+  {
+   "id": "tnt-emp-020",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "You struck our {part}. We shall mention it.",
+   "words": 8,
+   "when": {
+    "wound": "self"
+   }
+  },
+  {
+   "id": "tnt-emp-021",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "A new revision of you? How inferior.",
+   "words": 7,
+   "when": {
+    "tier": "opp_higher"
+   }
+  },
+  {
+   "id": "tnt-emp-022",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "Guard, the petitioner is looking at you. Look back.",
+   "words": 9,
+   "when": {
+    "guard": "alive"
+   }
+  },
+  {
+   "id": "tnt-emp-023",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "Do not promise to fix us, petitioner.",
+   "words": 7,
+   "when": {
+    "vs": "protagonist"
+   }
+  },
+  {
+   "id": "tnt-emp-024",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "Sulk louder, petitioner. We cannot hear you from the throne.",
+   "words": 10,
+   "when": {
+    "vs": "anti_hero"
+   }
+  },
+  {
+   "id": "tnt-emp-025",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "react",
+   "text": "Do not eat the guard. We need them for the parade.",
+   "words": 11,
+   "when": {
+    "vs": "cyborg"
+   }
+  },
+  {
+   "id": "tnt-emp-026",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "answer",
+   "text": "We do not go to petitioners. Petitioners come to us.",
+   "words": 10,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-emp-027",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "answer",
+   "text": "How rude. Say it again, slower, for the minutes.",
+   "words": 9,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-emp-028",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Pity us? We are the empire.",
+   "words": 6,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "pity"
+   ]
+  },
+  {
+   "id": "tnt-emp-029",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Enough. The empire advances.",
+   "words": 4,
+   "when": {
+    "ended": "takeoff"
+   }
+  },
+  {
+   "id": "tnt-emp-030",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "short",
+   "text": "Well, petitioner?",
+   "words": 2,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-emp-031",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "short",
+   "text": "How dull.",
+   "words": 2,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-emp-032",
+   "fighter": "EMPRESS",
+   "tier": "whole",
+   "family": "short",
+   "text": "Guard, note that.",
+   "words": 3,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-emp-033",
+   "fighter": "EMPRESS",
+   "tier": "hook",
+   "family": "hook",
+   "text": "Your stance is irregular.",
+   "words": 4
+  },
+  {
+   "id": "tnt-emp-034",
+   "fighter": "EMPRESS",
+   "tier": "hook",
+   "family": "hook",
+   "text": "We rather like the crater.",
+   "words": 5,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-emp-035",
+   "fighter": "EMPRESS",
+   "tier": "hook",
+   "family": "hook",
+   "text": "The guard is watching.",
+   "words": 4,
+   "when": {
+    "guard": "alive"
+   }
+  },
+  {
+   "id": "tnt-emp-036",
+   "fighter": "EMPRESS",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Do try to be interesting.",
+   "words": 5
+  },
+  {
+   "id": "tnt-emp-037",
+   "fighter": "EMPRESS",
+   "tier": "jab",
+   "family": "jab",
+   "text": "We expected a better petition.",
+   "words": 5
+  },
+  {
+   "id": "tnt-emp-038",
+   "fighter": "EMPRESS",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Come, impress us.",
+   "words": 3
+  },
+  {
+   "id": "tnt-emp-039",
+   "fighter": "EMPRESS",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Petitioner.",
+   "words": 1
+  },
+  {
+   "id": "tnt-emp-040",
+   "fighter": "EMPRESS",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Do carry on.",
+   "words": 3
+  },
+  {
+   "id": "tnt-cyb-001",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Welcome. Do take a seat. Any seat.",
+   "words": 7,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-cyb-002",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Your table will be ready shortly.",
+   "words": 6,
+   "when": {
+    "rung": "1"
+   },
+   "opens": [
+    "stall"
+   ]
+  },
+  {
+   "id": "tnt-cyb-003",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Thank you for waiting. It is nearly your turn.",
+   "words": 9,
+   "when": {
+    "rung": "2-3"
+   },
+   "opens": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-cyb-004",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "May I take your order? It is optional.",
+   "words": 8,
+   "when": {
+    "rung": "2-3"
+   }
+  },
+  {
+   "id": "tnt-cyb-005",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "The wait is now six minutes. Complimentary bread.",
+   "words": 8,
+   "when": {
+    "rung": "4-6"
+   }
+  },
+  {
+   "id": "tnt-cyb-006",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Sir, the menu is still open.",
+   "words": 6,
+   "when": {
+    "rung": "4-6"
+   },
+   "opens": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-cyb-007",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "We have been open an hour. One customer. You.",
+   "words": 9,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-cyb-008",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "Please, sir. A man must eat.",
+   "words": 6,
+   "when": {
+    "rung": "7-12"
+   }
+  },
+  {
+   "id": "tnt-cyb-009",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "The kitchen is closing. It has been closing for an hour.",
+   "words": 11,
+   "when": {
+    "rung": "13+"
+   }
+  },
+  {
+   "id": "tnt-cyb-010",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "ladder",
+   "text": "I have started on the tablecloth.",
+   "words": 6,
+   "when": {
+    "rung": "13+"
+   }
+  },
+  {
+   "id": "tnt-cyb-011",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Ten! You qualify for a loyalty card.",
+   "words": 7,
+   "when": {
+    "standoff_count": 10
+   }
+  },
+  {
+   "id": "tnt-cyb-012",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Twenty-five visits. A free drink. A free you.",
+   "words": 8,
+   "when": {
+    "standoff_count": 25
+   }
+  },
+  {
+   "id": "tnt-cyb-013",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "Fifty. You are a regular. I know your order.",
+   "words": 9,
+   "when": {
+    "standoff_count": 50
+   }
+  },
+  {
+   "id": "tnt-cyb-014",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "milestone",
+   "text": "A hundred. We shall name a dish after you.",
+   "words": 9,
+   "when": {
+    "standoff_count": 100
+   }
+  },
+  {
+   "id": "tnt-cyb-015",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "You are doing wonderfully, sir. Do keep not winning.",
+   "words": 9,
+   "when": {
+    "standing": "ahead"
+   }
+  },
+  {
+   "id": "tnt-cyb-016",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "I am behind. It is only the starter.",
+   "words": 8,
+   "when": {
+    "standing": "behind"
+   }
+  },
+  {
+   "id": "tnt-cyb-017",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "A crater! A new prep bowl.",
+   "words": 6,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-cyb-018",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "Look at all the customers. Left in a hurry.",
+   "words": 9,
+   "when": {
+    "collateral": "many"
+   }
+  },
+  {
+   "id": "tnt-cyb-019",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "Sir, your {part} looks tender. Very tender.",
+   "words": 7,
+   "when": {
+    "wound": "opp"
+   }
+  },
+  {
+   "id": "tnt-cyb-020",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "N-n-not the {part}. It is a seasonal part.",
+   "words": 8,
+   "when": {
+    "wound": "self"
+   }
+  },
+  {
+   "id": "tnt-cyb-021",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "A bigger portion! How considerate.",
+   "words": 5,
+   "when": {
+    "tier": "opp_higher"
+   }
+  },
+  {
+   "id": "tnt-cyb-022",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "I do like a harbour. It is where the food arrives.",
+   "words": 11,
+   "when": {
+    "biome": "harbour"
+   }
+  },
+  {
+   "id": "tnt-cyb-023",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "The special today is you, sir. With sincerity.",
+   "words": 8,
+   "when": {
+    "vs": "protagonist"
+   }
+  },
+  {
+   "id": "tnt-cyb-024",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "Sir, you are frowning at the menu. It is not that bad.",
+   "words": 12,
+   "when": {
+    "vs": "anti_hero"
+   }
+  },
+  {
+   "id": "tnt-cyb-025",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "react",
+   "text": "Madam, your party is very well dressed. I have not eaten in a while.",
+   "words": 14,
+   "when": {
+    "vs": "empress"
+   }
+  },
+  {
+   "id": "tnt-cyb-026",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Certainly, sir. One moment while I come to the table.",
+   "words": 10,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "dare"
+   ]
+  },
+  {
+   "id": "tnt-cyb-027",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Feedback noted. Do continue.",
+   "words": 4,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "needle"
+   ]
+  },
+  {
+   "id": "tnt-cyb-028",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "answer",
+   "text": "Pity? I would prefer a tip.",
+   "words": 6,
+   "when": {
+    "taunted_back": true
+   },
+   "replies_to": [
+    "pity"
+   ]
+  },
+  {
+   "id": "tnt-cyb-029",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "takeoff",
+   "text": "Your order is on its way.",
+   "words": 6,
+   "when": {
+    "ended": "takeoff"
+   }
+  },
+  {
+   "id": "tnt-cyb-030",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "short",
+   "text": "Order up?",
+   "words": 2,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-cyb-031",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "short",
+   "text": "Sir?",
+   "words": 1,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-cyb-032",
+   "fighter": "CYBORG",
+   "tier": "whole",
+   "family": "short",
+   "text": "Any time.",
+   "words": 2,
+   "when": {
+    "tempo": "mashed"
+   }
+  },
+  {
+   "id": "tnt-cyb-033",
+   "fighter": "CYBORG",
+   "tier": "hook",
+   "family": "hook",
+   "text": "I see you have chosen to stand.",
+   "words": 7
+  },
+  {
+   "id": "tnt-cyb-034",
+   "fighter": "CYBORG",
+   "tier": "hook",
+   "family": "hook",
+   "text": "A fine crater, sir.",
+   "words": 4,
+   "when": {
+    "event": "crater"
+   }
+  },
+  {
+   "id": "tnt-cyb-035",
+   "fighter": "CYBORG",
+   "tier": "hook",
+   "family": "hook",
+   "text": "The kitchen is watching.",
+   "words": 4
+  },
+  {
+   "id": "tnt-cyb-036",
+   "fighter": "CYBORG",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Shall I bring the starters?",
+   "words": 5
+  },
+  {
+   "id": "tnt-cyb-037",
+   "fighter": "CYBORG",
+   "tier": "jab",
+   "family": "jab",
+   "text": "Do take your time. I have none.",
+   "words": 7
+  },
+  {
+   "id": "tnt-cyb-038",
+   "fighter": "CYBORG",
+   "tier": "jab",
+   "family": "jab",
+   "text": "We have a table for you.",
+   "words": 6
+  },
+  {
+   "id": "tnt-cyb-039",
+   "fighter": "CYBORG",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Sir.",
+   "words": 1
+  },
+  {
+   "id": "tnt-cyb-040",
+   "fighter": "CYBORG",
+   "tier": "tag",
+   "family": "tag",
+   "text": "Valued customer.",
+   "words": 2
+  }
+ ]
+}
