@@ -2,9 +2,10 @@
 // NOT run by CI, the validator or the sim. Run once from the repo root, in the commit that lands the slice's data:
 //     node docs/tools/pending/apply-slice3.cjs
 // It makes these keys required (the data lands in the same commit):
-//   data/director/interrupts.json  bands.edgeSlackBh (number, 0 or more); bands.taunt {enabled boolean, windowTicks integer, 1 or more};
-//                                  bands.charge {light, heavy: each {holdTicks, speed, minTicks, maxTicks}}; bands.meet {speed, minTicks, maxTicks}
-//   data/director/ai.json          reactTicks, answerTicks (integers, 0 or more); per level farTaunt, farCharge, farHeavy, answerTaunt
+//   data/director/interrupts.json  bands.hysteresisBh (number, 0 or more); bands.taunt {enabled boolean, windowTicks integer, 1 or more};
+//                                  bands.charge {light, heavy: each {holdTicks, speed, minTicks, maxTicks}}; bands.meet {speed, minTicks, maxTicks,
+//                                  chargerEdge (number, 0 to 100: points off the attacker's chance)}; notes _edge and _far are allowed
+//   data/director/ai.json          reactTicks, answerTicks (integers, 0 or more; the note _far is allowed); per level farTaunt, farCharge, farHeavy, answerTaunt
 //                                  (chances, 0 to 1) and approachReact (three chances summing to at most 1)
 // It adds the rules (bands-order: each approach's minTicks is at most its maxTicks and the light charge's holdTicks is below the heavy's;
 // ai-approach-react: the three chances sum to at most 1), the validator fixtures (the interrupts and ai ones, built from these shapes) and the cases.
@@ -19,7 +20,7 @@ const chance = { type: 'number', minimum: 0, maximum: 1 };
 
 // the fixture values: Encounter's drafts are not in the tree yet, so these follow the shapes in the brief (the cases do not depend on the numbers)
 const FX = {
-  bands: { edgeSlackBh: 0.5, taunt: { enabled: true, windowTicks: 60 }, charge: { light: { holdTicks: 30, speed: 4000, minTicks: 6, maxTicks: 90 }, heavy: { holdTicks: 60, speed: 4000, minTicks: 6, maxTicks: 90 } }, meet: { speed: 4000, minTicks: 3, maxTicks: 20 } },
+  bands: { hysteresisBh: 0.5, taunt: { enabled: true, windowTicks: 60 }, charge: { light: { holdTicks: 30, speed: 4000, minTicks: 6, maxTicks: 90 }, heavy: { holdTicks: 60, speed: 4000, minTicks: 6, maxTicks: 90 } }, meet: { speed: 4000, minTicks: 3, maxTicks: 20, chargerEdge: 10 } },
   ai: { reactTicks: 12, answerTicks: 12, level: { farTaunt: 0.2, farCharge: 0.3, farHeavy: 0.3, answerTaunt: 0.5, approachReact: [0.4, 0.3, 0.2] } },
 };
 
@@ -29,7 +30,7 @@ const FX = {
   const s = rj(f);
   const b = s.properties.bands;
   if (!b) throw new Error('bands is not in the interrupts schema (run the agency slice 2 schema first)');
-  if (!b.properties.edgeSlackBh) {
+  if (!b.properties.hysteresisBh) {
     const flight = (description) => obj({
       speed: Object.assign({ description: 'Units a second.' }, pos),
       minTicks: { type: 'integer', minimum: 1, description: 'At least this many whole ticks.' },
@@ -41,11 +42,13 @@ const FX = {
       minTicks: { type: 'integer', minimum: 1 },
       maxTicks: { type: 'integer', minimum: 1 },
     }, { description });
-    b.properties.edgeSlackBh = { type: 'number', minimum: 0, description: 'Slack, in body heights, at the edge of a band.' };
+    b.properties.hysteresisBh = { type: 'number', minimum: 0, description: 'The hysteresis, in body heights, at the edge of a band (Game Design\'s band rule): a pair that crossed a band edge must cross back by this much before it changes band again.' };
     b.properties.taunt = obj({ enabled: { type: 'boolean', description: 'The far taunt switch.' }, windowTicks: { type: 'integer', minimum: 1, description: 'The ticks the taunt\'s window stays open.' } }, { description: 'The far taunt.' });
     b.properties.charge = obj({ light: hold('The held light press\'s charged flight.'), heavy: hold('The held heavy press\'s charged flight.') }, { description: 'The held charge: a press held this long flies in on its own approach.' });
     b.properties.meet = flight('The meeting: both fighters closing on each other.');
-    for (const k of ['edgeSlackBh', 'taunt', 'charge', 'meet']) if (!b.required.includes(k)) b.required.push(k);
+    b.properties.meet.properties.chargerEdge = { type: 'number', minimum: 0, maximum: 100, description: 'Points off the attacker\'s chance when the rival is charging (the charger\'s edge); 0 to 100 (a share of 0 to 1 also fits).' };
+    b.properties.meet.required.push('chargerEdge');
+    for (const k of ['hysteresisBh', 'taunt', 'charge', 'meet']) if (!b.required.includes(k)) b.required.push(k);
     wj(f, s);
   }
 }
@@ -77,7 +80,7 @@ const FX = {
   {
     const f = dir + 'interrupts.json';
     const o = rj(f);
-    if (o.bands && o.bands.edgeSlackBh === undefined) {
+    if (o.bands && o.bands.hysteresisBh === undefined) {
       o.bands = Object.assign({}, o.bands, JSON.parse(JSON.stringify(FX.bands)));
       wj(f, o);
     }
@@ -127,16 +130,18 @@ const FX = {
   const c = rj(cf);
   const I = 'data/director/interrupts.json';
   const A = 'data/director/ai.json';
-  const flight = (over) => Object.assign({ speed: 4000, minTicks: 3, maxTicks: 20 }, over);
+  const flight = (over) => Object.assign({ speed: 4000, minTicks: 3, maxTicks: 20, chargerEdge: 10 }, over);
   const hold = (over) => Object.assign({ holdTicks: 30, speed: 4000, minTicks: 6, maxTicks: 90 }, over);
   const bd = (n, mut, expect) => ({ id: 'director-interrupts-bands-' + n, schema: 'director-interrupts.schema.json', mutate: [{ file: I, ...mut }], expect });
   const ai = (n, mut, expect) => ({ id: 'director-ai-' + n, schema: 'director-ai.schema.json', mutate: [{ file: A, ...mut }], expect });
   const add = [
     // bands: edgeSlackBh, taunt, charge, meet
-    bd('edge-slack-required', { del: ['/bands/edgeSlackBh'] }, { rule: 'required', pointer: '/bands' }),
-    bd('edge-slack-negative', { set: { '/bands/edgeSlackBh': -1 } }, { rule: 'minimum', pointer: '/bands/edgeSlackBh' }),
-    bd('edge-slack-zero-ok', { set: { '/bands/edgeSlackBh': 0 } }, null),
-    bd('edge-slack-type', { set: { '/bands/edgeSlackBh': 'some' } }, { rule: 'type', pointer: '/bands/edgeSlackBh' }),
+    bd('hysteresis-required', { del: ['/bands/hysteresisBh'] }, { rule: 'required', pointer: '/bands' }),
+    bd('hysteresis-negative', { set: { '/bands/hysteresisBh': -1 } }, { rule: 'minimum', pointer: '/bands/hysteresisBh' }),
+    bd('hysteresis-zero-ok', { set: { '/bands/hysteresisBh': 0 } }, null),
+    bd('hysteresis-type', { set: { '/bands/hysteresisBh': 'some' } }, { rule: 'type', pointer: '/bands/hysteresisBh' }),
+    bd('edge-slack-retired', { set: { '/bands/edgeSlackBh': 0.5 } }, { rule: 'additionalProperties', pointer: '/bands/edgeSlackBh' }),
+    bd('notes-ok', { set: { '/bands/_edge': 'comment', '/bands/_far': 'comment' } }, null),
     bd('taunt-required', { del: ['/bands/taunt'] }, { rule: 'required', pointer: '/bands' }),
     bd('taunt-key-required', { set: { '/bands/taunt': { enabled: true } } }, { rule: 'required', pointer: '/bands/taunt' }),
     bd('taunt-enabled-type', { set: { '/bands/taunt/enabled': 'yes' } }, { rule: 'type', pointer: '/bands/taunt/enabled' }),
@@ -156,11 +161,19 @@ const FX = {
     bd('charge-hold-order', { set: { '/bands/charge/light/holdTicks': 90 } }, { rule: 'xref:bands-order', pointer: '/bands/charge/light/holdTicks' }),
     bd('charge-hold-equal', { set: { '/bands/charge/light/holdTicks': 60 } }, { rule: 'xref:bands-order', pointer: '/bands/charge/light/holdTicks' }),
     bd('meet-required', { del: ['/bands/meet'] }, { rule: 'required', pointer: '/bands' }),
-    bd('meet-key-required', { set: { '/bands/meet': { speed: 4000, minTicks: 3 } } }, { rule: 'required', pointer: '/bands/meet' }),
+    bd('meet-key-required', { set: { '/bands/meet': { speed: 4000, minTicks: 3, chargerEdge: 10 } } }, { rule: 'required', pointer: '/bands/meet' }),
+    bd('charger-edge-required', { set: { '/bands/meet': { speed: 4000, minTicks: 3, maxTicks: 20 } } }, { rule: 'required', pointer: '/bands/meet' }),
+    bd('charger-edge-points-ok', { set: { '/bands/meet/chargerEdge': 100 } }, null),
+    bd('charger-edge-share-ok', { set: { '/bands/meet/chargerEdge': 0.1 } }, null),
+    bd('charger-edge-zero-ok', { set: { '/bands/meet/chargerEdge': 0 } }, null),
+    bd('charger-edge-above-100', { set: { '/bands/meet/chargerEdge': 120 } }, { rule: 'maximum', pointer: '/bands/meet/chargerEdge' }),
+    bd('charger-edge-negative', { set: { '/bands/meet/chargerEdge': -5 } }, { rule: 'minimum', pointer: '/bands/meet/chargerEdge' }),
+    bd('charger-edge-type', { set: { '/bands/meet/chargerEdge': 'ten' } }, { rule: 'type', pointer: '/bands/meet/chargerEdge' }),
     bd('meet-speed-positive', { set: { '/bands/meet': flight({ speed: 0 }) } }, { rule: 'exclusiveMinimum', pointer: '/bands/meet/speed' }),
     bd('meet-min-above-max', { set: { '/bands/meet': flight({ minTicks: 30 }) } }, { rule: 'xref:bands-order', pointer: '/bands/meet/minTicks' }),
     bd('meet-equal-ticks-ok', { set: { '/bands/meet': flight({ minTicks: 20 }) } }, null),
     // ai
+    ai('far-note-ok', { set: { '/_far': 'comment' } }, null),
     ai('react-ticks-required', { del: ['/reactTicks'] }, { rule: 'required', pointer: '' }),
     ai('answer-ticks-required', { del: ['/answerTicks'] }, { rule: 'required', pointer: '' }),
     ai('react-ticks-negative', { set: { '/reactTicks': -1 } }, { rule: 'minimum', pointer: '/reactTicks' }),
@@ -189,7 +202,7 @@ const FX = {
   for (const k of c.cases) {
     if (!k.id.startsWith('director-interrupts-bands-')) continue;
     const bo = k.mutate && k.mutate[0] && k.mutate[0].set && k.mutate[0].set['/bands'];
-    if (bo && typeof bo === 'object' && bo.edgeSlackBh === undefined && !(k.expect && k.expect.rule === 'required' && k.expect.pointer === '/bands')) Object.assign(bo, JSON.parse(JSON.stringify(FX.bands)));
+    if (bo && typeof bo === 'object' && bo.hysteresisBh === undefined && !(k.expect && k.expect.rule === 'required' && k.expect.pointer === '/bands')) Object.assign(bo, JSON.parse(JSON.stringify(FX.bands)));
   }
   wj(cf, c);
   console.log(`slice 3 schema applied (${n} new cases)`);
