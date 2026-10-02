@@ -7,12 +7,14 @@ extends SceneTree
 ##   charge_feint     charge_light on tick 10, charge_feint on tick 50 (the peel), the flight ended
 ##   knock_short, knock_long, drift   the knockback event on tick 10 (kind slideShort 0.5 s, slideLong 1.1 s, drift 1.0 s), the subject sent back
 ##   embed            the embed event on tick 10 (60 ticks driven in), then the get-up
+##   swat, mine, spray   the parked energy sequences of wave energy1 played on tick 10 (spray: four bolts, six ticks apart); run with --waves
 ## Needs a window to draw; run it with --no-window (offscreen), never a window.
 ##   godot --no-window --path . -s res://render/anim/tools/agency_lab.gd -- --scene=taunt [--out=a.rgb | --sheet=s.png] [--size=300x200] [--step=2] [--off] [--reduced]
 ## --off switches the agency poses off (the before).
 
 const DT := 1.0 / 60.0
 const SCENES := ["taunt", "charge_light", "charge_heavy", "charge_feint", "knock_short", "knock_long", "drift", "embed"]
+const ENERGY := ["swat", "mine", "spray"]   # the parked energy poses (wave energy1, docs 9.24): the lab plays the sequence by hand (nothing fires these yet); needs --waves
 
 var scene: String = "taunt"
 var scene_given: bool = false
@@ -73,7 +75,7 @@ func _run() -> void:
 	RenderAnim._fighters.clear()
 	var f0 = S.fighters[0]
 	var f1 = S.fighters[1]
-	var scenes: Array = [scene] if (sheet == "" or scene_given) else SCENES
+	var scenes: Array = [scene] if (sheet == "" or scene_given) else (SCENES + ENERGY if OS.get_cmdline_user_args().has("--waves") else SCENES)
 	var sv := SubViewport.new()
 	sv.size = size
 	sv.own_world_3d = true
@@ -179,6 +181,12 @@ func _run() -> void:
 						f0.y = 14.0 * sin(u * PI)
 					if k == 10:
 						evs.append(_ev("knockback", S.tick, {"victim": 0.0, "attacker": 1.0, "kind": kind, "amount": 60.0, "n": S.tick + int(dur * 60.0), "dur": dur}))
+				"swat", "mine", "spray":
+					var sq: String = "en." + sc
+					var at: Array = [10, 16, 22, 28] if sc == "spray" else [10]
+					if at.has(k) and AnimData.entries.has(sq):
+						var afe: AnimFighter = RenderAnim.fighter(S, f0)
+						afe._seq = {"id": sq, "t0": S.T, "dur": float(AnimData.entries[sq].dur) / 60.0, "wt": 1.0}
 				"embed":
 					if k >= 10 and k < 70:
 						f0.state = "down"

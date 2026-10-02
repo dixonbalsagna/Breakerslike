@@ -290,9 +290,13 @@ static func enforce(lq: Array[Quaternion], shape: String = "") -> float:
 	var qa: Quaternion = lq[ua_l]
 	if 2.0 * (qa.w * qa.z - qa.x * qa.y) < -arm_back_soft:
 		worst = maxf(worst, _arm_back(lq, ua_l))
+		if not fast_ok(lq[ua_l], ua_l, shape):   # the swing taken out of the blind spot can leave the twist a few degrees over
+			worst = maxf(worst, _fix_bone(lq, ua_l, shape, hs))
 	qa = lq[ua_r]
 	if 2.0 * (qa.w * qa.z - qa.x * qa.y) < -arm_back_soft:
 		worst = maxf(worst, _arm_back(lq, ua_r))
+		if not fast_ok(lq[ua_r], ua_r, shape):   # the swing taken out of the blind spot can leave the twist a few degrees over
+			worst = maxf(worst, _fix_bone(lq, ua_r, shape, hs))
 	last_fix = worst
 	return worst
 
