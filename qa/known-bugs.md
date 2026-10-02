@@ -171,6 +171,7 @@ Reported through the EP. QA has not reproduced or measured these; each has an ow
 | GB-003 | The split-screen camera jolts when a player is knocked away. | Camera | open, with Camera |
 | GB-004 | A ranged attack press locks both fighters during the fly-in. Raised as a design question, not a fault. | Game Design | open, design call |
 | GB-005 | Mountain tumbles gain too much momentum from a glancing bounce. | World | open, with World |
+| GB-006 | A launched fighter flies at speed feet first, laid out along the flight line (Orb, 2026-10-02, a screenshot of VORR on the live web build: body horizontal, legs leading, a bright speed streak behind). Looks silly in motion | Animation (the `launch` body profile and spin, `anim_fighter.gd`), with Rendering (the pivot's rotation from `f.rot` and the pose) | open, unreproduced by QA; a launch's spin and pose are Animation's |
 
 QA has no band for any of the three yet. For GB-005 the harness already counts bounces per bounced journey and journeys longer than 4,000 units (`5c.bounces`, `5c.long`); a per-journey momentum or speed-gain row would need a field from World's journey events. For GB-003 a camera-motion metric would need Camera's rig output; ask the EP when a band is wanted.
 
