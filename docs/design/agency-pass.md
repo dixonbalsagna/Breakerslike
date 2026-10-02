@@ -396,3 +396,39 @@ The starts floor works: a patient player now starts 44 to 49% of exchanges, insi
 | a | **Matches run 80 s longer** (a median of 9:56, from 8:35). The AI charges 76 times a match, because launches leave the pair far apart about 40% of the time, and each charge is slower than the fly-in it replaced | **Both: the charges shorten, and then QA re-tunes.** A held light goes after 8 ticks and flies 0.3 to 1.0 s. A held heavy goes after 16 ticks and flies 0.5 to 1.4 s. That gives back about half the 80 s. QA then raises k to bring the median to between 7:00 and 7:30. The band stays 6 to 8 minutes: Orb asked for five minutes or more, and nearly ten is too long. The 4 points of extra collateral are inside the bands and need no change |
 | b | **The band edge.** A match opens exactly 12 bh apart, so the opening press read as far and played a taunt. Encounter added 0.1 bh of slack | **Move the edge, and keep the opening distance.** The far band starts beyond **12.5 bh**, so the opening press is a lunge. Each band edge also gets **0.5 bh of hysteresis,** so the icon doesn't flicker when the fighters hover on a line. The entrance still needs its 12 bh |
 | c | **A rival's press during a held heavy's hold** turns it into a meeting | **Intended.** The defender is free during any charge, and pressing attack is one of his answers. Both rush and meet in a fist clash. The fighter who was already charging enters it at **+5,** for the charge he had built. Winning a clash earns a launch, so he doesn't lose his reward by being met |
+
+## 13. A light-only player can always finish a fight (urgent ruling, 2026-10-02)
+
+**What QA found** on the first agency build (`docs/qa/baseline-agency1.md`). The endings are in band (launch 28.6%, knock-back 20.4%, stay 51.0%), but:
+- a masher wins 0 of 100 against the easy, medium and hard AI, where the bands are at least 60% against easy and 35 to 50% against medium;
+- two lights-only players never finish: 0 of 40 matches were decided before the 15:00 cap;
+- brink to KO is 128 s against 45 to 90.
+
+**The cause is one rule.** A finisher needs decisive exchanges, and a decisive exchange has meant a launch, a clash won or a guard break. Launches now need a heavy. So a player who only presses light can wear the rival down but can never open him up or finish him.
+
+**The fix keeps Orb's four earners and keeps "mash is a blur, weaker".** A light never launches. It doesn't need to.
+
+| # | Rule | Data |
+| ---: | :--- | :--- |
+| 1 | **A knock-back is a decisive exchange.** Being driven back means that fighter lost the exchange. It counts for the brink's set-up, for the finisher and for the mood, exactly as a launch does | The decisive list gains `knockback` |
+| 2 | **A blur always closes.** When four or more lights of a string have landed, the blur plays its own ender, a knock-back the player doesn't press. This holds for plain mashing too. It is not a launch | `blur.enderAfter` 4 |
+| 3 | **The plain blur's ender is the weak one.** It drives the rival back 0.6 of the tier's knock-back distance: 2.1, 3, 3.9 and 4.8 bh. The perfect blur, once timing is built, gets the full distance and its clean hits | `blur.enderDist` 0.6 |
+| 4 | **A knock-back hurts.** Its skid costs half of a launch's impact wear | `knockback.wear` 0.5 |
+| 5 | **Mashed lights do ×0.8 of a light each,** and no less. More strikes at 0.8 is still a weaker string than a combo | `blur.strikeMul` 0.8 |
+| 6 | **A light ender never launches.** Earner 2 is still a heavy ender after four landed strikes, and with the alchemist, at flow 3 or more | No change |
+| 7 | **The easy AI earns far fewer launches.** It earned 17 to 35 a match against the masher's 2. The AI's use of the four earners scales by difficulty: ×0.25 on easy, ×0.6 on medium and ×1.0 on hard. The target is at most 6 earned launches a match for the easy AI | `ai.earnerUse` 0.25, 0.6, 1.0 |
+
+**What a light-only player can now always do:** land four lights, drive the rival back, and repeat. Each knock-back wears him, and at the brink it opens him and then finishes him.
+
+**The other rows.**
+- **Brink to KO.** With knock-backs counted, decisive exchanges go from about 29% to about 49% of the total, so the brink should fall to around 75 s. If it is still over 90 s, `brinkSetups` goes from 2 to 1.
+- **Length.** QA's k +8% is accepted, for a median of about 454 s. Re-measure after rules 1 to 5, because knock-back wear shortens matches again.
+- **Mood** (Calm 22.1%, Tense 61.0%). Re-measure after these rules. If Calm is still under 30%, the decay goes from 4 to 5.
+- **The timing baseline** (timed against a masher 67.5%, style-only against a masher 75.0%, timed against style-only 45.0%) is recorded as the starting point. §2's bands apply once the timing rules are built.
+
+**The bands to hit after this ruling:**
+- a masher wins at least 60% against the easy AI and 35 to 50% against medium, with forms taken;
+- two lights-only players finish at least 95% of matches before the time cap;
+- brink to KO is 45 to 90 s.
+
+**A met charge, until the fist clash exists.** Encounter's interim rule is confirmed: the meeting is settled by the old roll, with 10 points off the charger's chance. With no pulses yet, that stands in for the defender's timing in answering. When the fist clash is built, the pulses decide and the charger enters at +5 (§12).
