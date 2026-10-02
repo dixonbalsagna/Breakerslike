@@ -74,7 +74,7 @@ wj('tools/schemas/anim-targets.schema.json', {
       "      if (pose.startsWith('_') || !isObj(o)) continue;",
       "      if (known.size && !known.has(pose)) err(TG, `/poses/${esc(pose)}`, 'targets-pose', `pose \"${pose}\" is not in data/anim/poses.json nor a wave's poses file`);",
       '      const lm = contactLimbs.get(pose);',
-      "      if (lm) for (const l of lm) if (l in o) err(TG, `/poses/${esc(pose)}/${l}`, 'targets-limb', `${l} lands the blow of a key set whose contact pose this is; it is never changed here`);",
+      "      if (lm) for (const l of lm) if (l in o) err(TG, `/poses/${esc(pose)}/${l}`, 'targets-limb', `${l} lands the blow of a key set whose contact pose this is; it is never changed here`, 'warning');",
       '    }',
       '  }',
       '',
