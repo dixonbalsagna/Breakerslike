@@ -25,7 +25,7 @@
     "airDrag": 0.08
   },
   "tumble": {
-    "brakeMul": 2.0,
+    "brakeMul": 0.6,
     "maxSeconds": 1.2,
     "cappedTail": 0.3
   },

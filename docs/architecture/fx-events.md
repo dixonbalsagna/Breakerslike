@@ -153,7 +153,7 @@ The prototype's `draw*` functions show how each one was drawn.
 
 Every positioned effect event carries `z`, the depth it happens at (0 is the fighter plane, positive toward the camera): `spark`, `ring`, `debris`, `dust`, `splash`, `fire`, `after`, `charge`, `beamSplash`, `damage`, `scorch`, `slide` (with `z1` for its far end), `slide_dust`, `skim` and `shake`. An emitter that takes a fighter reads his depth; one that takes a position takes `z` last and sends 0 when the caller gives none. The core's own calls pass the fighter's depth; World's and the director's pass theirs in their depth slices. Until the depth switch-on a fighter's `z` is 0 except during a flight aimed at a building.
 
-Reserved for World's ground contact (G3), in the hash table and the reference consumer but not sent yet: `left_ground`, `bounce`, `land`, `tumble_end`, `journey_end` (their rows come with G3).
+World's ground contact (G3) sends `left_ground`, `bounce`, `land`, `tumble_end` and `journey_end` (fields in docs/world/ground-contact.md section 4). `tumble_end`: `kind` (stop, recover, air), `contacts`, `n`, and `dur`, the **ticks the body rolled in the tumble** (0 to 72; `journey_end.dur` is the whole journey in seconds).
 
 ## The intro phase and the last stand
 

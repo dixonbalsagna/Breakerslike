@@ -816,7 +816,7 @@ static func _finish(S: SimState, f, by, b: Body) -> void:
 		var te := SimFx.contactEvent(S, "tumble_end", f, f.x, f.y, b.vN)
 		te.kind = "recover" if how == "recover" else ("air" if how == "water" else "stop")
 		te.contacts = f.jContacts
-		te.dur = float(f.jT) * SimConst.DT
+		te.dur = float(maxi(f.tumbleT, 0))   # ticks rolled in the tumble (journey_end.dur is the whole journey, in seconds)
 		te.n = _launchN(f)
 	var je := SimFx.contactEvent(S, "journey_end", f, f.x, f.y, b.vN)
 	je.contacts = f.jContacts
