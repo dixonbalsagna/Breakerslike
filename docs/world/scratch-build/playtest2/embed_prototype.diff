@@ -1,0 +1,75 @@
+--- a/sim/world/contact.gd
++++ b/sim/world/contact.gd
+@@ -60,6 +60,13 @@
+ static var K_AREA_TOUCH: float = 0.5     # ... and this share when it is anything else (the old slide's touch-down)
+ static var K_AIRDRAG: float = 0.55      # the horizontal drag base per second after a journey's first contact (0.55 is the launch's own flight)
+ static var K_GAINCAP: float = 0.0        # a journey never goes faster than this times its first-contact speed, on the ground or after a contact (0 off)
++static var EMB_MIN: float = 1.7
++static var EMB_SPECIAL: float = 1.5
++static var EMB_SEC: float = 0.75
++static var EMB_COOL: float = 5.0
++static var _embLast := {}
++static var _embPend := {}
++static var STAT: Array = [0, 0, 0]   # embeds, held back by the cool-down, hops suppressed
+ static var K_GMUL: float = 1.0           # gravity after a journey's first contact, times 1000
+ static var K_RUBBLE_MIN: float = 8.0
+ static var K_PAVE_DUG: float = -3.0
+@@ -94,6 +101,7 @@
+ 	var vLost: float = 0.0        # speed removed this tick (the wear)
+ 	var dxStep: float = 0.0       # signed x moved this tick in contact
+ 	var lips: int = 0
++	var special: bool = false
+ 	var z: float = 0.0            # depth (T: the row the ground is read on when depth is on)
+ 
+ 
+@@ -369,6 +377,12 @@
+ 	var forceTumble: bool = b.contacts >= K_MAXC or b.t >= K_MAXT
+ 	if slam:
+ 		var hop: bool = (not sea) and sp >= K_HOPSPEED and not b.hopped
++		if hop and first:
++			var Ee: float = WorldCrater.impactEnergy(sp, b.tier) * (WorldCrater.SPECIAL_E_MULT if b.special else 1.0)
++			var dEst: float = WorldCrater.radiusOf(Ee, b.special) * WorldCrater.DEPTH_RATIO * (WorldCrater.GRAZE_MIN + (1.0 - WorldCrater.GRAZE_MIN) * sqrt(sin2)) / 75.0
++			if dEst >= EMB_MIN or (b.special and dEst >= EMB_SPECIAL):
++				hop = false
++				STAT[2] += 1
+ 		info["k"] = "slam"
+ 		info["hop"] = hop
+ 		info["dig"] = not wasHopped
+@@ -597,6 +611,7 @@
+ 	b.rot = f.rot
+ 	b.wet = f.wet
+ 	b.hopped = f.hopped
++	b.special = f.launchSpecial
+ 	var by = f.launchBy if f.launchBy != null else SimRoster.opp(S, f)
+ 	b.tier = by.tier
+ 	b.slideD = f.slideD
+@@ -766,7 +781,18 @@
+ 	if k == "slam":
+ 		var vert: float = absf(f.vy) / maxf(SimDetMath.hypot(f.vx, f.vy), 0.000001)
+ 		if bool(e.get("dig", true)):
+-			WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial, f.z)
++			var rc = WorldCrater.dig(S, f.x, E, by, "impact", f.vx / f.launchT / maxf(sp, 0.000001), vert, f.launchSpecial, f.z)
++			if rc != null and first:
++				var dbh: float = rc.depth / 75.0
++				if dbh >= EMB_MIN or (f.launchSpecial and dbh >= EMB_SPECIAL):
++					var slot: int = S.fighters.find(f)
++					if S.T - float(_embLast.get(slot, -100.0)) >= EMB_COOL:
++						_embLast[slot] = S.T
++						_embPend[slot] = true
++						STAT[0] += 1
++					else:
++						STAT[1] += 1
+ 	if sea:
+ 		SimFx.splash(S, f.x, f.y + 10.0, 14, f.z)
+ 	else:
+@@ -846,6 +872,10 @@
+ 		return
+ 	f.state = "down"
+ 	f.stateT = (0.75 - WorldSlide.RECOVER) if slid else 0.0
++	var slotE: int = S.fighters.find(f)
++	if _embPend.get(slotE, false):
++		_embPend[slotE] = false
++		f.stateT = 0.75 - EMB_SEC   # embedded: down for the 60 ticks
+ 	f.bounces = 0.0
+ 	f.launchBy = null
+ 	f.launchT = 1.0

@@ -1,0 +1,5 @@
+--- a/sim/world/contact.gd
++++ b/sim/world/contact.gd
+@@ stepContact, the leave test
+-	var sprev: float = _gslope(S, b.x, b.z) * dir
++	var sprev: float = sl   # the slope ahead only: the central difference read the trench the body had just cut behind him as an upslope
