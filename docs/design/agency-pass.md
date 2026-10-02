@@ -21,8 +21,8 @@ An icon by the fighter shows which band he is in, so a press never surprises.
 | Band | Distance | A physical press does |
 | :--- | :--- | :--- |
 | **Close** | Within 3 bh | Strikes at once, as today |
-| **Mid** | 3 to 12 bh | **A short lunge:** about a third of a second of travel (20 ticks at most), then the wind-up. The stick picks the entry, as it does up close: toward rushes, level steps in, away backsteps |
-| **Far** | Beyond 12 bh | **Tap to taunt, hold to charge** |
+| **Mid** | 3 to 12.5 bh | **A short lunge:** about a third of a second of travel (20 ticks at most), then the wind-up. The stick picks the entry, as it does up close: toward rushes, level steps in, away backsteps |
+| **Far** | Beyond 12.5 bh | **Tap to taunt, hold to charge** |
 
 With RB held, a press fires a blast in any band (§5).
 
@@ -39,8 +39,8 @@ Holding the attack button in the far band charges.
 
 | | **A held light** | **A held heavy** |
 | :--- | :--- | :--- |
-| **Before he goes** | 12 ticks | 24 ticks |
-| **The flight** | Fast: about 0.5 to 1.5 s by distance | Slower: about 0.8 to 2.0 s |
+| **Before he goes** | 8 ticks (12 before §12) | 16 ticks (24 before §12) |
+| **The flight** | Fast: about 0.3 to 1.0 s by distance | Slower: about 0.5 to 1.4 s |
 | **Changing his mind** | Releasing the button stops the charge at no cost. That is the feint | Committed once he goes. Only a dodge-cancel (15 ki) stops it |
 | **Blasts on the way** | Any blast that lands stops him | He shrugs off light blasts and volleys, taking half their damage. A charged shot or a beam still stops him |
 | **On arrival** | A light opener, into a brawl | A charged heavy. If it lands clean it **earns a launch** (§3) |
@@ -386,3 +386,13 @@ The build has earned launches at ×1.6 force (about 28% of decided exchanges), k
 - A held guard takes a blast at the guard's rate, like a strike.
 - A heavy charge from the far band (§1) shrugs off shots of power 1 at half damage. Power 2 and above stop it.
 - These are first values. QA reports blast damage as a share of match damage from the first energy slice, and the band to start from is 15 to 30%.
+
+## 12. Rulings on Encounter's slice 3 (the challenge and the charges, 2026-10-02)
+
+The starts floor works: a patient player now starts 44 to 49% of exchanges, inside the band.
+
+| # | Question | Ruling |
+| ---: | :--- | :--- |
+| a | **Matches run 80 s longer** (a median of 9:56, from 8:35). The AI charges 76 times a match, because launches leave the pair far apart about 40% of the time, and each charge is slower than the fly-in it replaced | **Both: the charges shorten, and then QA re-tunes.** A held light goes after 8 ticks and flies 0.3 to 1.0 s. A held heavy goes after 16 ticks and flies 0.5 to 1.4 s. That gives back about half the 80 s. QA then raises k to bring the median to between 7:00 and 7:30. The band stays 6 to 8 minutes: Orb asked for five minutes or more, and nearly ten is too long. The 4 points of extra collateral are inside the bands and need no change |
+| b | **The band edge.** A match opens exactly 12 bh apart, so the opening press read as far and played a taunt. Encounter added 0.1 bh of slack | **Move the edge, and keep the opening distance.** The far band starts beyond **12.5 bh**, so the opening press is a lunge. Each band edge also gets **0.5 bh of hysteresis,** so the icon doesn't flicker when the fighters hover on a line. The entrance still needs its 12 bh |
+| c | **A rival's press during a held heavy's hold** turns it into a meeting | **Intended.** The defender is free during any charge, and pressing attack is one of his answers. Both rush and meet in a fist clash. The fighter who was already charging enters it at **+5,** for the charge he had built. Winning a clash earns a launch, so he doesn't lose his reward by being met |
