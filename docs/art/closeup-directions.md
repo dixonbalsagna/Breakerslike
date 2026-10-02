@@ -1,5 +1,7 @@
 # Close-ups of the fighters' faces: three directions, a recommendation
 
+> **Parked (2026-10-02, Orb's decision).** The mask aesthetic and the broken masks are for one future character, not the game's house style. Directions A and B and everything below are kept as a seed for that character; the house style is the unmasked faces and the current silhouettes, being refined in `art/concepts/refine/`.
+
 Owner: Art Director. 2026-10-02. Orb: "loop on the art style to create stylized closeups of the fighters' faces so the on-screen closeups can be memorable and recognizable." Concept art, working labels, **pending Legal review**. Orb picks. This replaces the faceless portraits as the thing to choose from (`rule-of-cool-art.md` section 1 still holds the frame, the sizes and the zero-budget texture note).
 
 **The one page for Orb:** `art/concepts/closeups/closeups-comparison.svg`. The path (nine rounds, the rejected ones kept): `art/concepts/closeups/rounds/NOTES.md` and `rounds/round-1/` to `round-9/`.

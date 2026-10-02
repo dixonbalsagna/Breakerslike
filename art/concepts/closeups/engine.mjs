@@ -272,8 +272,9 @@ const GROUND = {
 export const IDS = { P: 'protagonist', A: 'anti_hero', E: 'empress', C: 'cyborg' };
 // The face group, placed as in the portrait: the face centred low in the 512 square, tipped and scaled by the expression.
 export function faceGroup(dir, fk, expr, id, o = {}) {
-  const P = PALS[fk], e = EXPR[expr];
-  const face = dir === 'T' ? dirT(fk, e, id, P, o.t ?? 0.5) : { A: dirA, B: dirB, C: dirC }[dir](fk, e, id, P, o.stage ?? 0, !!o.blank);
+  const P = { ...PALS[fk], ...(o.pal ?? {}) }, e = EXPR[expr];
+  // dir 'X': a custom face drawn by the caller (o.draw), used by art/concepts/refine for the unmasked refinement work
+  const face = dir === 'X' ? o.draw(fk, e, id, P) : dir === 'T' ? dirT(fk, e, id, P, o.t ?? 0.5) : { A: dirA, B: dirB, C: dirC }[dir](fk, e, id, P, o.stage ?? 0, !!o.blank);
   const scale = 0.96 * e.k, tx = 256 + (fk === 'A' || fk === 'P' ? 18 : 0), ty = 302 + e.dy;
   return { g: `<g transform="translate(${f2(tx)} ${f2(ty)}) rotate(${e.head}) scale(${f2(scale)})">${face}</g>`, tx, ty, scale, e, P };
 }
@@ -299,3 +300,5 @@ export function strip(dir, fk, expr, id, o = {}) {
     `<rect x="${W - 120}" y="${H - 11}" width="86" height="7" fill="${P.acc}" stroke="#14101f" stroke-width="1.5"/></g>` +
     `<polygon points="${poly4}" fill="none" stroke="${P.frame}" stroke-width="6" stroke-linejoin="miter"/><polygon points="${poly4}" fill="none" stroke="#14101f" stroke-width="1.5"/>`;
 }
+// the engine's drawing parts, for the refinement work in art/concepts/refine (it draws its own heads and reuses the eyes, brows, mouths and the frame)
+export const H = { shade, f2, pts, poly, line, ell, rotp, eye, brow, mouth, capsule, eyeShape, nose, hairBack, hairFront, sigil, HEAD, RIG, PALS, EXPR, PALEMASK, LITC, LITC_EDGE, BREAK, breakPoly, GROUND };

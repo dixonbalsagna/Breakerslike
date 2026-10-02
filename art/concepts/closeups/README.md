@@ -9,3 +9,5 @@ Round 7 adds `expressions-B.svg`, `anti-hero-transition.svg`, `crops-sheet.svg` 
 Round 8 adds `damage-expressions-B.svg` and applies Legal's constraints (`docs/art/closeup-directions.md`, round 8). The blank-mask sheets are kept as the zero-risk fallback.
 
 Round 9 adds `damage-expressions-A.svg` and applies Legal's RL-045 conditions (the Cyborg's plain pale lit eye, the Protagonist's plain swollen eye).
+
+Parked 2026-10-02 (Orb): masks are for one future character, not the house style; this folder is a seed for that character. The house style is refined in `art/concepts/refine/`.
