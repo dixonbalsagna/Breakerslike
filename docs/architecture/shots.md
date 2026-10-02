@@ -119,3 +119,23 @@ All but the press log and the intent hash are prepared as one neutral slice (`pe
 
 **Proofs, in the tree:** the code passes parity on the untouched goldens (9 matches, 184,273 ticks) with the checks "shots" and "agency lines"; with the new state and events hashed, every light digest and tick count is identical, so the one golden file that comes out differs in its full-state checkpoints only. Parity, determinism, the seam sweep, `npm test`, the validator (0 errors), its self-test (2,358 of 2,358), the touch test and the loader check pass.
 
+## 12. Game Design's first numbers, and a shot that is let pass (prepared 2026-10-02)
+
+Parked in `docs/architecture/pending/` (`shots_numbers.py`, `shots_release.py`), proven in a scratch copy of 7acf512, waiting for the slot.
+
+**The numbers** (`agency-pass.md` section 11, item 6b), in `data/fight/shots.json` with no schema change:
+
+| Kind | Speed (units a tick) | Trade power | Plain damage | Flight |
+| :--- | ---: | ---: | ---: | :--- |
+| `bolt` | 60 | 1 | 8.67 (a third of a light) | 120 ticks |
+| `shard` | 50 | 1 | 5.2 (a fifth of a light) | 24 ticks: 1,200 units |
+| `arc` | 45 | 2 | 52.8 (0.8 of a heavy) | 120 ticks |
+| `charged` | 90 | 3 | 39.6 (0.6 of a heavy, the tap) | 120 ticks |
+| `lob` | a 36-tick arc | 3 | 66 (a heavy) | 36 ticks |
+
+- The damage column is the plain rule's stand-in. "A shape carries its strike's damage": the director's blasts pass their own at the fire (a volley's total is one light; a charged shot rises to a full heavy at 30 ticks of charge).
+- Not in this file, because they are the director's: the ki costs, the counts (a volley of 3, a spread of 5), and the burst, which has no travel and is an area hit, not a shot.
+- The radii and the lob's height are my placeholders.
+
+**A shot that is let pass** (ruling 6a). When `hitFighter` returns false (a dodge), or a seeking shot arrives at a target that cannot be hit, the shot flies on as a straight shot at its last velocity for the kind's life, and the ground and the water then stop it. `Shot.passed` remembers whom it has passed, so it is not offered to him again every tick. `SimShots.release(S, shot)` does the same on the director's call. Before this, a let-pass seeking shot stayed on its target and met him again each tick.
+
