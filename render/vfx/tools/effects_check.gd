@@ -855,18 +855,46 @@ func _speed() -> void:
 	S.dirS.ex = null
 	wait.call(hcl, 6)
 	_check(hcl.speed.made == 1, "a clash that is not won (no decisive event) has its heavy's streak")
-	# The count in a real minute of AI play against the 20 a minute Orb's treatment B was sized on.
+	# The rationing in a controlled minute: ten scripted exchanges, 60 ticks apart, of the kinds that matter. The rule decides how many
+	# streaks come out of them; how often a real fight makes such exchanges is the fight's rhythm (it changes with Encounter's work), so no
+	# count from live play is asserted here (docs/vfx/react-plan.md has the measured rate).
+	var hm := VfxHub.new()
+	hm.reset(S, 6)
+	var script_ex: Array = [
+		["heavy", "", "heavy"], ["heavy", "", "heavy"], ["heavy", "", "heavy"], ["heavy", "", "heavy"],      # four heavies: four streaks
+		["heavy", "", "launch"], ["heavy", "", "launch"], ["heavy", "", "launch"],                            # three launches: three streaks (the launch takes the heavy's)
+		["heavy", "", "two"],                                                                                   # two heavies in one exchange: one streak (the last)
+		["sig", "", "heavy"], ["heavy", "RIPOSTE", "launch"],                                                  # a signature and a riposte that launches: panels, none
+	]
+	var n_ex: int = 100
+	for sx in script_ex:
+		S.dirS.ex = new_ex.call(n_ex, sx[0], sx[1])
+		n_ex += 1
+		f.x = 20000.0
+		f.vx = 3000.0
+		f.vy = 500.0
+		var evs: Array = [heavy.call(0.0, 1.0)]
+		if sx[2] == "launch":
+			evs.append(VfxMock.ev("launch", {"actor": 0.0, "target": 1.0, "amount": 3100.0, "face": 1.0}))
+		_tick(S, hm, evs)
+		if sx[2] == "two":
+			wait.call(hm, 8)
+			_tick(S, hm, [heavy.call(0.0, 1.0)])
+		S.dirS.ex = null
+		wait.call(hm, 60)
+	_check(hm.speed.made == 8 and hm.speed.suppressed == 3 and hm.speed.capped == 3, "ten scripted exchanges: %d streaks (4 heavies, 3 launches, 1 of two heavies), %d hits left to panels (the signature, the riposte and its launch), %d heavies behind a launch left without (the exchange has its one)" % [hm.speed.made, hm.speed.suppressed, hm.speed.capped])
+	# And in real play the system fires at all, whatever the rhythm: two minutes of AI play make at least one streak.
 	var S2 := SimCore.createSim()
 	SimCore.newMatch(S2, 12345)
 	var h2 := VfxHub.new()
 	h2.reset(S2, 12345)
-	for k in range(3600):
+	for k in range(7200):
 		SimCore.step(S2)
 		h2.consume(S2, S2.out.fx)
 		S2.out.fx.clear()
 		S2.out.feed.clear()
-	var per_min: int = h2.speed.made
-	_check(per_min >= 8 and per_min <= 24, "in a real minute %d streaks (%d hits had a panel, %d were the same exchange's second), about the 17 a minute Game Design sized the one-per-exchange rule on" % [per_min, h2.speed.suppressed, h2.speed.capped])
+	print("    (live, for the record: %.1f streaks a minute, %d panelled, %d second hits capped)" % [float(h2.speed.made) / 2.0, h2.speed.suppressed, h2.speed.capped])
+	_check(h2.speed.made >= 1, "in two real minutes of play the speed lines fire (%d)" % h2.speed.made)
 	SimCore.dispose(S2)
 	# Off, and the drawing budget.
 	var ho := VfxHub.new()
