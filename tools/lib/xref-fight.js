@@ -270,6 +270,8 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/wounds\.json$/)) {
     const w = get(rel);
     const g = isObj(w) ? w.guardWearSplit : undefined;
+    const ls = isObj(w) ? w.lastStand : undefined;
+    if (isObj(ls) && typeof ls.windowS === 'number' && Math.abs(ls.windowS * 60 - Math.round(ls.windowS * 60)) > 1e-6) err(rel, '/lastStand/windowS', 'wounds-last-stand', `${ls.windowS} s is not a whole number of ticks (60 a second)`);
     if (isObj(g) && typeof g.arms === 'number' && typeof g.legs === 'number' && Math.abs(g.arms + g.legs - 1) > 1e-9) {
       err(rel, '/guardWearSplit', 'guard-split', 'arms ' + g.arms + ' + legs ' + g.legs + ' = ' + (g.arms + g.legs) + ', but the two shares must sum to 1');
     }
@@ -834,6 +836,26 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (k.startsWith('_') || !isObj(b)) continue;
       if (shapesI.length && !shapesI.includes(k)) err(IN, `/beats/${esc(k)}`, 'intro-shape', `beat shape "${k}" is not in ragdoll_motion.json shapes (${shapesI.join(', ')})`);
       if (seqsI && typeof b.seq === 'string' && !(b.seq in seqsI)) err(IN, `/beats/${esc(k)}/seq`, 'intro-seq', `sequence "${b.seq}" is not in data/anim/waves/intro1.sequences.json`);
+    }
+  }
+
+  // ---- fight intro: the timeline runs in order; the animation's opening fits its staredown ----
+  const fint = get('data/fight/intro.json');
+  if (isObj(fint) && isObj(fint.ticks)) {
+    const IT2 = 'data/fight/intro.json';
+    const k = fint.ticks;
+    const lt = (a, b, strict) => { if (typeof k[a] === 'number' && typeof k[b] === 'number' && (strict ? k[a] >= k[b] : k[a] > k[b])) err(IT2, `/ticks/${a}`, 'intro-order', `${a} ${k[a]} must be ${strict ? 'before' : 'at most'} ${b} ${k[b]}`); };
+    lt('fallA', 'landA', true); lt('fallB', 'landB', true); lt('landA', 'landB', false); lt('landB', 'staredown', false); lt('staredown', 'clock', true); lt('skipFrom', 'clock', true);
+    const aint = get('data/anim/intro.json');
+    if (isObj(aint) && typeof k.staredown === 'number' && typeof k.clock === 'number') {
+      const len = (k.clock - k.staredown) / 60;
+      if (typeof aint.tense_lead === 'number' && aint.tense_lead > len) err('data/anim/intro.json', '/tense_lead', 'intro-staredown', `tense_lead ${aint.tense_lead} s is longer than the ${len.toFixed(2)} s staredown (data/fight/intro.json)`, 'warning');
+      const seqs = get('data/anim/waves/intro1.sequences.json');
+      if (isObj(aint.beats)) for (const [shape, b] of Object.entries(aint.beats)) {
+        if (shape.startsWith('_') || !isObj(b) || typeof b.at !== 'number') continue;
+        const dur = isObj(seqs) && isObj(seqs.sequences) && isObj(seqs.sequences[b.seq]) && typeof seqs.sequences[b.seq].dur === 'number' ? seqs.sequences[b.seq].dur / 60 : 0;
+        if (b.at + dur > len) err('data/anim/intro.json', `/beats/${esc(shape)}/at`, 'intro-staredown', `beat "${b.seq}" for ${shape} ends at ${(b.at + dur).toFixed(2)} s, after the ${len.toFixed(2)} s staredown`, 'warning');
+      }
     }
   }
 

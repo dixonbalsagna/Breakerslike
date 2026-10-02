@@ -25697,6 +25697,287 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "intro-order-valid",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 36,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "intro-fall-after-landing",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 40,
+              "landA": 36,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-order",
+        "pointer": "/ticks/fallA"
+      }
+    },
+    {
+      "id": "intro-fall-equals-landing",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 36,
+              "fallB": 114,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-order",
+        "pointer": "/ticks/fallB"
+      }
+    },
+    {
+      "id": "intro-a-lands-after-b",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 120,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-order",
+        "pointer": "/ticks/landA"
+      }
+    },
+    {
+      "id": "intro-both-land-together-ok",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 114,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "intro-b-lands-after-staredown",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 36,
+              "fallB": 84,
+              "landB": 150,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-order",
+        "pointer": "/ticks/landB"
+      }
+    },
+    {
+      "id": "intro-staredown-not-before-clock",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 36,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 300,
+              "clock": 300,
+              "skipFrom": 30
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-order",
+        "pointer": "/ticks/staredown"
+      }
+    },
+    {
+      "id": "intro-skip-from-not-before-clock",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 36,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 300
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-order",
+        "pointer": "/ticks/skipFrom"
+      }
+    },
+    {
+      "id": "intro-skip-from-zero-ok",
+      "schema": "fight-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/intro.json",
+          "set": {
+            "/ticks": {
+              "fallA": 0,
+              "landA": 36,
+              "fallB": 84,
+              "landB": 114,
+              "staredown": 144,
+              "clock": 300,
+              "skipFrom": 0
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "wounds-last-stand-whole-tick-ok",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/lastStand/windowS": 1.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "wounds-last-stand-fraction-of-tick",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/lastStand/windowS": 1.234
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wounds-last-stand",
+        "pointer": "/lastStand/windowS"
+      }
+    },
+    {
+      "id": "wounds-last-stand-zero-ok",
+      "schema": "fighter-wounds.schema.json",
+      "mutate": [
+        {
+          "file": "data/fighters/FIXTURE_HERO/wounds.json",
+          "set": {
+            "/lastStand/windowS": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-intro-tense-lead-longer-than-staredown-warns",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/tense_lead": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-staredown",
+        "pointer": "/tense_lead"
+      }
+    },
+    {
+      "id": "anim-intro-beat-ends-after-staredown-warns",
+      "schema": "anim-intro.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/intro.json",
+          "set": {
+            "/beats/A/at": 2.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:intro-staredown",
+        "pointer": "/beats/A/at"
+      }
     }
   ],
   "text": [
