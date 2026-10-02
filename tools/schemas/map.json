@@ -231,6 +231,14 @@
       "schema": "anim-targets.schema.json"
     },
     {
+      "match": "data/anim/agency.json",
+      "schema": "anim-agency.schema.json"
+    },
+    {
+      "match": "data/anim/target_poles.json",
+      "schema": "anim-target-poles.schema.json"
+    },
+    {
       "match": "data/anim/waves/*.poses.json",
       "schema": "anim-wave-poses.schema.json"
     },

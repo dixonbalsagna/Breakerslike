@@ -34720,6 +34720,742 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-agency-live-valid",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/schema": "anim.agency/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-agency-key-required",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/charge"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-agency-schema-version",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/schema": "anim.agency/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-agency-unknown-key",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-agency-underscore-key-ok",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-agency-knockback-kind-missing",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/knockback/bump"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockback"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-kind-unknown",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/shove": {
+              "hold": "ag.hold.kb_short",
+              "weight": 0.8,
+              "in": 0.1,
+              "out": 0.1
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/knockback/shove"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-key-required",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/knockback/drift/out"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockback/drift"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-unknown-key",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/loop": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/knockback/drift/loop"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-weight-range",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/weight": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/knockback/drift/weight"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-weight-negative",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/weight": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockback/drift/weight"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-ease-negative",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/in": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockback/drift/in"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-ease-zero-ok",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/in": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-agency-knockback-hold-shape",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/hold": "AG Hold"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/knockback/drift/hold"
+      }
+    },
+    {
+      "id": "anim-agency-knockback-hold-not-a-pose",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/knockback/drift/hold": "ag.hold.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:agency-pose",
+        "pointer": "/knockback/drift/hold"
+      }
+    },
+    {
+      "id": "anim-agency-embed-seq-required",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/embed/seq"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/embed"
+      }
+    },
+    {
+      "id": "anim-agency-embed-seq-not-a-sequence",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/embed/seq": "ag.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:agency-seq",
+        "pointer": "/embed/seq"
+      }
+    },
+    {
+      "id": "anim-agency-embed-weight-range",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/embed/weight": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/embed/weight"
+      }
+    },
+    {
+      "id": "anim-agency-taunt-seq-not-a-sequence",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/seq": "ag.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:agency-seq",
+        "pointer": "/taunt/seq"
+      }
+    },
+    {
+      "id": "anim-agency-taunt-cut-kinds-duplicate",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": [
+              "taunt_end_cut",
+              "taunt_end_cut"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/taunt/cut_kinds/1"
+      }
+    },
+    {
+      "id": "anim-agency-taunt-cut-kinds-shape",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": [
+              "Taunt End"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/taunt/cut_kinds/0"
+      }
+    },
+    {
+      "id": "anim-agency-taunt-cut-kinds-empty-ok",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/taunt/cut_kinds": []
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-agency-charge-light-max-ticks-required",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/charge/light/max_ticks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/charge/light"
+      }
+    },
+    {
+      "id": "anim-agency-charge-max-ticks-positive",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/heavy/max_ticks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/charge/heavy/max_ticks"
+      }
+    },
+    {
+      "id": "anim-agency-charge-max-ticks-integer",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/heavy/max_ticks": 120.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/charge/heavy/max_ticks"
+      }
+    },
+    {
+      "id": "anim-agency-charge-feint-ticks-required",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "del": [
+            "/charge/feint/ticks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/charge/feint"
+      }
+    },
+    {
+      "id": "anim-agency-charge-feint-ticks-positive",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/feint/ticks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/charge/feint/ticks"
+      }
+    },
+    {
+      "id": "anim-agency-charge-kind-unknown",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/medium": {
+              "hold": "ag.hold.charge_light",
+              "weight": 0.8,
+              "in": 0.1,
+              "out": 0.1,
+              "max_ticks": 60
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/charge/medium"
+      }
+    },
+    {
+      "id": "anim-agency-charge-hold-not-a-pose",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/feint/hold": "ag.hold.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:agency-pose",
+        "pointer": "/charge/feint/hold"
+      }
+    },
+    {
+      "id": "anim-agency-charge-main-pose-ok",
+      "schema": "anim-agency.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/agency.json",
+          "set": {
+            "/charge/light/hold": "hurt.hold"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-target-poles-live-valid",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/schema": "anim.target_poles/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-target-poles-key-required",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "del": [
+            "/poses"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-target-poles-schema-version",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/schema": "anim.target_poles/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-target-poles-unknown-key",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-target-poles-poses-empty",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/poses"
+      }
+    },
+    {
+      "id": "anim-target-poles-pose-name-shape",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/Bad Name": {
+              "pole_hand_r": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/poses/Bad Name"
+      }
+    },
+    {
+      "id": "anim-target-poles-pose-empty",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/hurt.hold": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/poses/hurt.hold"
+      }
+    },
+    {
+      "id": "anim-target-poles-pose-unknown-key",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/hurt.hold": {
+              "pole_head": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/poses/hurt.hold/pole_head"
+      }
+    },
+    {
+      "id": "anim-target-poles-pole-length",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/hurt.hold": {
+              "pole_hand_r": [
+                1,
+                2
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/poses/hurt.hold/pole_hand_r"
+      }
+    },
+    {
+      "id": "anim-target-poles-pole-type",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/hurt.hold": {
+              "pole_hand_r": [
+                1,
+                "a",
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/poses/hurt.hold/pole_hand_r/1"
+      }
+    },
+    {
+      "id": "anim-target-poles-pole-all-four-ok",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/hurt.hold": {
+              "pole_hand_r": [
+                1,
+                2,
+                3
+              ],
+              "pole_hand_l": [
+                1,
+                2,
+                -3
+              ],
+              "pole_foot_r": [
+                1,
+                -2,
+                3
+              ],
+              "pole_foot_l": [
+                1,
+                -2,
+                -3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-target-poles-pose-not-in-files",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/hurt.nowhere": {
+              "pole_hand_r": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:poles-pose",
+        "pointer": "/poses/hurt.nowhere"
+      }
+    },
+    {
+      "id": "anim-target-poles-wave-pose-ok",
+      "schema": "anim-target-poles.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/target_poles.json",
+          "set": {
+            "/poses/w1.jab.chamber": {
+              "pole_hand_l": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

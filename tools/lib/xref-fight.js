@@ -974,6 +974,28 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim agency and target poles: poses and sequences exist ----
+  {
+    const allPoses = new Set();
+    const mainA = get('data/anim/poses.json');
+    if (isObj(mainA) && isObj(mainA.poses)) for (const k of Object.keys(mainA.poses)) allPoses.add(k);
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.poses\.json$/)) { const d = get(rel); if (isObj(d) && isObj(d.poses)) for (const k of Object.keys(d.poses)) allPoses.add(k); }
+    const allSeqs = new Set();
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.sequences\.json$/)) { const d = get(rel); if (isObj(d) && isObj(d.sequences)) for (const k of Object.keys(d.sequences)) allSeqs.add(k); }
+    const ag = get('data/anim/agency.json');
+    if (isObj(ag)) {
+      const AG = 'data/anim/agency.json';
+      const needPose = (id, pointer) => { if (allPoses.size && typeof id === 'string' && !allPoses.has(id)) err(AG, pointer, 'agency-pose', `pose "${id}" is not in poses.json nor a wave's poses file`); };
+      const needSeq = (id, pointer) => { if (allSeqs.size && typeof id === 'string' && !allSeqs.has(id)) err(AG, pointer, 'agency-seq', `sequence "${id}" is not in a wave's sequences file`); };
+      if (isObj(ag.knockback)) for (const [k, v] of Object.entries(ag.knockback)) if (!k.startsWith('_') && isObj(v)) needPose(v.hold, `/knockback/${esc(k)}/hold`);
+      if (isObj(ag.charge)) for (const [k, v] of Object.entries(ag.charge)) if (!k.startsWith('_') && isObj(v)) needPose(v.hold, `/charge/${esc(k)}/hold`);
+      if (isObj(ag.embed)) needSeq(ag.embed.seq, '/embed/seq');
+      if (isObj(ag.taunt)) needSeq(ag.taunt.seq, '/taunt/seq');
+    }
+    const pl = get('data/anim/target_poles.json');
+    if (isObj(pl) && isObj(pl.poses) && allPoses.size) for (const p of Object.keys(pl.poses)) if (!p.startsWith('_') && !allPoses.has(p)) err('data/anim/target_poles.json', `/poses/${esc(p)}`, 'poles-pose', `pose "${p}" is not in poses.json nor a wave\'s poses file`);
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

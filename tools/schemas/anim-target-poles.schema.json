@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-target-poles",
+  "title": "anim.target_poles/1",
+  "description": "data/anim/target_poles.json: the elbow and knee places that keep a re-aimed target's bend as it was (data/anim/targets.json; docs/animation/joint-limits.md): pose id to pole_hand_r, pole_hand_l, pole_foot_r and pole_foot_l, the joint's place relative to its root joint, as in a pose sketch ([x, y, z] in model units). Merged over the sketch with targets.json. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-reference: every pose is in a pose file (checked by tools/lib/xref-fight.js, poles-pose).",
+  "type": "object",
+  "required": [
+    "schema",
+    "poses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.target_poles/1"
+    },
+    "poses": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*([.][a-z0-9_~]+)*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "pole_hand_r": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "pole_hand_l": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "pole_foot_r": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "pole_foot_l": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}
