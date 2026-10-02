@@ -1,0 +1,402 @@
+--- a/sim/core/state.gd
++++ b/sim/core/state.gd
+@@ -226,6 +226,7 @@
+ 	var pop: float = 0.0
+ 	var seed: float = 0.0
+ 	var popAlive: float = 0.0
++	var wear: float = 0.0      # hit points of unshown wear from light shots (WorldBlast.shotBuilding): it shows (and is paid in one blow) at chip.threshold of maxhp
+ 
+ 
+ class TreeState:
+--- a/sim/core/hash.gd
++++ b/sim/core/hash.gd
+@@ -9,7 +9,7 @@
+ 	"canHide", "lockBackT", "exT"]
+ ## Intent v2 (I1): the v2 fields in the record's order, then today's dash, charge and stance until I3, then the agency fields.
+ const INTENT: Array = ["mx", "my", "guard", "guardPress", "dodge", "sprint", "power", "powerPress", "powerTap", "mode", "light", "heavy", "sig", "upgrade", "special", "context", "transform", "dash", "charge", "stance", "lightHeld", "heavyHeld", "escape"]
+-const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled", "floors", "fmask"]
++const BUILDING: Array = ["x", "w", "h", "maxhp", "hp", "alive", "kind", "pop", "seed", "popAlive", "z", "d", "row", "fled", "floors", "fmask", "wear"]
+ const SHOT: Array = ["id", "owner", "kind", "mode", "x", "y", "z", "vx", "vy", "tgt", "left", "total", "x0", "y0", "px", "py", "power", "dmg", "group", "deflected", "fresh", "dead", "passed"]
+ const TREE: Array = ["x", "h", "alive", "burn"]
+ const BEAM: Array = ["ox", "oy", "ux", "uy", "len", "p", "t", "life", "w", "variant", "col", "pw", "struck", "sf", "cap", "levelled", "oz", "zs"]
+--- a/sim/core/fx.gd
++++ b/sim/core/fx.gd
+@@ -394,6 +394,15 @@
+ 	e.owner = float(S.fighters.find(att)); e.victim = float(S.fighters.find(f))
+ 
+ 
++## A shot hit floors of a skyscraper (WorldBlast.shotBuilding): the same event as a brunt's, victim -1, the shot's direction in ux, uy.
++static func floorHitShot(S: SimState, b, floor_: int, n: int, outcome: String, ratio: float, y: float, slot: int, ux: float, uy: float) -> void:
++	var e := _ev(S, "floor_hit")
++	e.b = float(b.idx); e.floor = floor_; e.n = n; e.outcome = outcome; e.ratio = ratio
++	e.x = b.x; e.y = y; e.z = WorldBrunt.faceZ(b)
++	e.ux = ux; e.uy = uy
++	e.kind = b.kind; e.owner = float(slot); e.victim = -1.0
++
++
+ ## B2: a brunt hit floors of a skyscraper: the lowest floor, how many were cleared (0 for a crack or a dent).
+ static func floorHit(S: SimState, f, b, floor_: int, n: int, outcome: String, ratio: float, y: float, by) -> void:
+ 	var e := _ev(S, "floor_hit")
+--- a/sim/core/shots.gd
++++ b/sim/core/shots.gd
+@@ -357,6 +357,9 @@
+ 					break
+ 		if sh.dead or hitOne:
+ 			continue
++		if sh.mode == LINE and WorldBlast.shotMeetsBuilding(S, sh, mx[i], my[i], rad[i]):   # World: a shot that flies into a building ends there
++			end(S, sh, "building")
++			continue
+ 		if sh.mode == LOB and arrived[i]:
+ 			hitWorld(S, sh, "ground")
+ 			end(S, sh, "ground")
+--- a/sim/world/brunt.gd
++++ b/sim/world/brunt.gd
+@@ -163,7 +163,11 @@
+ ## Returns {"floors": bool, "k", "hit": Array of standing floors covered, "sumS", "dmg", "ratio", "outcome" (punch, crack,
+ ## dent for floors; collapse, heavy, wreck, crack for whole buildings), "pass": continues through, "keep", "deaths"}.
+ static func outcomeOf(S: SimState, b, y: float, spN: float, tier: float) -> Dictionary:
+-	var dmg: float = spN * (0.55 + 0.25 * tier) * BRUNT_MUL
++	return outcomeDmg(S, b, y, spN * (0.55 + 0.25 * tier) * BRUNT_MUL)
++
++
++## The same by the damage itself (a brunt's from its speed and tier, a shot's from its kind: WorldBlast.shotBuilding).
++static func outcomeDmg(S: SimState, b, y: float, dmg: float) -> Dictionary:
+ 	if b.floors >= FLOORS_MIN:
+ 		var gy: float = WorldStructures.baseY(S, b)
+ 		var fh: float = floorH(b)
+--- a/sim/world/blast.gd
++++ b/sim/world/blast.gd
+@@ -71,10 +71,154 @@
+ 	var g: float = WorldTerrain.groundY(S, x, z)
+ 	var sp: float = maxf(SimDetMath.hypot(vx, vy), 0.000001)
+ 	var E: float = float(k.craterE) * float(D.tierEnergy[ti])
+-	res.crater = WorldCrater.dig(S, x, E, f, "impact", vx / sp, absf(vy) / sp, false, z)
++	var air: float = maxf(0.0, y - g)   # a burst above the ground (a mine in the air, a shot that ran out of life): the bowl fades with the height
++	if air > 0.0:
++		E *= maxf(0.0, 1.0 - air / (float(k.get("airReach", 6.0)) * 75.0))
++	if E > 0.02:
++		res.crater = WorldCrater.dig(S, x, E, f, "impact", vx / sp, absf(vy) / sp, false, z)
+ 	SimFx.debris(S, x, g + 8.0, int(k.debris), "#6d6a66", 500.0, z)
+ 	SimFx.dust(S, x, g, int(k.dust), "", z)
+ 	SimFx.ring(S, x, g + 10.0, float(k.ringR), "#ffffff", 0.35, 8.0, z)
+ 	SimFx.shake(S, float(k.shake), x, z)
+ 	res.levelled = WorldStructures.damageArea(S, x, g + 5.0, float(k.radius), float(k.damage) * float(D.tierDamage[ti]), f)
+ 	return res
++
++
++const STEP: float = 24.0   # the sample spacing along a shot's path this tick (the narrowest building is wider)
++
++
++## Does the shot (already moved this tick by dx, dy; radius r) fly into a standing building of the front street? If it does, the building takes
++## the shot's direct hit here (it reaches a building whose nearest face is within Z_REACH of its plane, as every blast does) and the call returns true (the caller ends the shot). A shot that meets a fighter first never gets here.
++static func shotMeetsBuilding(S: SimState, sh, dx: float, dy: float, r: float) -> bool:
++	var D: Dictionary = data()
++	if D.is_empty() or not D.get("direct", {}).has(sh.kind):
++		return false
++	var len: float = SimDetMath.hypot(dx, dy)
++	var x0: float = sh.x - dx
++	var y0: float = sh.y - dy
++	var mxm: float = SimWrap.wrap(x0 + dx * 0.5)
++	var ylo: float = minf(y0, sh.y) - r
++	var yhi: float = maxf(y0, sh.y) + r
++	var hit = null
++	var hitS: float = 2.0
++	for i in WorldStructures.near(S, mxm, len * 0.5 + r):
++		var b = S.buildings[i]
++		if not b.alive or absf(SimWrap.sdx(mxm, b.x)) > b.w * 0.5 + len * 0.5 + r:
++			continue
++		if maxf(0.0, absf(sh.z - b.z) - b.d * 0.5) > WorldStructures.Z_REACH:
++			continue
++		if ylo > WorldTerrain.groundY(S, b.x) + b.h + 200.0 + r:   # well above it (the cheap reject: the ground here, the building's full height, a heap's worth)
++			continue
++		var gy: float = WorldStructures.baseY(S, b)
++		var top: float = gy + WorldStructures.curH(b) + r
++		if ylo > top or yhi < gy - 5.0:
++			continue
++		# the first sample along the path that is inside this building (the nearest to the start wins among buildings)
++		var n: int = maxi(1, int(ceil(len / STEP)))
++		for s in range(0, n + 1):
++			var px: float = SimWrap.wrap(x0 + dx * float(s) / float(n))
++			var py: float = y0 + dy * float(s) / float(n)
++			if absf(SimWrap.sdx(px, b.x)) <= b.w * 0.5 + r and py >= gy - 5.0 and py <= top:
++				var fs: float = float(s) / float(n)
++				if fs < hitS:
++					hitS = fs
++					hit = b
++				break
++	if hit != null:
++		var px2: float = SimWrap.wrap(x0 + dx * hitS)
++		var py2: float = y0 + dy * hitS
++		shotBuilding(S, sh.owner, sh.kind, sh.power, hit, px2, py2, sh.z, sh.vx, sh.vy)
++		sh.x = px2
++		sh.y = py2
++		return true
++	return false
++
++
++## A shot hits building b at (x, y): the damage by the shot's kind and the shooter's tier, through the building's floors (a skyscraper loses
++## floors: dent, crack or punch, and a punched span pancakes what stands above it) or its hit points (a house). A light shot (chip in the data)
++## first piles into the building's wear pool (nothing shows); at chip.threshold of maxhp the pool is paid in one blow. Returns {"outcome",
++## "dmg", "levelled"}: outcome chip (nothing shown), or what the floors did, or hit/collapse for a plain building.
++static func shotBuilding(S: SimState, slot: int, kind: String, power: float, b, x: float, y: float, z: float, vx: float, vy: float) -> Dictionary:
++	var D: Dictionary = data()
++	var h: Dictionary = D.direct[kind]
++	var f = S.fighters[slot]
++	var ti: int = clampi(int(f.tier), 1, 4) - 1
++	var dmg: float = float(h.damage) * float(D.tierDamage[ti])
++	var res := {"outcome": "hit", "dmg": dmg, "levelled": false}
++	var k: Dictionary = D.kinds[kind]
++	var sp: float = maxf(SimDetMath.hypot(vx, vy), 0.000001)
++	SimFx.ring(S, x, y, float(k.ringR) * 0.5, "#ffffff", 0.3, 8.0, z)
++	SimFx.shake(S, float(k.shake) * 0.5, x, z)
++	if bool(h.get("chip", false)):
++		b.wear += dmg
++		if b.wear < float(D.chip.threshold) * b.maxhp:
++			res.outcome = "chip"
++			SimFx.debris(S, x, y, 2, "#77808f", 300.0, z)
++			return res
++		dmg = b.wear   # it shows: the pool is paid in one blow
++		b.wear = 0.0
++		res.dmg = dmg
++		res.outcome = "wound"
++	var by = f
++	if b.floors >= WorldBrunt.FLOORS_MIN:
++		var oc: Dictionary = WorldBrunt.outcomeDmg(S, b, y, dmg)
++		var c: Dictionary = _floors(S, b, oc, by, x, y, slot, vx / sp, vy / sp)
++		res.outcome = "collapse" if c.collapse else ("pancake" if c.pancake else oc.outcome)
++		res.levelled = not b.alive
++	else:
++		WorldStructures.damageBuilding(S, b, dmg, by, "burst", x, 0.0)
++		res.levelled = not b.alive
++		if res.levelled:
++			res.outcome = "collapse"
++	SimFx.debris(S, x, y, int(k.debris), "#77808f", 500.0, z)
++	SimFx.dust(S, x, y, int(k.dust), "", z)
++	return res
++
++
++## WorldBrunt.applyFloors for a shot: the same rules (punch clears the floors it covers, crack and dent keep damage on them, the core wears by
++## CORE_SHARE, a punched span pancakes the floors above), with no fighter in the event.
++static func _floors(S: SimState, b, oc: Dictionary, by, cx: float, y: float, slot: int, ux: float, uy: float) -> Dictionary:
++	var res := {"pancake": false, "collapse": false}
++	var F: int = b.floors
++	if b.fdmg.size() != F:
++		b.fdmg = PackedFloat32Array()
++		b.fdmg.resize(F)
++		b.fdmg.fill(0.0)
++	var popF: float = WorldBrunt.floorPop(b)
++	var lowest: int = oc.k
++	if oc.outcome == "punch":
++		var cleared: int = 0
++		for j in oc.hit:
++			b.fmask = b.fmask & ~(1 << j)
++			b.fdmg[j] = 0.0
++			cleared += 1
++			lowest = mini(lowest, j)
++		if cleared > 0:
++			WorldCollateral.kill(S, b.idx, popF * float(cleared), by, 0.0, cx, lowest)
++		SimFx.floorHitShot(S, b, lowest, cleared, "punch", oc.ratio, y, slot, ux, uy)
++	elif oc.outcome == "crack":
++		for j in oc.hit:
++			b.fdmg[j] += oc.dmg
++		var d: float = popF * float(oc.hit.size()) * minf(1.0, oc.ratio * WorldBrunt.FLOOR_DEATH)
++		if d > 0.0:
++			WorldCollateral.kill(S, b.idx, d, by, 0.0, cx, oc.hit[0])
++		SimFx.floorHitShot(S, b, oc.hit[0], 0, "crack", oc.ratio, y, slot, ux, uy)
++	else:
++		for j in oc.hit:
++			b.fdmg[j] += oc.dmg
++		SimFx.floorHitShot(S, b, oc.hit[0] if oc.hit.size() > 0 else oc.k, 0, "dent", oc.ratio, y, slot, ux, uy)
++	b.hp -= WorldBrunt.CORE_SHARE * oc.dmg
++	if b.hp <= 0.0:
++		res.collapse = true
++		WorldStructures.collapse(S, b, by, "burst", cx, 0.0)
++		return res
++	if oc.outcome == "punch":
++		var pk: Dictionary = WorldBrunt.pancake(S, b, by, 0.0, cx, null)
++		res.pancake = pk.pancake
++		res.collapse = pk.collapse
++	return res
++
++
++## A mine's blast (a ground mine rests on the ground, an air mine hangs at y): the shot's own blast by the mine's kind row, a vertical one.
++static func mineBlast(S: SimState, slot: int, x: float, y: float, z: float) -> Dictionary:
++	return shotHit(S, slot, "mine", x, y, z, 0.0, -1.0, "ground")
+--- a/data/biomes/blast.json
++++ b/data/biomes/blast.json
+@@ -1,68 +1,106 @@
+-{
+-  "schema": "biomes.blast/1",
+-  "_about": "What an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind (data/fight/shots.json): craterE the crater's energy at tier 1 (1 is a scuff: a slam at 900 speed; the bowl radius is 160 units times its square root), radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake. tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. The structure reach by tier (fighter ladder reach.structure) and the casualty window apply as for any blast.",
+-  "kinds": {
+-    "bolt": {
+-      "craterE": 0.12,
+-      "radius": 70,
+-      "damage": 40,
+-      "debris": 3,
+-      "dust": 1,
+-      "ringR": 160,
+-      "shake": 1.5,
+-      "splash": 4
+-    },
+-    "shard": {
+-      "craterE": 0.07,
+-      "radius": 55,
+-      "damage": 24,
+-      "debris": 2,
+-      "dust": 1,
+-      "ringR": 120,
+-      "shake": 1.0,
+-      "splash": 3
+-    },
+-    "arc": {
+-      "craterE": 0.64,
+-      "radius": 128,
+-      "damage": 128,
+-      "debris": 6,
+-      "dust": 3,
+-      "ringR": 336,
+-      "shake": 4.8,
+-      "splash": 8
+-    },
+-    "charged": {
+-      "craterE": 0.8,
+-      "radius": 160,
+-      "damage": 160,
+-      "debris": 8,
+-      "dust": 3,
+-      "ringR": 420,
+-      "shake": 6.0,
+-      "splash": 10
+-    },
+-    "lob": {
+-      "craterE": 0.5,
+-      "radius": 120,
+-      "damage": 100,
+-      "debris": 6,
+-      "dust": 2,
+-      "ringR": 320,
+-      "shake": 4.0,
+-      "splash": 8
+-    }
+-  },
+-  "tierEnergy": [
+-    1.0,
+-    1.3,
+-    1.7,
+-    2.2
+-  ],
+-  "tierDamage": [
+-    1.0,
+-    1.4,
+-    2.0,
+-    2.8
+-  ]
+-}
+\ No newline at end of file
++{
++  "schema": "biomes.blast/1",
++  "_about": "What an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind (data/fight/shots.json): craterE the crater's energy at tier 1 (1 is a scuff: a slam at 900 speed; the bowl radius is 160 units times its square root), radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake. tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. The structure reach by tier (fighter ladder reach.structure) and the casualty window apply as for any blast.",
++  "kinds": {
++    "bolt": {
++      "craterE": 0.12,
++      "radius": 70,
++      "damage": 40,
++      "debris": 3,
++      "dust": 1,
++      "ringR": 160,
++      "shake": 1.5,
++      "splash": 4,
++      "airReach": 4.0
++    },
++    "shard": {
++      "craterE": 0.07,
++      "radius": 55,
++      "damage": 24,
++      "debris": 2,
++      "dust": 1,
++      "ringR": 120,
++      "shake": 1.0,
++      "splash": 3,
++      "airReach": 4.0
++    },
++    "arc": {
++      "craterE": 0.64,
++      "radius": 128,
++      "damage": 128,
++      "debris": 6,
++      "dust": 3,
++      "ringR": 336,
++      "shake": 4.8,
++      "splash": 8,
++      "airReach": 4.0
++    },
++    "charged": {
++      "craterE": 0.8,
++      "radius": 160,
++      "damage": 160,
++      "debris": 8,
++      "dust": 3,
++      "ringR": 420,
++      "shake": 6.0,
++      "splash": 10,
++      "airReach": 4.0
++    },
++    "lob": {
++      "craterE": 0.5,
++      "radius": 120,
++      "damage": 100,
++      "debris": 6,
++      "dust": 2,
++      "ringR": 320,
++      "shake": 4.0,
++      "splash": 8,
++      "airReach": 4.0
++    },
++    "mine": {
++      "craterE": 0.6,
++      "radius": 130,
++      "damage": 130,
++      "debris": 8,
++      "dust": 3,
++      "ringR": 340,
++      "shake": 5.0,
++      "splash": 8,
++      "airReach": 6.0
++    }
++  },
++  "tierEnergy": [
++    1.0,
++    1.3,
++    1.7,
++    2.2
++  ],
++  "tierDamage": [
++    1.0,
++    1.4,
++    2.0,
++    2.8
++  ],
++  "direct": {
++    "bolt": {
++      "damage": 24,
++      "chip": true
++    },
++    "shard": {
++      "damage": 14,
++      "chip": true
++    },
++    "arc": {
++      "damage": 150
++    },
++    "charged": {
++      "damage": 300
++    },
++    "lob": {
++      "damage": 220
++    }
++  },
++  "chip": {
++    "threshold": 0.12
++  }
++}
