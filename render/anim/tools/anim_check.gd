@@ -150,13 +150,15 @@ func _test_form() -> void:
 ## both arms and both legs broken, fighter 1 is worn and then fresh. The broken arm must hang when no blow is being thrown, no
 ## blow may use the broken limb, the stance must sag toward the brink and the worn fighter must breathe harder than the fresh one.
 func _test_wounds() -> void:
+	# Every part is a controlled case that cannot depend on how a live match plays (the sim changes under it: launches, embeds, skids): a match is started only for
+	# the fighters' records, and the animation is driven directly.
 	var live_was: bool = RenderAnim.wave1_live
-	RenderAnim.wave1_live = false   # this test is about wound motion: which blows are drawn must not decide it
+	RenderAnim.wave1_live = false
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	main.start_match(4, {"p1": true, "p2": true})
 	var S: SimState = main.host.S
-	for i in range(90):
+	for i in range(30):
 		main.frame(DT)
 	var a = S.fighters[0]
 	var b = S.fighters[1]
@@ -165,47 +167,50 @@ func _test_wounds() -> void:
 	a.stage = [0, 0, 3, 3]
 	b.wear = [0, int(at * 0.85), 0, 0]
 	b.stage = [0, 2, 0, 0]
-	var afa: AnimFighter = RenderAnim.fighter(S, a)
-	var afb: AnimFighter = RenderAnim.fighter(S, b)
 	var s2: int = AnimRig.index["spine_2"]
-	var limp: AnimPose = AnimData.pose("wound.arm_limp", not afa._hang_right)
-	var sfx: String = "r" if afa._hang_right else "l"
-	var fo: int = AnimRig.index["forearm_" + sfx]
-	var hanging := 0
-	var calm := 0
-	var lo_w := 9.0
-	var hi_w := -9.0
-	var sag0: AnimPose = AnimData.pose("wound.sag")
-	var d_worn_best := 99.0   # the stance of b nearest the sagging pose over the frames he stands in it (a launch or a rise has other targets)
-	var frames := 0
-	# at least 600 frames, and on until 40 calm ones were seen (a match that keeps the broken fighter busy has few; a cap of 4000 ends a stuck one)
-	while frames < 600 or (calm < 40 and frames < 4000):
-		frames += 1
-		main.frame(DT)
-		if b.state == "free" and afb._part == "" and afb._rise_t0 < 0.0 and afb.version > 0:
-			var dw := 0.0
-			for nm0 in ["spine_1", "spine_2", "head", "pelvis"]:
-				var i0: int = AnimRig.index[nm0]
-				dw += afb._tq[i0].angle_to(sag0.q[i0])
-			d_worn_best = minf(d_worn_best, dw)
-		# a calm frame: nothing thrown, no pose sequence and the ragdoll at rest (a fighter still rolling out of a tumble is not standing calm)
-		if afa._part == "" and a.state == "free" and afa.version > 0 and afa._seq.is_empty() and afa._rd.out_w < 0.5:
-			calm += 1
+	# 1. a broken arm hangs: a fighter standing calm (no blow, no sequence, no ragdoll) with his right or left arm broken, over a second of sim time
+	var hang_n := 0
+	var hang_ok := 0
+	for slot_i in [0, 1]:
+		var afa := AnimFighter.new(slot_i)
+		afa._wound_read(a)
+		var limp: AnimPose = AnimData.pose("wound.arm_limp", not afa._hang_right)
+		var fo: int = AnimRig.index["forearm_" + ("r" if afa._hang_right else "l")]
+		var stub: Dictionary = {"state": "free", "vx": 0.0}
+		for tk in range(60):
+			afa.q = AnimData.pose("stance.aggressive").q.duplicate()
+			afa.hips = AnimData.pose("stance.aggressive").hips
+			afa._part = ""
+			afa._wound_limbs(stub, float(tk) * DT)
+			hang_n += 1
 			if afa.q[fo].angle_to(limp.q[fo]) < 0.3:
-				hanging += 1
-		var ang: float = afb.q[s2].angle_to(Quaternion.IDENTITY)
-		lo_w = minf(lo_w, ang)
-		hi_w = maxf(hi_w, ang)
-	_expect(calm > 30 and hanging > calm * 0.9, "wound test: the broken arm hung on %d of %d calm frames" % [hanging, calm])
-	_expect(int(afa.debug["wound_bad"]) == 0, "wound test: %d blows used a broken limb (of %d)" % [afa.debug["wound_bad"], afa.debug["wound_strikes"]])
-	var sag: AnimPose = AnimData.pose("wound.sag")
-	var fresh: AnimPose = AnimData.pose("stance.aggressive")
-	var d_worn: float = d_worn_best
-	var d_fresh := 0.0
-	for nm in ["spine_1", "spine_2", "head", "pelvis"]:
-		var i2: int = AnimRig.index[nm]
-		d_fresh += fresh.q[i2].angle_to(sag.q[i2])
+				hang_ok += 1
+	_expect(hang_n > 0 and hang_ok == hang_n, "wound test: the broken arm hung on %d of %d calm frames" % [hang_ok, hang_n])
+	# 3. a fighter at the brink is drawn toward the sagging stance more than a fresh one: the same fighter, the same state, only the sim's brink progress differs
+	var sag0: AnimPose = AnimData.pose("wound.sag")
+	var dists: Array = []
+	for brink in [1.0, 0.0]:
+		var afb := AnimFighter.new(1)
+		b.state = "free"
+		afb._wound_read(b)
+		afb._brinkp = brink
+		afb._tq = AnimPose.identity_q()
+		afb._bkey = -1   # rebuild the target now
+		afb._bkey2 = -1
+		afb._target_base(S, b, S.T)
+		var dw := 0.0
+		for nm0 in ["spine_1", "spine_2", "head", "pelvis"]:
+			var i0: int = AnimRig.index[nm0]
+			dw += afb._tq[i0].angle_to(sag0.q[i0])
+		dists.append(dw)
+	var d_worn: float = dists[0]
+	var d_fresh: float = dists[1]
 	_expect(d_worn < d_fresh * 0.9, "wound test: the stance did not sag toward the brink (%.3f against %.3f)" % [d_worn, d_fresh])
+	# 2. no blow uses a broken limb: one match, and only if it threw blows with the arm broken (counted when it did; the number must be 0)
+	var afm: AnimFighter = RenderAnim.fighter(S, a)
+	for i in range(600):
+		main.frame(DT)
+	_expect(int(afm.debug["wound_bad"]) == 0, "wound test: %d blows used a broken limb (of %d)" % [afm.debug["wound_bad"], afm.debug["wound_strikes"]])
 	# the breath of a worn fighter against a fresh one, in a controlled setup (the same fighter, the same four seconds, only the wear differs):
 	# a live match plays differently whenever the sim changes, so the chest of whoever happened to be standing in it is not a measure
 	b.state = "free"
@@ -225,7 +230,7 @@ func _test_wounds() -> void:
 			hi_c = maxf(hi_c, angc)
 		ranges.append(hi_c - lo_c)
 	_expect(float(ranges[0]) > float(ranges[1]) * 1.2, "wound test: the worn fighter's chest moves %.3f, the fresh one's %.3f" % [ranges[0], ranges[1]])
-	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, chest range worn %.3f fresh %.3f (controlled)" % [hanging, calm, afa.debug["wound_bad"], ranges[0], ranges[1]])
+	print("wound test: broken arm hung on %d of %d calm frames, %d blows by the broken limb, stance sag %.3f against %.3f fresh, chest range worn %.3f fresh %.3f (controlled)" % [hang_ok, hang_n, afm.debug["wound_bad"], d_worn, d_fresh, ranges[0], ranges[1]])
 	RenderAnim.wave1_live = live_was
 
 

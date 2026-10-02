@@ -357,6 +357,12 @@ static func _build_fast(shape: String) -> Dictionary:
 	return r
 
 
+## Puts one constrained bone inside its limits (a limb solve that could find no legal bend plane clamps the upper bone and folds the joint below to reach as
+## near as it can). Returns the correction in radians.
+static func clamp_bone(lq: Array[Quaternion], i: int, shape: String = "") -> float:
+	return _fix_bone(lq, i, shape, scale_of(shape, "hinge"))
+
+
 static func _fix_bone(lq: Array[Quaternion], i: int, shape: String, hs: float) -> float:
 	var q: Quaternion = lq[i]
 	if kind[i] == KIND_HINGE:

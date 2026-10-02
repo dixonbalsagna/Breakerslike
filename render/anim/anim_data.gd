@@ -34,6 +34,7 @@ static var entries: Dictionary = {}      # parked entry sequences (data/anim/wav
 static var wave_of: Dictionary = {}     # pose id -> the wave file it came from
 static var shapes: Dictionary = {}      # data/anim/shapes.json: shape key -> {idle, hit} tuning
 static var sockets: Dictionary = {}     # data/anim/sockets.json (regions a blow lands on, limbs that land it)
+static var target_fix: Dictionary = {}    # data/anim/targets.json: pose id -> the hand or foot targets that replace the authored ones (re-aimed after the joint limits)
 static var effector_poses: Dictionary = {}   # data/anim/effectors.json: pose id -> authored clavicle hunch
 
 
@@ -58,6 +59,7 @@ static func load_all() -> void:
 	AnimPose.hunch_up_max = float(hj.get("up_max", 2.0))
 	effector_poses = ej.get("poses", {})
 	sockets = _read("sockets.json")
+	target_fix = _read("targets.json").get("poses", {})
 	AnimJoints.setup(_read("joints.json"))
 	shapes = _read("shapes.json").get("shapes", {})
 	ground = _read("ground.json")
@@ -74,6 +76,7 @@ static func load_all() -> void:
 			for sd in ["r", "l"]:
 				if effector_poses[id].has(sd):
 					sk["hunch_" + sd] = effector_poses[id][sd]
+		sk = _fixed(id, sk)
 		poses[id] = AnimPose.bake(id, sk)
 		raw[id] = sk
 	var kj: Dictionary = _read("keysets.json")
@@ -116,11 +119,22 @@ static func load_all() -> void:
 
 
 ## One parked wave's files (poses, key sets, sequences, cues, entries).
+## A pose's sketch with its re-aimed targets (data/anim/targets.json) in place of the authored ones.
+static func _fixed(id: String, sk: Dictionary) -> Dictionary:
+	if not target_fix.has(id):
+		return sk
+	var out: Dictionary = sk.duplicate()
+	for k in target_fix[id]:
+		out[k] = target_fix[id][k]
+	return out
+
+
 static func _load_wave(wn: String) -> void:
 	var wp: Dictionary = _read("waves/" + wn + ".poses.json").get("poses", {})
 	for id in wp:
-		poses[id] = AnimPose.bake(id, wp[id])
-		raw[id] = wp[id]
+		var wsk: Dictionary = _fixed(id, wp[id])
+		poses[id] = AnimPose.bake(id, wsk)
+		raw[id] = wsk
 		wave_of[id] = wn
 	if FileAccess.file_exists(DIR + "waves/" + wn + ".keysets.json"):
 		var wk: Dictionary = _read("waves/" + wn + ".keysets.json").get("keysets", {})

@@ -41,7 +41,7 @@ mkdirSync(rawDir, { recursive: true });
 
 function runGodot(script, args, { headless = true, timeout = 900 } = {}) {
   const a = ['--path', project];
-  if (headless) a.push('--headless');
+  a.push(headless ? '--headless' : '--no-window');   // never a window: the render tools draw offscreen
   a.push('--script', `res://render/anim/tools/${script}.gd`, '--', ...waveArgs, ...args);
   const r = spawnSync(godot, a, { encoding: 'utf8', timeout: timeout * 1000, maxBuffer: 1 << 28 });
   if (r.status !== 0 && r.status !== null && r.stdout.indexOf('passed') < 0 && r.stdout.indexOf('FAILED') < 0) console.error(`[review] ${script} exited ${r.status}`);

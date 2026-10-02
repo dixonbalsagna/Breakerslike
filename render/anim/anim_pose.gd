@@ -149,6 +149,19 @@ static func ik_limb(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVect
 			dx += 2.0
 	ik2(lq, gq, gp, a, b, c, plan.tgt, plan.E)
 	hinge_fix(lq, gq, gp, a, b, c, s)
+	if float(plan.excess) > 0.0001 and retarget > 0.0:   # (the bake only: a contact or a foot on the ground keeps its end where it is asked)
+		# no legal plane reaches the target (a hand behind a leaned-over shoulder, a foot at the hip of a tuck): the upper bone is brought inside its range, and the joint
+		# below folds, within its hinge, to bring the end as near the target as that allows. The limb keeps its shape (a tuck stays tucked) instead of the end being flung out
+		AnimJoints.clamp_bone(lq, a, shape)
+		gq[a] = gq[AnimRig.parent[a]] * lq[a]
+		gp[b] = gp[a] + gq[a] * AnimRig.rest_local[b]
+		var tl: Vector3 = gq[a].inverse() * (target - gp[b])
+		var flex: float = atan2(tl.x, -tl.y) * s
+		flex = clampf(flex, AnimJoints.hinge_min[b], AnimJoints.hinge_max[b] * AnimJoints.scale_of(shape, "hinge"))
+		lq[b] = Quaternion(Vector3(0, 0, 1), flex * s)
+		gq[b] = gq[a] * lq[b]
+		gp[c] = gp[b] + gq[b] * AnimRig.rest_local[c]
+		gq[c] = gq[b] * lq[c]
 
 
 ## Chooses the bend plane for a limb: returns {E (the joint's place), tgt (the end's place, drawn in if the joint cannot fold that far), phi, twist (rad, of the
@@ -180,7 +193,7 @@ static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b:
 	var a1: Vector3 = u.cross(a0)
 	var phi0: float = atan2(u.dot(a0.cross(pv)), a0.dot(pv))
 	var phi: float = phi0
-	var ev: Vector2 = _plane_eval(a0, a1, phi0, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
+	var ev: Vector3 = _plane_eval(a0, a1, phi0, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
 	if psi < 0.21:
 		# a near-straight limb takes the neutral plane (its tiny bend could point anywhere and turn the foot or the hand over)
 		phi = 0.0
@@ -192,9 +205,11 @@ static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b:
 		var k: int = 0
 		while k < 72:
 			var ph: float = -PI + float(k) * (TAU / 72.0)
-			var e2: Vector2 = _plane_eval(a0, a1, ph, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
+			var e2: Vector3 = _plane_eval(a0, a1, ph, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
 			var dist: float = absf(wrapf(ph - phi0, -PI, PI))
-			var score: float = e2.x * 100.0 + dist
+			# the legal plane that strains the joint least (twist and swing each as a share of their range), nearer the asked-for one on a tie: a tuck
+			# takes the hip folded forward, not the leg swung back to its limit
+			var score: float = e2.x * 100.0 + e2.z + 0.35 * dist
 			if score < best:
 				best = score
 				bphi = ph
@@ -207,19 +222,23 @@ static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b:
 
 ## For the joint placed with its plane turned `phi` from neutral, the upper bone's frame as hinge_fix would give it: Vector2(the excess past the limits (rad,
 ## twist plus swing), the twist (rad)).
-static func _plane_eval(a0: Vector3, a1: Vector3, phi: float, u: Vector3, l1: float, d: float, cos_a: float, sin_a: float, psi: float, P: Quaternion, s: float, a: int, shape: String) -> Vector2:
+static func _plane_eval(a0: Vector3, a1: Vector3, phi: float, u: Vector3, l1: float, d: float, cos_a: float, sin_a: float, psi: float, P: Quaternion, s: float, a: int, shape: String) -> Vector3:
 	var e_off: Vector3 = u * (l1 * cos_a) + (a0 * cos(phi) + a1 * sin(phi)) * (l1 * sin_a)
 	var u1: Vector3 = e_off.normalized()
 	var u2: Vector3 = (u * d - e_off).normalized()
 	var w: Vector3 = u2 - u1 * u1.dot(u2)
 	if w.length() < 0.0001:
-		return Vector2.ZERO
+		return Vector3.ZERO
 	w = w.normalized() * s
 	var yb: Vector3 = -u1
 	var qa: Quaternion = Basis(w, yb, w.cross(yb)).get_rotation_quaternion()
 	var ql: Quaternion = P.inverse() * qa
 	var ex: Vector2 = AnimJoints.excess_at(ql, a, shape, psi)
-	return Vector2(ex.x + ex.y, AnimJoints.twist_of(ql, AnimJoints.axis_of[a]))
+	var tw: float = AnimJoints.twist_of(ql, AnimJoints.axis_of[a])
+	var rg: Vector2 = AnimJoints.twist_range_at(a, shape, psi)
+	var sa: float = AnimJoints.swing_of(ql, tw, AnimJoints.axis_of[a])
+	var strain: float = pow(tw / maxf(absf(rg.y) if tw >= 0.0 else absf(rg.x), 0.05), 2.0) + pow(sa / maxf(AnimJoints._limit_of(ql, a, tw, AnimJoints.axis_of[a], shape), 0.05), 2.0)
+	return Vector3(ex.x + ex.y, tw, strain)
 
 
 ## After ik2: makes the joint a pure human hinge. The upper bone twists about its own axis until the bend plane is the

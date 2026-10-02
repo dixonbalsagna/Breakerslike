@@ -287,39 +287,67 @@ func hit(dx: float, dy: float, force: float, region: int, u: float, u2: float) -
 		om[i] += f * (hit_k[i] if i < hit_k.size() else 1.0) * (hit_kx[k] * dx * (1.0 + hit_vx[i] * vv) + hit_ky[k] * dy + hit_kc[k] * cv)
 
 
-## An elbow or a knee the ragdoll moves keeps to its hinge: the turn it adds is cut to what is left between the pose's own bend and the hinge's end
-## (the elbow may not fold past its maximum, nor the knee, nor either bend the wrong way). A pure function of the pose and the turn, so replays agree.
-func _hinge_room(q: Array[Quaternion], bone: int, t: float) -> float:
-	var st: Vector2 = AnimJoints.hinge_state(q[bone], bone)   # the pose's bend in the direction of flexion
-	var sg: float = AnimJoints.hinge_sign[bone]
-	var add: float = t * sg                                     # the added turn in the direction of flexion
-	var lo_room: float = AnimJoints.hinge_min[bone] - st.x
-	var hi_room: float = AnimJoints.hinge_max[bone] * AnimJoints.scale_of(shape_key, "hinge") - st.x
-	return clampf(add, minf(lo_room, 0.0), maxf(hi_room, 0.0)) * sg
-
-
 ## Adds the motion to the solved pose, shown at weight w; `scale` (one factor a degree of freedom, optional) lets a limb move less (a broken arm hangs heavy).
+## With the joint limits on, every turn it adds is kept inside the joint's range (data/anim/joints.json): a turn that would take an elbow, a knee, a shoulder, a hip,
+## the spine or the head past a limit is cut to the largest share of it that stays inside (a pure function of the pose and the turn, so replays agree), and
+## a shoulder's lift and sweep are made as one turn about the axis between them, which adds no twist (two turns in a row do, and twist is what folds an elbow
+## the wrong way).
 func apply(q: Array[Quaternion], w: float, scale: PackedFloat32Array = PackedFloat32Array()) -> void:
 	if w <= 0.001:
 		return
 	var limited: bool = AnimJoints.loaded and AnimJoints.enabled
-	for i in range(N):
+	var i: int = 0
+	while i < N:
 		var t: float = th[i] * w * (scale[i] if scale.size() == N else 1.0)
-		if absf(t) < 0.0005:
-			continue
 		var ab: int = bone_a[i]
-		var axis: Vector3 = Vector3(1, 0, 0) if is_x[i] == 1 else Vector3(0, 0, 1)
 		var b2: int = bone_b[i]
-		if b2 < 0:
-			var nq: Quaternion = q[ab] * Quaternion(axis, t)
-			if limited and is_x[i] == 0 and not AnimJoints.fast_ok(nq, ab, shape_key):
-				# the turn would take an elbow, a knee, a shoulder or a hip past its limit: cut it to what is left of the range
-				if AnimJoints.kind[ab] == AnimJoints.KIND_HINGE:
-					nq = q[ab] * Quaternion(axis, _hinge_room(q, ab, t))
-				elif AnimJoints.is_limb[ab] == 1:
-					nq = q[ab] * Quaternion(axis, AnimJoints.flex_room(q[ab], ab, t, shape_key))
-			q[ab] = nq
+		var pair: bool = limited and is_x[i] == 0 and b2 < 0 and i + 1 < N and is_x[i + 1] == 1 and bone_a[i + 1] == ab
+		var t2: float = th[i + 1] * w * (scale[i + 1] if scale.size() == N else 1.0) if pair else 0.0
+		var adv: int = 2 if pair else 1
+		if absf(t) < 0.0005 and absf(t2) < 0.0005:
+			i += adv
+			continue
+		var axis: Vector3 = Vector3(1, 0, 0) if is_x[i] == 1 else Vector3(0, 0, 1)
+		if not limited:
+			if b2 < 0:
+				q[ab] = q[ab] * Quaternion(axis, t)
+			else:
+				var sa0: float = share_a[i]
+				q[ab] = q[ab] * Quaternion(axis, t * sa0)
+				q[b2] = q[b2] * Quaternion(axis, t * (1.0 - sa0))
+		elif pair:
+			var rv := Vector3(t2, 0.0, t)
+			var ang: float = rv.length()
+			_turn(q, ab, Quaternion(rv / ang, ang), -1, 0.0)
+		elif b2 < 0:
+			_turn(q, ab, Quaternion(axis, t), -1, 0.0)
 		else:
 			var sa: float = share_a[i]
-			q[ab] = q[ab] * Quaternion(axis, t * sa)
-			q[b2] = q[b2] * Quaternion(axis, t * (1.0 - sa))
+			_turn(q, ab, Quaternion(axis, t * sa), b2, t * (1.0 - sa))
+		i += adv
+
+
+## Turns bone `ab` by `dq` (and `b2`, when it has one, by `tb` about the same axis as `dq`'s), by the largest share of the turn that keeps both inside their limits.
+func _turn(q: Array[Quaternion], ab: int, dq: Quaternion, b2: int, tb: float) -> void:
+	var axis_b := Vector3(1, 0, 0) if dq.x * dq.x > dq.z * dq.z else Vector3(0, 0, 1)
+	var qa: Quaternion = q[ab] * dq
+	var qb: Quaternion = q[b2] * Quaternion(axis_b, tb) if b2 >= 0 else Quaternion.IDENTITY
+	if AnimJoints.fast_ok(qa, ab, shape_key) and (b2 < 0 or AnimJoints.fast_ok(qb, b2, shape_key)):
+		q[ab] = qa
+		if b2 >= 0:
+			q[b2] = qb
+		return
+	var lo: float = 0.0
+	var hi: float = 1.0
+	for _it in range(6):
+		var mid: float = (lo + hi) * 0.5
+		var ma: Quaternion = q[ab] * Quaternion.IDENTITY.slerp(dq, mid)
+		var mb: Quaternion = q[b2] * Quaternion(axis_b, tb * mid) if b2 >= 0 else Quaternion.IDENTITY
+		if AnimJoints.fast_ok(ma, ab, shape_key) and (b2 < 0 or AnimJoints.fast_ok(mb, b2, shape_key)):
+			lo = mid
+		else:
+			hi = mid
+	if lo > 0.0:
+		q[ab] = q[ab] * Quaternion.IDENTITY.slerp(dq, lo)
+		if b2 >= 0:
+			q[b2] = q[b2] * Quaternion(axis_b, tb * lo)

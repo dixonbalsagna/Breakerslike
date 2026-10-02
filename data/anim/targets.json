@@ -1,0 +1,231 @@
+{
+ "schema": "anim.targets/1",
+ "_about": "Hand and foot targets re-aimed after the joint limits (docs/animation/joint-limits.md): pose id -> the targets that replace the authored ones in that pose's sketch (render/anim/anim_data.gd, _fixed). Where an authored hand sat behind its own shoulder, no comfortable bend reached it and the pose showed an elbow-high or straight arm; these keep the old bend and put the hand where a legal bend reaches it. The limb that lands a blow is never changed here (the contact slice reads its reach). Made with render/anim/tools/retarget_suggest.gd and looked at in art/animation/joint-limits/. Render only, outside the sim's data hash.",
+ "poses": {
+  "gc.getup_quick.kip": {
+   "hand_r": [
+    20.0,
+    43.0,
+    7.0
+   ]
+  },
+  "gc.getup_slow.kneel": {
+   "hand_r": [
+    16.0,
+    28.0,
+    12.0
+   ]
+  },
+  "hurt.hold": {
+   "hand_r": [
+    12.0,
+    50.0,
+    13.0
+   ]
+  },
+  "react.fold": {
+   "hand_l": [
+    22.0,
+    37.0,
+    -11.0
+   ],
+   "hand_r": [
+    22.0,
+    37.0,
+    10.0
+   ]
+  },
+  "strike.cross.follow": {
+   "hand_l": [
+    18.0,
+    58.0,
+    -8.0
+   ]
+  },
+  "strike.elbow.contact": {
+   "hand_l": [
+    14.0,
+    56.0,
+    -11.0
+   ]
+  },
+  "strike.elbow.follow": {
+   "hand_r": [
+    20.0,
+    67.0,
+    8.0
+   ]
+  },
+  "strike.hook.contact": {
+   "hand_l": [
+    24.0,
+    52.0,
+    -6.0
+   ]
+  },
+  "strike.jab.contact": {
+   "hand_l": [
+    26.0,
+    55.0,
+    -6.0
+   ]
+  },
+  "strike.round.follow": {
+   "hand_r": [
+    8.0,
+    56.0,
+    12.0
+   ]
+  },
+  "strike.upper.contact": {
+   "hand_l": [
+    18.0,
+    56.0,
+    -8.0
+   ]
+  },
+  "w1.haymaker.contact": {
+   "hand_l": [
+    18.0,
+    55.0,
+    -9.0
+   ]
+  },
+  "w1.hook.contact": {
+   "hand_l": [
+    24.0,
+    52.0,
+    -6.0
+   ]
+  },
+  "w1.jab.contact": {
+   "hand_l": [
+    26.0,
+    55.0,
+    -6.0
+   ]
+  },
+  "w1.low_kick.follow": {
+   "hand_r": [
+    8.0,
+    56.0,
+    12.0
+   ]
+  },
+  "w1.palm_heel.contact": {
+   "hand_l": [
+    26.0,
+    55.0,
+    -6.0
+   ]
+  },
+  "w1.roundhouse.contact": {
+   "hand_l": [
+    -10.0,
+    63.0,
+    -13.0
+   ],
+   "hand_r": [
+    4.0,
+    48.0,
+    19.0
+   ]
+  },
+  "w1.roundhouse.follow": {
+   "hand_l": [
+    0.0,
+    55.0,
+    -10.0
+   ],
+   "hand_r": [
+    8.0,
+    56.0,
+    12.0
+   ]
+  },
+  "w1.roundhouse~b.follow": {
+   "hand_r": [
+    8.0,
+    56.0,
+    12.0
+   ]
+  },
+  "w1.shoulder_check.contact": {
+   "hand_r": [
+    14.0,
+    54.0,
+    5.0
+   ]
+  },
+  "w1.snap_round.follow": {
+   "hand_r": [
+    8.0,
+    56.0,
+    12.0
+   ]
+  },
+  "w1.spear_hand.follow": {
+   "hand_l": [
+    18.0,
+    58.0,
+    -8.0
+   ]
+  },
+  "w1.uppercut.contact": {
+   "hand_l": [
+    18.0,
+    56.0,
+    -8.0
+   ]
+  },
+  "w2.arc_dive.arrive": {
+   "hand_l": [
+    16.0,
+    43.0,
+    -11.0
+   ]
+  },
+  "w2.arc_dive~b.arrive": {
+   "hand_l": [
+    16.0,
+    43.0,
+    -11.0
+   ]
+  },
+  "w2.dash.start": {
+   "hand_l": [
+    10.0,
+    47.0,
+    -3.0
+   ]
+  },
+  "w2.dash~b.start": {
+   "hand_l": [
+    14.0,
+    47.0,
+    -9.0
+   ]
+  },
+  "w2.dash~b.travel": {
+   "hand_l": [
+    2.0,
+    37.0,
+    -3.0
+   ]
+  },
+  "w2.pivot.travel": {
+   "hand_r": [
+    12.0,
+    58.0,
+    14.0
+   ]
+  },
+  "w2.spiral.start": {
+   "hand_r": [
+    20.0,
+    49.0,
+    26.0
+   ]
+  }
+ }
+}

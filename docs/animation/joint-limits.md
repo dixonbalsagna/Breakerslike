@@ -42,7 +42,7 @@ Per-shape scales (P, A, E, C) are in the same file (`shapes`: a multiplier on sw
 1. **The pose bake** (`AnimPose.bake`): the limb solves are `ik_limb`, and a last `enforce` pass runs until it changes nothing, so no authored pose can leave its sketch outside the limits (an `fk` bone override included).
 2. **The limb solves** (`AnimPose.ik_limb`, used by the bake, the contact solve and the foot-on-slope solve): the end goes exactly where asked; the only free choice, the plane the elbow or knee bends in, is made so the bone above is inside its range. The pose's own plane is kept when legal; an illegal one moves the shortest way to a legal plane; a near-straight limb takes the neutral plane (knee forward, elbow behind). A hinge never folds past its end: a target nearer than the limb can fold is met as near as it can (the limb ends inside the defender, not short of him). The bake alone may also slide a hand target forward up to 12 units when no comfortable bend (twist under 75 degrees) reaches it (a hand behind its own shoulder).
 3. **The blender** (`AnimPose.mix`, `mix_lag`, the base smoothing, the contact blend): shoulders and hips blend as swing and twist (twist as an angle, swing as a turn vector through the rest pose), so two legal rotations never blend through a frame past the range.
-4. **The ragdoll** (`AnimRagdoll.apply`): an elbow or knee it moves is cut to what is left of the hinge's range (a pure function of the pose, so replays agree); a shoulder or hip to what is left of its swing cone.
+4. **The ragdoll** (`AnimRagdoll.apply`): every turn it adds (elbow, knee, shoulder, hip, spine, head) is cut to the largest share that stays inside the joint's range, a pure function of the pose so replays agree; a shoulder's lift and sweep are made as one turn about the axis between them, which adds no twist. In four seeded matches this took the ragdoll stage from 752 frames that first broke a limit to 194, and corrections over 30 degrees from 117 to 35.
 5. **The last pass of every solve** (`AnimJoints.enforce`, after every layer): anything still outside is put back. A source that respects the limits makes no correction (the fast path costs a few float tests per bone, no trig). This is the guarantee: whatever a layer does, what reaches the screen is inside the limits.
 
 Cost: the solve went from about 92 to about 128 microseconds a fighter on a loaded machine (4,200-tick match; budget 1.0 ms mean for all of animation).
@@ -73,6 +73,10 @@ Cost: the solve went from about 92 to about 128 microseconds a fighter on a load
 ## 4. What changed on screen
 
 Where a bend was impossible the pose changed; where it was legal it did not. Of 355 baked poses, 172 changed by more than half a unit at an elbow, knee, hand or foot, and 51 by more than 6 (the legs of the tucks and the skid, kicks, the rear hand of the jabs, hooks and hammers). `art/animation/records/joint-limits.md` lists them. Before and after, the same seeded match: `art/animation/joint-limits/*-before-after.gif` (two front kicks, two roundhouses; the knee that folded the wrong way in the chamber now folds the right way), and `art/animation/tumble-broken-arm-before-after.gif` for the broken arm.
+
+### Re-aimed targets and the tucks (2026-10-02)
+
+Where the limits turned an authored pose worse (an elbow-high guard from a hand authored behind its own shoulder, a tuck whose feet no hip can reach), the targets were re-authored, not the limits loosened: `data/anim/targets.json` holds 30 re-aimed rear-hand targets (never the limb that lands a blow), made with `render/anim/tools/retarget_suggest.gd`, and the four tucks (`launch.tuck`, `gc.tech_flip.tuck`, `gc.tech_flip.spin`, `gc.hold.brace_tumble`) have feet and knee poles that a legal hip and knee reach. Old against new for the 51 poses that moved by more than 6 units: `art/animation/joint-limits/changed-poses-1.png` to `-5.png`.
 
 ## 5. What a new fighter's rig must declare
 

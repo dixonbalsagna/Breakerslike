@@ -24,10 +24,10 @@ export const sequences = {
   ] },
   tech_flip: { dur: 21, phases: [
     { id: 'tuck', ticks: 5, sketch: { family: 'tumble', lean: 70, hips: [0, -6, 0], spine: { lean: 40 }, head: { pitch: 34 }, hand_r: [20, 40, 12], hand_l: [18, 38, -8],
-        foot_r: [16, 40, 8], foot_l: [12, 36, -6], ...OPEN },
+        foot_r: [-1.4, 20.5, 5], foot_l: [-1.4, 20.5, -5], pole_foot_r: [16.6, -3.5, 0], pole_foot_l: [16.6, -3.5, 0], ...OPEN },
       orig: 'the recovery: the body tucking in tight, the knees to the chest' },
     { id: 'spin', sketch: { family: 'tumble', lean: 90, hips: [0, -6, 0], spine: { lean: 50, twist: 10 }, head: { pitch: 40 }, hand_r: [18, 36, 12], hand_l: [16, 34, -8],
-        foot_r: [14, 38, 8], foot_l: [10, 34, -6], ...OPEN },
+        foot_r: [-4.0, 22.0, 5], foot_l: [-4.0, 22.0, -5], pole_foot_r: [15.0, -8.0, 0], pole_foot_l: [15.0, -8.0, 0], ...OPEN },
       orig: 'a tight flip: the body one ball turning over' },
     { id: 'open', ticks: 6, sketch: { family: 'airborne_neutral', lean: 8, hips: [0, -2, 0], spine: { lean: 2 }, head: { pitch: 4 }, hand_r: [14, 60, 26], hand_l: [14, 60, -24],
         foot_r: [4, 6, 8], foot_l: [-4, 4, -7], ...OPEN },
@@ -60,7 +60,7 @@ export const sequences = {
 // held poses (not sequences): a pose id that AnimFighter mixes for as long as the journey says
 export const holds = {
   brace_tumble: { sketch: { family: 'tumble', lean: 52, hips: [0, -6, 0], spine: { lean: 30 }, head: { pitch: 28 }, hand_r: [14, 56, 12], pole_hand_r: [10, 4, 8], hand_l: [14, 54, -10],
-      foot_r: [14, 30, 8], foot_l: [10, 26, -6], ...OPEN },
+      foot_r: [0.4, 14.5, 5], foot_l: [0.4, 14.5, -5], pole_foot_r: [16.3, -5.0, 0], pole_foot_l: [16.3, -5.0, 0], ...OPEN },
     orig: 'braced in a roll: chin tucked, the forearms drawn in front of the face, the knees up' },
 };
 
