@@ -138,6 +138,15 @@ const ctx = A => ({ A, runRecords: async () => [rec()] });
     const bad = evaluate({ default: Array.from({ length: 40 }, () => jm({ slide: 30, wall: 30, slam: 12, caught: 17, water: 6, brunt: 5, bounce: 0, other: 0 }, { capped: 10, long: 20 })) }), idb = k => bad.find(r => r.id === k);
     assert.strictEqual(idb('5c.mix.halted:').status, 'FAIL'); assert.strictEqual(idb('5c.largest').status, 'FAIL'); assert.strictEqual(idb('5c.capped').status, 'FAIL'); assert.strictEqual(idb('5c.long').status, 'FAIL');
   });
+  await t('exchange endings: the launch share is judged against 25 to 35%; knock-back and continue stay PENDING until exchange_end events give them, then judge 20 to 30 and 40 to 50', async () => {
+    const er = (e, extra = {}) => rec({ exEnds: e, ...extra });
+    const only = evaluate({ default: Array.from({ length: 40 }, () => er({ launch: 30, other: 70 })) }), id1 = k => only.find(r => r.id === k);
+    assert.strictEqual(id1('10.end.launch').status, 'PASS'); assert.strictEqual(id1('10.end.knockback').status, 'PENDING'); assert.strictEqual(id1('10.end.continue').status, 'PENDING');
+    const hi = evaluate({ default: Array.from({ length: 40 }, () => er({ launch: 60, other: 40 })) });
+    assert.strictEqual(hi.find(r => r.id === '10.end.launch').status, 'FAIL');
+    const full = evaluate({ default: Array.from({ length: 40 }, () => er({ launch: 30, knockback: 25, continue: 45 })) }), id2 = k => full.find(r => r.id === k);
+    assert.strictEqual(id2('10.end.launch').status, 'PASS'); assert.strictEqual(id2('10.end.knockback').status, 'PASS'); assert.strictEqual(id2('10.end.continue').status, 'PASS');
+  });
   console.log(`godot qa selftest: ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();

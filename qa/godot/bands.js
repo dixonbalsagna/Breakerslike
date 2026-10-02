@@ -425,7 +425,23 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
     R.info('10.gap', '§10', 'Breathing room, release to the next request, median', 'retired', 'replaced by the feel row release to next request at most 1.0 s. Measured: ' + median(gaps).toFixed(2) + ' s');
     const noLong = D.filter(r => !r.exGaps.some(g => g > 10)).length;
     R.rate('10.gap10', '§10', 'Matches with no gap over 10 s', { v: noLong / D.length, ci: wl(noLong, D.length), lo: 0.95 });
-    { const ls = S.clusterShare(D, r => total(r.launches), r => melee(r) + r.beams.length); R.rate('10.launchShare', '§10', 'Exchanges that end in a launch (40 to 65%; replaces launches per minute)', { v: ls.p, ci: ls.ci, lo: 0.40, hi: 0.65 }); }
+    // agency pass section 3 (docs/design/agency-pass.md): how a melee exchange ends: the brawl continues 40 to 50%, a knock-back 20 to 30%, a launch 25 to 35%. Today only the launch is told apart (no knock-back or continue state in the sim); the other two switch on with `exchange_end {actor, kind}` events.
+    { const E = r => r.exEnds || {}, tot = r => sum(Object.values(E(r))), has = D.every(r => r.exEnds);
+      if (has && sum(D.map(tot)) > 0) {
+        const kinds = sum(D.map(r => E(r).knockback || 0)) + sum(D.map(r => E(r).continue || 0)) > 0, ls = S.clusterShare(D, r => E(r).launch || 0, tot);
+        R.rate('10.end.launch', '§10', 'Melee exchanges that end in a launch (25 to 35%, agency pass section 3; it was 40 to 65%)', { v: ls.p, ci: ls.ci, lo: 0.25, hi: 0.35 });
+        if (kinds) {
+          const kb = S.clusterShare(D, r => E(r).knockback || 0, tot), ct = S.clusterShare(D, r => E(r).continue || 0, tot);
+          R.rate('10.end.knockback', '§10', 'Melee exchanges that end in a knock-back (20 to 30%)', { v: kb.p, ci: kb.ci, lo: 0.20, hi: 0.30 });
+          R.rate('10.end.continue', '§10', 'Melee exchanges after which the brawl continues, both in reach (40 to 50%)', { v: ct.p, ci: ct.ci, lo: 0.40, hi: 0.50 });
+        } else {
+          R.info('10.end.rest', '§10', 'Melee exchanges that do not end in a launch (knock-back and continue are not told apart yet)', fmt.pct(1 - ls.p), 'the knock-back (20 to 30%) and continue (40 to 50%) rows switch on with exchange_end events');
+          R.pending('10.end.knockback', '§10', 'Melee exchanges that end in a knock-back (20 to 30%)', 'needs exchange_end events (the agency pass slice)');
+          R.pending('10.end.continue', '§10', 'Melee exchanges after which the brawl continues (40 to 50%)', 'needs exchange_end events (the agency pass slice)');
+        }
+      } else R.pending('10.end.launch', '§10', 'How melee exchanges end: continue 40 to 50%, knock-back 20 to 30%, launch 25 to 35%', 'records without exchange endings');
+    }
+    { const ls = S.clusterShare(D, r => total(r.launches), r => melee(r) + r.beams.length); R.info('10.launchShare', '§10', 'Launches as a share of exchanges, planner launches over all exchanges (old row, band 40 to 65% retired by agency pass section 3)', fmt.pct(ls.p), 'the standing row is 10.end.launch'); }
     const fl = D.flatMap(r => r.flights);
     const haul = D[0].longHaul || 1500;                                 // 1,500 x TRAV_LAUNCH since the world scale (SC): 9,000 units = 120 fighter heights
     R.point('10.longHaul', '§10', `Launches with at least ${haul.toLocaleString('en-US')} units of horizontal travel (1,500 x the launch traversal factor)`, { v: fl.filter(f => f.travel >= haul).length / fl.length, lo: 0.30, unit: 'pct' });
