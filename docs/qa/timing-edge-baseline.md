@@ -51,3 +51,27 @@ Encounter's slice 1 (earned launches, knock-backs, STAY) is in; the timing rules
 - **Two light-only players do not finish a match.** T6 (timed mash against a plain mash) decided 0 of 40: with no earned launch a lights-only match runs to the 15:00 cap. The agency pass allows it (a mash is faster and weaker), but two beginners pressing one button would sit in a stalemate; a brink and finisher path for light-only fights, or the time-cap event, is worth a look.
 - **No timing edge yet, as expected.** Timed against its untimed twin reads taps 45.0% (T2), hold 55.0% (T7), the mirrors 52.5% (T4) and 45.0% (T5), all noise around 50%.
 - The timed tapper's launches earned per match (25 to 35) are about 3 times the masher's; once timing rules exist the launch-earning edge should widen further.
+
+# Third baseline: after agency slice 4 (`7408870`)
+
+Slice 4 is in (the blur's knock-back ender, knock-backs decisive, the AI's earner use by difficulty, brinkSetups 1, k +8%); the timing rules are still not built. 40 matches each, scripts throw heavies with the stick up and toward the rival and take their forms. `node qa/timing-edge.js --matches=40 --plan=core`.
+
+
+| ID | Matchup | A wins | 95% interval | Band | Verdict | Damage per exchange A / B | Launches earned A / B | Turn-taking | A on-beat |
+| :--- | :--- | ---: | :--- | :--- | :--- | :--- | :--- | ---: | ---: |
+| T1 | timed (80% of beats) against a masher | 57.5% (23 of 40) | 42.2% to 71.5% | 72 to 82% | FAIL | 213.7 / 215.8 | 16.5 / 7 | 89.9% | 77.4% |
+| T2 | timed against a style-only player (same mix, never on the beat) | 50.0% (20 of 40) | 35.2% to 64.8% | 62 to 70% | FAIL | 208.2 / 199.4 | 21.8 / 20.4 | 81.8% | 76.6% |
+| T3 | style-only against a masher | 55.0% (22 of 40) | 39.8% to 69.3% | 55 to 62% | in band, interval wide | 210.9 / 214.4 | 15 / 6.9 | 89.2% | 36.1% |
+| T4 | mirror: both timed (all else equal) | 52.5% (21 of 40) | 37.5% to 67.1% | 45 to 55% | in band, interval wide | 199.9 / 202 | 20.9 / 20.6 | 82.2% | 77.1% |
+| T5 | mirror: both style-only | 57.5% (23 of 40) | 42.2% to 71.5% | 45 to 55% | FAIL | 213.6 / 204.6 | 20.2 / 20.4 | 82.7% | 35.1% |
+| T6 | timed mash (within 3 ticks) against a plain mash | 52.5% (21 of 40) | 37.5% to 67.1% | 62 to 82% | FAIL | 261.1 / 233.3 | 2 / 1.5 | 95.8% | 82.5% |
+| T7 | timed hold (released within 6 ticks of the flash) against a plain hold | 30.0% (12 of 40) | 18.1% to 45.4% | 62 to 82% | FAIL | 157.7 / 229.9 | 38 / 45.4 | 62.4% | 7.9% |
+| T8 | timed against the medium AI | 85.0% (34 of 40) | 70.9% to 92.9% | 60 to 80% | FAIL | 89.3 / 128.2 | 27.8 / 13.4 | 48.5% | 75.9% |
+| T9 | masher against the medium AI (control-rules 6: 35 to 50%) | 45.0% (18 of 40) | 30.7% to 60.2% | 35 to 50% | in band, interval wide | 82.7 / 123.2 | 3.5 / 18.5 | 57.5% | 0.0% |
+
+## Reading it
+
+- **The masher is back inside its AI bands** (T9 45.0% against the medium AI; the baseline's 100-match masher rows read easy 99%, medium 37%, hard 0%), and style-only against a masher is 55.0% (T3; band 55 to 62). The quantity advantage is gone: the masher now deals the same damage per exchange as the others (about 215 each) and earns 3 launches a match against the tappers' 15 to 21.
+- **Still no timing edge**, as expected: timed against its untimed twin reads taps 50.0% (T2), mash 52.5% (T6), hold 30.0% (T7); the mirrors 52.5% and 57.5%. Timed against the masher 57.5% (band 72 to 82).
+- **Timed against the medium AI 85.0%** (band 60 to 80): a skilled input still beats the medium AI by more than the band allows, before any timing rule exists; the medium AI's levers (earnerUse, guardRepeat, punish) are what to move if the timing edge adds to it.
+- Two lights-only players now finish: 60 of 60 matches, median 2:44 (it was 0 of 4 on the slice 3 tree).

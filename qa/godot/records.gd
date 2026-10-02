@@ -286,7 +286,8 @@ func run_match(seed: int, arm: String, cap: int, capsec: float) -> Dictionary:
 					rec.reach.tall += 1
 					var gx: float = fv.x
 					var slope: float = absf(WorldTerrain.groundY(S, gx + 40.0) - WorldTerrain.groundY(S, gx - 40.0)) / 80.0
-					if slope <= 0.15:
+					var gdiff: float = absf(WorldTerrain.groundY(S, fa.x) - WorldTerrain.groundY(S, fv.x))
+					if slope <= 0.15 and gdiff < rdy * 0.5:   # on flat ground at the victim and no step in the ground between the two (a shore or a ledge between them explains the height)
 						rec.reach.tallFlat += 1
 						# for World and Encounter: the tick, the heights of both fighters and of the ground under each, and both states
 						rec.reachFlat.append({"tick": S.tick, "t": snappedf(S.T, 0.01), "dy": snappedf(rdy, 0.1), "dx": snappedf(rdx, 0.1), "attY": snappedf(fa.y, 0.1), "vicY": snappedf(fv.y, 0.1), "attGround": snappedf(WorldTerrain.groundY(S, fa.x), 0.1), "vicGround": snappedf(WorldTerrain.groundY(S, fv.x), 0.1), "attState": str(fa.state), "vicState": str(fv.state), "kind": str(e.get("kind")), "exTag": str(rex.tag), "slope": snappedf(slope, 0.001)})
