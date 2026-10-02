@@ -169,6 +169,8 @@ func _run() -> void:
 		for row in [[-600.0, "front street"], [-2025.0, "block row 2"]]:
 			await _scenario("depth %s at pitch %d one view" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 600.0, float(pitch)), {})
 			await _scenario("depth %s at pitch %d split" % [row[1], int(pitch)], func(): return _depth(float(row[0]), 9000.0, float(pitch)), {})
+	for lv in ["one view", "split", "reduced", "over a shot"]:
+		await _scenario("last stand %s" % lv, func(): return _last_stand(lv), {})
 	for iv in ["full", "humans", "reduced", "skip"]:
 		await _scenario("intro %s" % iv, func(): return _intro_run(iv), {})
 	await _scenario("panel signature", func(): return _panel_basic(), {})
@@ -210,6 +212,8 @@ func _run() -> void:
 		_real_match(int(seeds[0]), -1, 49.0, FULL_TICKS)
 		_real_match(int(seeds[mini(1, seeds.size() - 1)]), 1, 0.0, FULL_TICKS)
 		_real_match(int(seeds[0]), -1, 0.0, FULL_TICKS, 0)
+	_intro_real()
+	_opening_default()
 	_sim_unchanged()
 	print("frames checked  %d, checks %d" % [frames_checked, checks])
 	for k in stats:
@@ -1269,6 +1273,148 @@ func _panel_band_pose(dx: float, dy: float) -> Dictionary:
 	_check(bad == 0, "%s: the strip covered a fighter" % _label)
 	stats["panel band %s" % _label] = "none" if p.is_empty() else ("top" if int(p["band"]) == 0 else "bottom")
 	return {}
+
+
+## The last stand's trigger (`last_stand_ready {actor, dur}`): live, so nothing pauses. One view: a 0.7 s cut-in on him (two
+## cut frames), not rationed; a split: a push on his pane and no cut; reduced motion and over a sim-owned shot: nothing.
+func _last_stand(mode: String) -> Dictionary:
+	var ax: float = 20000.0
+	var far: float = 6000.0 if mode == "split" else 600.0
+	_pose(ax, 0.0, ax + far, 0.0)
+	_rig.reduced_motion = mode == "reduced"
+	_seed_rig()
+	for _i in range(240):
+		_tick_rig()
+	var z0: float = _rig.current().cam_z[0]
+	var cuts: int = 0
+	var ov_ticks: int = 0
+	var zmax: float = z0
+	if mode == "over a shot":
+		_tick_rig([_shot_events("transform", {"actor": 1.0, "tier": 2.0, "source": "x", "dur": 3.0, "version": "full"})])
+	var before: int = _rig.last_stand_shots
+	_tick_rig([_shot_events("last_stand_ready", {"actor": 0.0, "dur": 20.0})])
+	if _rig.current().cut:
+		cuts += 1
+	for k in range(150):
+		_tick_rig()
+		if _rig.current().cut:
+			cuts += 1
+		if _rig._ov_kind == "last_stand":
+			ov_ticks += 1
+		zmax = maxf(zmax, _rig.current().cam_z[0])
+	match mode:
+		"one view":
+			_check(absi(ov_ticks - int(CamParams.LAST_STAND_DUR * 60.0)) <= 3 and cuts == 2, "%s: cut-in %d ticks, %d cut frames (want 42 and 2)" % [_label, ov_ticks, cuts])
+			# a second one, for the other fighter, 2 s later: not rationed
+			for _i in range(60):
+				_tick_rig()
+			_tick_rig([_shot_events("last_stand_ready", {"actor": 1.0, "dur": 20.0})])
+			var again: int = 0
+			for k in range(20):
+				_tick_rig()
+				if _rig._ov_kind == "last_stand":
+					again += 1
+			_check(again > 10, "%s: the second fighter's last stand got no cut-in" % _label)
+		"split":
+			_check(cuts == 0 and ov_ticks == 0 and zmax > z0 * 1.06, "%s: split: %d cuts, %d cut-in ticks, push %.3f" % [_label, cuts, ov_ticks, zmax / z0])
+		"reduced":
+			_check(_rig.last_stand_shots == before and ov_ticks == 0 and cuts == 0, "%s: a shot in reduced motion" % _label)
+		"over a shot":
+			_check(_rig.last_stand_shots == before and ov_ticks == 0, "%s: a last-stand shot over a transformation" % _label)
+	stats["last stand " + mode] = "cut-in %d ticks, %d cut frames, push x%.3f" % [ov_ticks, cuts, zmax / z0]
+	_rig.reduced_motion = false
+	return {}
+
+
+## The real sim's intro (setup "intro": true): the events as the sim sends them drive the shots.
+func _intro_real() -> void:
+	_begin("intro real")
+	SimCore.newMatch(_S, 3, {"p1": true, "p2": true}, {"intro": true})
+	_rig.reset(_S, vw, vh)
+	_watch_first()
+	_S.dt = SplitRig.DT
+	var cuts: Array = []
+	var seen: Dictionary = {}
+	var off: int = 0
+	var both_ok: bool = true
+	var clock_t: int = -1
+	for t in range(0, 340):
+		SimCore.step(_S)
+		var ev: Array = _S.out.fx.duplicate()
+		_S.out.fx.clear()
+		_S.out.feed.clear()
+		for e in ev:
+			var et: String = String(e.type)
+			if et in ["intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start"]:
+				seen[et] = int(seen.get(et, 0)) + 1
+				if et == "clock_start":
+					clock_t = t
+		_rig.step(_S, vw, vh, ev)
+		_tick += 1
+		_watch()
+		var cur: SplitFrame = _rig.current()
+		if cur.cut:
+			cuts.append(t)
+		if _rig.solo_kind == "intro" and (_rig._in_phase == "fall" or _rig._in_phase == "land") and t > 0:
+			if not _on_screen(cur, _rig.solo_slot):
+				off += 1
+		if clock_t >= 0 and t > clock_t + 20 and t < clock_t + 30:
+			both_ok = both_ok and _on_screen(cur, 0) and _on_screen(cur, 1)
+	var want: Array = [0, 36, 84, 114, 144, 239, 263, 287]
+	var ok: bool = seen.get("intro_start", 0) == 1 and seen.get("entrance_fall", 0) == 2 and seen.get("entrance_land", 0) == 2 and seen.get("staredown_start", 0) == 1 and seen.get("clock_start", 0) == 1
+	_check(ok, "intro real: events seen %s" % str(seen))
+	var cuts_ok: bool = false
+	if cuts.size() >= want.size():
+		cuts_ok = true
+		var head: Array = []
+		for c in cuts:
+			if int(c) < 300:
+				head.append(c)
+		cuts_ok = head.size() == want.size()
+		if cuts_ok:
+			for q in range(want.size()):
+				cuts_ok = cuts_ok and absi(int(head[q]) - int(want[q])) <= 2
+	_check(cuts_ok, "intro real: cuts %s (want about %s)" % [str(cuts), str(want)])
+	_check(off == 0, "intro real: the faller was off the screen for %d ticks" % off)
+	_check(both_ok and absi(clock_t - 300) <= 1, "intro real: both fighters on the screen after the clock (clock at %d)" % clock_t)
+	stats["intro real"] = "events %s, cuts %s, faller off %d ticks" % [str(seen), str(cuts), off]
+	SimCore.dispose(_S)
+	_S = null
+
+
+## The default opening (the setup's default is "skip": both fighters already on their craters, 900 units apart): the first
+## frames frame them both well.
+func _opening_default() -> void:
+	_begin("opening default")
+	SimCore.newMatch(_S, 3, {"p1": true, "p2": true})
+	_rig.reset(_S, vw, vh)
+	_watch_first()
+	_S.dt = SplitRig.DT
+	var worst_margin: float = 1.0e9
+	var min_size: float = 1.0e9
+	var split_seen: bool = false
+	for t in range(0, 180):
+		SimCore.step(_S)
+		var ev: Array = _S.out.fx.duplicate()
+		_S.out.fx.clear()
+		_S.out.feed.clear()
+		_rig.step(_S, vw, vh, ev)
+		_tick += 1
+		_watch()
+		var cur: SplitFrame = _rig.current()
+		split_seen = split_seen or cur.mode != "merged"
+		for i in range(2):
+			var f = _S.fighters[i]
+			var pos: Vector2 = cur.screen_pos(0, f.x, f.y + CamParams.CHEST, float(f.z))
+			worst_margin = minf(worst_margin, minf(pos.x, vw - pos.x) / vw)
+			if t > 30:
+				min_size = minf(min_size, _apparent_px(i, cur) / vh)
+	_check(not split_seen, "opening default: the layout was not one view")
+	_check(worst_margin >= 0.08, "opening default: a fighter within %.3f of the screen edge" % worst_margin)
+	_check(min_size >= 0.09, "opening default: a fighter only %.3f of the screen height" % min_size)
+	stats["opening default"] = "one view, edge margin %.3f of the width, smallest %.3f of the height" % [worst_margin, min_size]
+	SimCore.dispose(_S)
+	_S = null
 
 
 ## The opening, against the sim's timeline (data/fight/intro.json: A falls at 0 and lands at 36, B falls at 84 and lands at

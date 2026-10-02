@@ -56,6 +56,20 @@ That is eight hard cuts in five seconds, each on an event of the sim; the only t
   - *World*: the crater's `r` in `entrance_land` is used to size the landing frame (150 units is a stand-in); the frame is clamped to 7%..12% of the screen height.
   - *Simulation*: nothing; the camera's reading of `delay` (skip allowed after) is not used.
 
+### Row 7 bound to the sim's real intro events (2026-10-04, 74ede76)
+
+The sim now sends the intro events with exactly the fields the shot reads (`intro_start {dur, delay}`, `entrance_fall {actor, x, y, z, y1, dur}`, `entrance_land {actor, x, y, z, y1, r}`, `staredown_start {dur}`, `clock_start {kind}`), and the real sim's intro (setup `"intro": true`, which is the fourth argument of `SimCore.newMatch`) drives the shot in the sweep ("intro real"): the five events arrive once or twice as listed, the cuts fall at ticks 0, 36, 84, 114, 144, 239, 263 and 287, the faller is never off the screen, and both fighters are on the screen after the clock (tick 299). "A" is the fighter on the left start spot. Animation's face cuts land on its tension pose from tick 240; mine start at 239.
+
+**The default opening** (the setup's default is `"skip"`: both fighters already on their entrance craters, 900 units apart, no intro events): the camera needs nothing and frames them well. Measured (sweep "opening default", and `intro_shots.gd --opening` on the real renderer with the real pipeline): one view, no split, the fighters at 0.168 of the width from the nearest screen edge at the worst and at least 10.4% of the screen height tall; the real renderer's frame at tick 20 has them at 29% and 71% of the width on their craters.
+
+### Row 23: the last stand's trigger (built 2026-10-04)
+
+`last_stand_ready {actor, dur}` (once per fighter per match, at the first brink; `last_stand_end {actor, kind}` needs nothing from the camera). The camera's part is the cut of Game Design's option B (the face cut-in and the line are UI's and Narrative's). It is live, so nothing pauses.
+- **One view:** a hard cut-in on the fighter at the brink, a close-up from fight size to 16% over 0.7 s, then a cut back (two cut frames). It is not rationed (it happens at most twice a match), but it never plays over a sim-owned shot, a launch hold or the intro, or while another cut-in is running.
+- **A split:** a push on his pane (the tier push's shape, 12%, no cut), because a cut-in in one pane would hide the other fight.
+- **Reduced motion:** nothing (the HUD and the face carry it).
+- **Tests** ("last stand one view / split / reduced / over a shot"): 40 to 42 ticks and exactly two cut frames, and the other fighter's later last stand also plays; a push of more than 6% and no cut in a split; nothing in reduced motion and over a transformation.
+
 ### Row 19: orbit and re-entry (planned; wave 2)
 
 **Needs** the game to choose the landing spot at launch time, and to tell the camera. That is what lets the camera cut ahead of the victim instead of chasing him back down.

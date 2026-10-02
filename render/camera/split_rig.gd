@@ -92,6 +92,7 @@ var _tf_g: int = 0                       # the beats in ticks (docs/design/moves
 var _tf_b: int = 0
 var _tf_s: int = 0
 var intro_active: bool = false           # between intro_start and clock_start (docs/architecture/intro-phase.md)
+var last_stand_shots: int = 0              # last-stand shots started (counted for the tests)
 var intro_cuts: int = 0                  # the intro's hard cuts (counted for the tests)
 var _in_phase: String = ""               # fall, land, stare or face
 var _in_slot: int = -1
@@ -596,6 +597,17 @@ func _update_orientation(S: SimState) -> void:
 func _read_events(S: SimState, events: Array) -> void:
 	for ev in events:
 		match String(_ef(ev, "type", "")):
+			"last_stand_ready":
+				# The first brink of a fighter's match: his one free signature is open. Live, so nothing pauses: in one view a
+				# 0.7 s cut-in on him (a close-up, then back), in a split a push on his pane; the face cut-in and the line are
+				# UI's and Narrative's. Not in reduced motion (the HUD and the face carry it), not over a sim-owned shot.
+				var lsa: int = int(_ef(ev, "actor", -1))
+				if lsa >= 0 and lsa < 2 and not reduced_motion and not intro_active and solo_kind == "":
+					last_stand_shots += 1
+					if sep < 0.5 and not fold_active:
+						_start_overlay("last_stand", lsa, Vector3.ZERO, CamParams.R_FIGHT, CamParams.R_FINISH, CamParams.LAST_STAND_DUR, false)
+					else:
+						_push[lsa] = 0.0
 			"intro_start":
 				intro_active = true
 				_in_t = 0
@@ -1149,18 +1161,18 @@ func _start_cut(S: SimState, v: int) -> void:
 ## A camera-only cut-in (a building smash, a crippling moment): a hard cut to a fixed or followed view for `dur` seconds,
 ## then a hard cut back. It runs in one view only, never over a launch hold, a cut or a sim-owned shot, with a cooldown
 ## and a per-minute cap so cuts stay events (docs/camera/camera-v2.md section 4).
-func _start_overlay(kind: String, slot: int, pt: Vector3, r0: float, r1: float, dur: float) -> void:
-	if _ov_kind != "" or fold_active or sep >= 0.5 or reduced_motion:
+func _start_overlay(kind: String, slot: int, pt: Vector3, r0: float, r1: float, dur: float, rationed: bool = true) -> void:
+	if _ov_kind != "" or fold_active or sep >= 0.5 or reduced_motion or intro_active:
 		return
 	if solo_kind != "" and solo_kind != "launch":
 		return
-	if not _ov_times.is_empty() and time - float(_ov_times[-1]) < CamParams.OV_COOLDOWN:
+	if rationed and not _ov_times.is_empty() and time - float(_ov_times[-1]) < CamParams.OV_COOLDOWN:
 		return
 	var recent: int = 0
 	for t0 in _ov_times:
 		if time - float(t0) < 60.0:
 			recent += 1
-	if recent >= CamParams.OV_MAX_PER_MIN:
+	if rationed and recent >= CamParams.OV_MAX_PER_MIN:
 		return
 	_ov_kind = kind
 	_ov_t = 0.0
@@ -1169,10 +1181,11 @@ func _start_overlay(kind: String, slot: int, pt: Vector3, r0: float, r1: float, 
 	_ov_pt = pt
 	_ov_r0 = r0
 	_ov_r1 = r1
-	_ov_times.append(time)
-	if _ov_times.size() > 12:
-		_ov_times.pop_front()
-	cut_ins += 1
+	if rationed:
+		_ov_times.append(time)
+		if _ov_times.size() > 12:
+			_ov_times.pop_front()
+		cut_ins += 1
 	_cut_now = true
 
 

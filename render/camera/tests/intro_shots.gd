@@ -14,6 +14,7 @@ var main: Node
 var out: String = "."
 var seed: int = 1
 var reduced: bool = false
+var opening: bool = false
 
 
 func _initialize() -> void:
@@ -28,6 +29,8 @@ func _initialize() -> void:
 			seed = int(a.substr(4))
 		elif a == "--reduced":
 			reduced = true
+		elif a == "--opening":
+			opening = true
 	var vpn := SubViewport.new()
 	vpn.size = size
 	vpn.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -54,6 +57,25 @@ func _run() -> void:
 	main.hud.visible = false
 	var S: SimState = main.host.S
 	var vp: Vector2 = main.get_viewport().get_visible_rect().size
+	if opening:
+		# The game's default opening (the setup's "skip"): the real sim and the real pipeline, no injected events.
+		var view0 := SplitView.new()
+		main.add_child(view0)
+		view0.attach(main)
+		view0.size = vp
+		for t in range(0, 91):
+			main.host.tick(vp.x, vp.y)
+			if t == 20 or t == 90:
+				for p in main.all_panes():
+					p.snap_occlusion()
+				for k in range(3):
+					main.render_view(1.0)
+					await RenderingServer.frame_post_draw
+				main.get_viewport().get_texture().get_image().save_png("%s/opening_%03d.png" % [out, t])
+				var fr0: SplitFrame = main.split_frame
+				print("opening t=%d mode %s z %.3f/%.3f x0 %.0f x1 %.0f" % [t, fr0.mode, fr0.cam_z[0], fr0.cam_z[1], S.fighters[0].x, S.fighters[1].x])
+		quit(0)
+		return
 	var x0: float = _plains(S)
 	var xs: Array = [SimWrap.wrap(x0 - 450.0), SimWrap.wrap(x0 + 450.0)]
 	for i in range(2):
