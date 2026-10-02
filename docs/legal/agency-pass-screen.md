@@ -88,3 +88,41 @@ Read `docs/combat/alchemist-recipes.md` sections 2.2 to 2.6 and `docs/combat/pen
 6. **One crater per transformation,** scaled by tier. The scar stays as terrain. The rocks stay stood down through the transformation and return after the settle, as built.
 7. **Mid-air power-ups and entrance craters stay without it,** as built.
 8. **Re-screen at the first transformation cinematic,** since crater, ring, camera and sound will meet for the first time.
+
+## Section 15: Orb's energy direction (2026-10-02)
+
+Screens `docs/design/agency-pass.md` section 15. From the written plan. A screen, not legal advice.
+
+| Item | Verdict | Log |
+|---|---|---|
+| 15.1 Explosions on every shot | **GO** | RL-060 |
+| 15.2 A deflect sends the shot wild | **GO** | RL-060 |
+| 15.3 Shots damage and level buildings | **GO** | RL-060 |
+| 15.4 Spray cone for rapid bolts | **GO** | RL-060 |
+| 15.5 Mines (hovering and ground, up to 6, chain reactions) | **GO**, with look rules | RL-061 |
+| Splitting shot, rain, curving shot (the first three) | **GO**, with staging rules | RL-062 |
+| Ricochet shot | **GO** | RL-062 |
+| Burning wake | **CONDITIONAL** | RL-062 |
+| Shield orb | **CONDITIONAL** | RL-062 |
+
+**Closest to a specific signature (and what keeps it clear).** (1) A shot that surrounds the rival and then closes in on command is one famous villain-hero technique's signature, which Combat's line already bars for mines. Extend it to rain, the splitting shot and the curving shot: nothing encloses him, and nothing closes in on command. (2) A steerable curving blast guided by finger gestures: steer by the stick only, never by a finger or hand sweep. (3) A solid glowing line left behind a vehicle that destroys on touch is a famous film's signature, which the burning wake must not become. (4) A glowing sphere barrier is the genre's stock barrier, and a hovering orb falls under the orb rules.
+
+**15.1 Explosions.** A staple. The flame, smoke and sparks are environmental, so they may be fire-coloured. The shot's own core stays in the shooter's lane colour. Rules: the fully charged shot's "column of flame" is a local column in proportion to the blast, never a pillar into the sky and never a darkening sky; no mushroom cloud staged like a known scene; no sphere-shaped planet-scale blast; no shouted name with it.
+
+**15.2 The wild deflect.** The swat uses the plated forearm, as screened. No open palm held out, no casual backhand flick, and no line shouted.
+
+**15.3 Buildings.** Fine. Buildings are our fictional landmarks (screened). No real landmark is ever the target.
+
+**15.4 Spray cone.** The rules from the volley stand: no both-palms-pumping, no open-mouth scream.
+
+**15.5 Mines.** Fine, with look rules. A mine is a **hexagonal plate or faceted caltrop**, not a perfect glowing sphere, so it does not read as a ki ball or the orb signature. Never a set of seven, never in a ring of matching spheres (the cap of 6 is fine, but do not display them as a numbered set), never with markings or stars. Mines hover and wait, and never close in or surround on command (Combat's line, confirmed). Chain reactions are fine.
+
+**The first three kinds.**
+- **Splitting shot:** a burst into five bolts in a cone, from a charged shot. Fine. No hands spread wide as the cue.
+- **Rain:** fired upward, falls over a marked patch. The upward launch is one arm, plates lit, never both hands raised overhead holding a growing orb. It falls from above and never encloses the rival.
+- **Curving shot:** stick-steered, bending round cover. No finger steering and no surround.
+- **Ricochet shot:** a bank shot. No issue.
+
+**Burning wake: CONDITIONAL.** A scattered burning trail that fades in 3 s, drawn as heat shimmer and embers behind him, is fine. It must not be a solid straight neon line or wall that destroys on touch.
+
+**Shield orb: CONDITIONAL.** A single hovering shield, built in our hexagonal or faceted family (a faceted dome or crystal), not a smooth glowing sphere. One at a time. Never a set, never several orbiting him, never seven, and never with a face or markings.

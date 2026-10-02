@@ -79,6 +79,9 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-057 | Levitating rocks, motes, desaturation (VFX) | VFX | Medium (rocks) | Rocks GO on conditions; motes GO; desaturation CONDITIONAL | Open until the rocks are seen in motion |
 | RL-058 | Blow for Blow set piece and charge poses vs the twelve rules | Combat | Low | GO; all twelve met | Closed |
 | RL-059 | Blast amplification for power-up craters; rocks drift frames | VFX | Low | GO on eight conditions; rocks motion re-check passes | Open until the first transformation cinematic |
+| RL-060 | Agency 15.1 to 15.4: explosions, wild deflect, buildings, spray cone | Game Design, VFX | Low | GO with look rules | Closed |
+| RL-061 | Agency 15.5: mines | Game Design | Low to Medium | GO; hexagonal plate, no sphere set, never surround | Open until looks exist |
+| RL-062 | Agency 15.5 kinds: splitting, rain, curving, ricochet GO; burning wake, shield orb CONDITIONAL | Game Design | Medium | see agency-pass-screen.md | Open |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 
