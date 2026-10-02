@@ -68,12 +68,20 @@ func _run() -> void:
 		S.fighters[i].stage = [0, 0, 0, 0]
 	_forget()
 	# 3: the sky. Clouds alone, then reacting to a tier-3 and to a tier-4 fighter, then both, then the reduced version.
-	var skies: Array = [["sky-calm", 1.0, 1.0, true], ["sky-tier3", 3.0, 1.0, true], ["sky-tier4", 4.0, 1.0, true], ["sky-both", 4.0, 3.0, true], ["sky-reduced", 4.0, 1.0, false]]
+	# Each: the picture's name, the two tiers, clouds on, and how high above the ground both fly (the high camera: the
+	# gap must stay a gap in the clouds and never a pillar against the horizon, QA's GB-002).
+	var skies: Array = [["sky-calm", 1.0, 1.0, true, 0.0], ["sky-tier3", 3.0, 1.0, true, 0.0], ["sky-tier4", 4.0, 1.0, true, 0.0], ["sky-both", 4.0, 4.0, true, 0.0], ["sky-reduced", 4.0, 1.0, false, 0.0], ["sky-high-calm", 1.0, 1.0, true, 3000.0], ["sky-high-both", 4.0, 4.0, true, 3000.0]]
 	for sk in skies:
-		S.fighters[0].tier = sk[1]
-		S.fighters[1].tier = sk[2]
+		for i in range(2):
+			var f = S.fighters[i]
+			f.tier = sk[1] if i == 0 else sk[2]
+			f.y = WorldTerrain.groundY(S, f.x) + 2.0 + float(sk[4])
+		for k in range(3):
+			main.host.follow(vp.x, vp.y)
 		PaneWorld.clouds_on = sk[3]
 		(await _wide(S, 0.62, vp)).save_png("%s/%s.png" % [out, sk[0]])
+	for i in range(2):
+		S.fighters[i].y = WorldTerrain.groundY(S, S.fighters[i].x) + 2.0
 	PaneWorld.clouds_on = true
 	S.fighters[0].tier = 1.0
 	S.fighters[1].tier = 1.0

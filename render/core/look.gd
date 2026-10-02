@@ -154,7 +154,13 @@ const OUTLINE_PX: float = 1.5            # fighter outline width on screen, in p
 const CLOUD_PERIOD: float = 32.0         # cloud cells round the planet (the pattern wraps with it)
 const CLOUD_COVER: float = 0.52          # the share of the cloud band that is cloud
 const CLOUD_WIND: float = 0.004          # cells a second the clouds drift
-const SKY_REACT_R: float = 0.2           # the opening's half width, in tan units (half a screen's height is 0.27)
+## The clouds part for a fighter at tier 3 or more (sky.gdshader): the gap's half width and half height in half
+## screen heights; how far above him its middle sits and the lowest and highest that middle goes, in the cloud band's
+## heights above the horizon (the band is solid from 0.3 to 1.3); and how far off this pane's screen he may be before
+## nothing parts for him (as a share of the screen's width, fading out over it).
+const SKY_REACT_R := Vector2(0.7, 0.24)
+const SKY_REACT_AT := Vector3(0.45, 0.46, 1.0)
+const SKY_REACT_OFF: float = 0.15
 const SKY_REACT_S: float = 1.5           # the reaction eases in and out over this long
 ## Battle damage on the mannequin (docs/design/rule-of-cool.md feature 1; fighter_body.gdshader): marks by wound
 ## region that stay and build with the wounds' stages. Colours are plain palette numbers, like the mesh's.

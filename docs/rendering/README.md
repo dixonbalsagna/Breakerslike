@@ -332,18 +332,31 @@ Each fighter at stages 0 to 3, then the first again in the reduced version: ![da
 
 At the fight's own size, both wounded: ![damage in a fight](img/cool-damage-fight.png)
 
-**The sky reacts from tier 3 (feature 12, Rendering's part).**
-- **Clouds.** The sky had none, so nothing could part. It now has a band of long clouds above the horizon: two octaves of noise in the sky shader, lit warm from the horizon. They move with the camera's place round the planet (the pattern wraps with the planet) and a slow wind. There are none at the horizon line, where the ground's haze meets the sky, and none in space.
-- **The reaction.** For a fighter at tier 3 or more the clouds part in a tall opening above him, their edges round it lit in his colour, and the sky inside pales toward his colour. Half strength at tier 3, full at tier 4, easing over 1.5 s of tick time. Each pane shows it from its own camera. Nothing happens below tier 3.
-- **It only lightens.** A pixel inside the opening is never darker than the sky was, and there is no lightning (Legal's screen of the list). The stars fade inside the opening.
+**The clouds part from tier 3 (feature 12, Rendering's part).**
+- **Clouds.** The sky has a band of long clouds above the horizon: two octaves of noise in the sky shader, lit warm from the horizon. They move with the camera's place round the planet (the pattern wraps with the planet) and a slow wind. There are none at the horizon line, where the ground's haze meets the sky, and none in space.
+- **The reaction.** For a fighter at tier 3 or more, a gap opens in the cloud band above him, wider than tall, and the clouds round the gap are lit in his colour. Half strength at tier 3, full at tier 4, easing over 1.5 s of tick time. Nothing happens below tier 3.
+- **Only clouds.** That is all of it. No cloud is made, nothing is drawn where there is no cloud, and the sky inside the gap is the sky as it was. Under a clear patch of sky a tier 4 fighter shows nothing.
+- **It stays in the cloud band.** The gap's middle sits 0.45 above the fighter and between 0.46 and 1.0 above the horizon (in half screen heights); nothing parts in the last 0.14 above the horizon.
+- **Only for a fighter the pane shows.** It fades out as he leaves that pane's screen, over 15% of the screen's width, so no gap hangs in the sky for someone the player cannot see. In a split each pane parts the clouds for its own fighter.
+- **It only lightens a cloud, and never to white.** Nothing darkens and there is no lightning (Legal's screen of the list). Where two fighters' gaps meet, their colours blend by weight.
 - **It stands down** (stacking rule 9) while that fighter charges, charges a beam, breaks into a transformation, is the actor of a set-piece pause, or has VFX's transformation effect on him. It eases out and comes back after.
-- **The clouds stay at low quality** (EP's ruling, 2026-10-02: they cost nothing measurable, below). `--noclouds` takes them away, for A/B.
-- **Reduced motion gets a calm sky:** the clouds stand still (no wind) and do not part, so the reaction is the pale tint alone behind them. It follows UI's `reduced_motion` option.
+- **The clouds stay at low quality** (EP's ruling, 2026-10-02: they cost nothing measurable, below). `--noclouds` takes them away, and the reaction with them.
+- **With reduced motion** the clouds stand still (no wind) and nothing parts. It follows UI's `reduced_motion` option.
 - Rubble floating and cracks spreading under a standing fighter are VFX's and World's parts of the same feature.
 
 Calm, then one fighter at tier 3 and at tier 4: ![calm](img/cool-sky-calm.png) ![tier 3](img/cool-sky-tier3.png) ![tier 4](img/cool-sky-tier4.png)
 
-Both reacting (tier 4 and tier 3), the same with `--noclouds`, and with reduced motion on the web build: ![both](img/cool-sky-both.png) ![no clouds](img/cool-sky-reduced.png) ![calm](img/cool-sky-calm-motion.png)
+Both at tier 4, and the same with `--noclouds`: ![both](img/cool-sky-both.png) ![no clouds](img/cool-sky-reduced.png)
+
+**What it was, and why it changed (QA's GB-002, 2026-10-02).** The first version cleared the clouds in a tall opening above the fighter, lifted to the horizon, and paled the sky inside it toward his colour. Orb, flying high with both fighters at tier 4, saw a "strange aura": from a high camera the opening sat against the horizon glow as a pale blurred pillar, it slid across the sky with the far fighter's direction, and nothing explained it. The pale fill is gone, the opening is a gap in the clouds and nothing else, and a fighter off the screen parts nothing.
+
+The high camera, both at tier 4, before and after: ![before](img/sky-gb002-high-before.png) ![after](img/sky-gb002-high-after.png)
+
+The low camera, before and after: ![before](img/sky-gb002-low-before.png) ![after](img/sky-gb002-low-after.png)
+
+The split view, before and after (each pane now parts the clouds for its own fighter only): ![before](img/sky-gb002-split-before.png) ![after](img/sky-gb002-split-after.png)
+
+`tools/sky_check.gd` guards it (needs a window): with the clouds off, tier 4 changes no pixel of the sky; with them on, the last of the band above the horizon is unchanged; a tier 4 fighter off the screen changes nothing; with reduced motion nothing parts; and the clouds do part somewhere round the planet. Low and high camera, 8 places each. The old shader fails six of the ten.
 
 **Windows, and windows blowing out (feature 12).** The buildings had no windows, so VFX's glass came out of blank walls.
 - **Windows.** `building.gdshader` draws them on every wall: a row a floor (the building's height over its floor count), a column every 62 units along the wall (`WINDOW_PITCH`), 30% of them lit by a hash of the building and the cell (`WINDOW_LIT_SHARE`). No textures, no geometry, no draw call. They fade to the wall's tone before they alias at far zoom. `--nowindows` leaves the walls blank, for A/B.
@@ -612,6 +625,7 @@ All commands run from the repo root; each exits 0 on success.
 | Pane check | `godot --headless --path . --script res://render/tools/pane_check.gd` | passed (37 checks; hash with and without a compositor; the cut-away request, the pitch, the inset, attaching again) |
 | Cue check | `godot --headless --path . --script res://render/tools/cue_check.gd -- --profile=spaced` | passed (46 checks over two full matches; hash with and without the poses) |
 | Outline check | `godot --path . --script res://render/tools/outline_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 0 crack pixels over 24 poses; the unbaked control 9,024 (`docs/rendering/outline-normals-plan.md`) |
+| Sky check | `godot --path . --script res://render/tools/sky_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 10 checks (the clouds part and nothing else; the pre-fix shader fails 6) |
 | Cull check | `godot --path . --script res://render/tools/cull_check.gd` (needs a window; under `--headless` it exits with code 2, not run) | passed: 7 buildings, 504 views, the game's picture and the rasterizer-culled reference at most 30 of 255 apart (tolerance 64); the control with the old fault put back fails 52 of 72 views, up to 229 apart |
 | Sim parity (Simulation's) | `godot --headless --path . --script res://sim/core/tools/parity.gd` | still passes |
 

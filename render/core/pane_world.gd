@@ -42,7 +42,7 @@ var _cue_z := PackedFloat32Array() # ... his depth at the last tick seen,
 var _cue_want: Array = []          # ... and whether the cue was wanted then
 var _cue_t: float = -1.0
 static var clouds_on: bool = true          # the sky's clouds (main's --noclouds)
-static var sky_calm: bool = false          # reduced motion: the clouds stand still and do not part (main sets it)
+static var sky_calm: bool = false          # reduced motion: the clouds stand still and nothing parts (main sets it)
 var _react := PackedFloat32Array()         # per fighter: the sky's reaction to him, 0 to 1 (tier 3 half, tier 4 full)
 var _react_t: float = -1.0
 var _sky_mat: ShaderMaterial
@@ -232,10 +232,12 @@ func snap_occlusion() -> void:
 
 
 ## The sky (render/shaders/sky.gdshader): its clouds drift with the camera's place round the planet and a slow wind,
-## and from tier 3 the sky reacts to a fighter (docs/design/rule-of-cool.md feature 12; nothing below tier 3): the
-## clouds part in a tall opening above him and the sky there pales toward his colour, half at tier 3 and full at tier
-## 4, easing over SKY_REACT_S of tick time. It never darkens the sky (Legal). It stands down while he charges or
-## transforms, as VFX's rubble and cracks do (the stacking rule, rule 9 of the list: his own show has the moment).
+## and from tier 3 the clouds part for a fighter (docs/design/rule-of-cool.md feature 12; nothing below tier 3): a gap
+## in the cloud band above him with its edge lit in his colour, half at tier 3 and full at tier 4, easing over
+## SKY_REACT_S of tick time. Only for a fighter this pane shows: it fades out as he leaves the screen, so no gap hangs
+## in the sky for someone the player cannot see (QA's GB-002). It never darkens the sky (Legal). It stands down while
+## he charges or transforms, as VFX's rubble and cracks do (the stacking rule, rule 9 of the list: his own show has
+## the moment). With reduced motion (sky_calm) nothing parts.
 func _sky_react(host: SimHost, cam_x: float) -> void:
 	var S: SimState = host.S
 	var n: int = fighter_views.size()
@@ -256,10 +258,11 @@ func _sky_react(host: SimHost, cam_x: float) -> void:
 			var f = S.fighters[i]
 			var want: float = 0.0 if _busy(host, i) else clampf((float(f.tier) - 2.0) / 2.0, 0.0, 1.0)
 			_react[i] = want if snap else move_toward(_react[i], want, dt / RenderLook.SKY_REACT_S)
-			w = _react[i]
 			var v: FighterView = fighter_views[i]
-			d = (v.position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0) - cam_rig.position).normalized()
+			var chest: Vector3 = v.position + Vector3(0.0, FighterView.HEIGHT * 0.5, 0.0)
+			d = (chest - cam_rig.position).normalized()
 			c = v._aura_col
+			w = _react[i] * _on_screen(chest)
 		dirs.append(Vector4(d.x, d.y, d.z, w))
 		cols.append(c)
 	_sky_mat.set_shader_parameter("sky_react", dirs)
@@ -267,6 +270,17 @@ func _sky_react(host: SimHost, cam_x: float) -> void:
 	_sky_mat.set_shader_parameter("cloud_on", 1.0 if clouds_on else 0.0)
 	_sky_mat.set_shader_parameter("cloud_part", 0.0 if sky_calm else 1.0)
 	_sky_mat.set_shader_parameter("cloud_shift", SimWrap.wrap(cam_x) / SimConst.W * RenderLook.CLOUD_PERIOD + (0.0 if sky_calm else now * RenderLook.CLOUD_WIND))
+
+
+## How far a point of this pane's world is on its screen: 1 on it, falling to 0 over SKY_REACT_OFF of the screen's
+## width past an edge (0 behind the camera).
+func _on_screen(at: Vector3) -> float:
+	if cam_rig.is_position_behind(at):
+		return 0.0
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var p: Vector2 = cam_rig.unproject_position(at)
+	var out: float = maxf(maxf(-p.x, p.x - vp.x), maxf(-p.y, p.y - vp.y))
+	return 1.0 - smoothstep(0.0, RenderLook.SKY_REACT_OFF * vp.x, out)
 
 
 ## Whether fighter i is charging or transforming now (VFX's own test, render/vfx/react.gd, plus the sim's state for a
@@ -374,7 +388,7 @@ func _setup_environment() -> void:
 		"sky_upper_at": RenderLook.SKY_UPPER_AT, "sky_top_at": RenderLook.SKY_TOP_AT, "sky_thin": RenderLook.SKY_THIN,
 		"fog_band": RenderLook.FOG_BAND,
 	}
-	for k in [["cloud_period", RenderLook.CLOUD_PERIOD], ["cloud_cover", RenderLook.CLOUD_COVER], ["react_r", RenderLook.SKY_REACT_R]]:
+	for k in [["cloud_period", RenderLook.CLOUD_PERIOD], ["cloud_cover", RenderLook.CLOUD_COVER], ["react_r", RenderLook.SKY_REACT_R], ["react_at", RenderLook.SKY_REACT_AT]]:
 		_sky_mat.set_shader_parameter(k[0], k[1])
 	for k in skyp:
 		_sky_mat.set_shader_parameter(k, skyp[k])
