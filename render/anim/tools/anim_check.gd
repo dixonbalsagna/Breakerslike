@@ -247,6 +247,91 @@ func _test_heavy_arm() -> void:
 	print("heavy arm test: a broken arm swings %.2f rad where the same arm unbroken swings %.2f; the good arm is untouched" % [swing[1][0], swing[0][0]])
 
 
+## The joint limits (docs/animation/joint-limits.md): no knee or elbow can be bent past its end or the wrong way, from any source.
+## 1. every authored pose (near and far side, each shape's scale) of every wave is inside the limits; 2. every sequence frame, after the solve's last pass;
+## 3. the rule itself: a thigh twisted 170 degrees (the flipped knee of a kick) is out of range, and the pass folds the knee the right way;
+## 4. the limited IK reaches a kick, a high kick and a hand behind the shoulder with the bend plane inside the twist range and the end where it was asked;
+## 5. a ragdoll thrown to its extremes keeps every elbow and knee inside its hinge before the last pass; 6. a live match: no frame that reaches the screen is past a limit.
+func _test_joints() -> void:
+	AnimData.load_every_wave()
+	var rp: Dictionary = AnimJointLint.poses()
+	var bad_p: int = AnimJointLint.sum(rp.groups, "bad_frames")
+	_expect(bad_p == 0, "joint limits: %d pose frames are past a limit (%s)" % [bad_p, ", ".join(rp.bad_ids.slice(0, 6))])
+	var rs: Dictionary = AnimJointLint.sequences()
+	var bad_s: int = AnimJointLint.sum(rs.groups, "bad_frames")
+	_expect(bad_s == 0, "joint limits: %d sequence frames are past a limit (%s)" % [bad_s, ", ".join(rs.bad_ids.slice(0, 6))])
+	var ix: Dictionary = AnimRig.index
+	# 3. a flipped knee
+	var flip: Array[Quaternion] = AnimPose.identity_q()
+	flip[ix["thigh_r"]] = Quaternion(Vector3(0, 1, 0), deg_to_rad(170.0)) * Quaternion(Vector3(0, 0, 1), deg_to_rad(80.0))
+	flip[ix["shin_r"]] = Quaternion(Vector3(0, 0, 1), deg_to_rad(-60.0))
+	var before: Array = AnimJoints.violations(flip, "")
+	AnimJoints.enforce(flip, "")
+	var after: Array = AnimJoints.violations(flip, "")
+	var tw_after: float = AnimJoints.twist_of(flip[ix["thigh_r"]])
+	_expect(not before.is_empty() and after.is_empty() and absf(tw_after) <= deg_to_rad(86.0), "joint limits: a thigh twisted 170 degrees was not brought inside the range (twist now %.0f)" % rad_to_deg(tw_after))
+	# 4. limited IK on a kick, a high kick and a hand behind the shoulder
+	var base: AnimPose = AnimData.pose("stance.aggressive")
+	var worst_end: float = 0.0
+	var worst_tw: float = 0.0
+	var n_ik := 0
+	for lean in [0.0, 25.0, -20.0]:
+		for tgt in [Vector3(52, 44, 6), Vector3(48, 54, 8), Vector3(40, 20, 6), Vector3(60, 30, 6), Vector3(22, 14, 6)]:
+			var lq: Array[Quaternion] = base.q.duplicate()
+			lq[ix["pelvis"]] = Quaternion(Vector3(0, 0, 1), -deg_to_rad(lean))
+			var gq: Array[Quaternion] = []
+			gq.resize(AnimRig.N)
+			var gp := PackedVector3Array()
+			gp.resize(AnimRig.N)
+			AnimPose.fk(lq, base.hips, gq, gp)
+			var th: int = ix["thigh_r"]
+			AnimPose.ik_limb(lq, gq, gp, th, th + 1, th + 2, tgt, gp[th] + Vector3(10, 1, 0), -1.0)
+			AnimPose.fk(lq, base.hips, gq, gp)
+			var ex: Vector2 = AnimJoints.ball_excess(lq, th, "")
+			worst_tw = maxf(worst_tw, ex.x + ex.y)
+			worst_end = maxf(worst_end, (gp[th + 2] - tgt).length() if (tgt - gp[th]).length() < 33.0 else 0.0)
+			n_ik += 1
+	_expect(worst_tw <= 0.0005 and worst_end < 0.5, "joint limits: the limited IK left a thigh %.3f rad past its range or the foot %.2f units from a reachable target" % [worst_tw, worst_end])
+	# 5. a ragdoll thrown to its extremes
+	var rd_bad := 0
+	for sgn in [1.0, -1.0]:
+		for mag in [0.6, 1.5, 3.0]:
+			var af := AnimFighter.new(0)
+			af._rd.reset()
+			for i in range(AnimRagdoll.N):
+				af._rd.th[i] = mag * sgn * (1.0 if i % 2 == 0 else -1.0)
+			var rq: Array[Quaternion] = base.q.duplicate()
+			af._rd.apply(rq, 1.0)
+			for nm in ["forearm_l", "forearm_r", "shin_l", "shin_r"]:
+				var bi: int = ix[nm]
+				var th2: float = AnimJoints.hinge_state(rq[bi], bi).x
+				if th2 < AnimJoints.hinge_min[bi] - 0.02 or th2 > AnimJoints.hinge_max[bi] + 0.02:
+					rd_bad += 1
+	_expect(rd_bad == 0, "joint limits: the ragdoll folded %d elbows or knees past their hinge" % rd_bad)
+	# 6. a live match
+	RenderAnim.enabled = true
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	var live_bad := 0
+	var live_n := 0
+	RenderAnim.joint_audit = true
+	var src_bad := 0
+	while main.host.ticks < 2400 and not (S.game.ko != null and S.game.koT > 3.0):
+		main.frame(DT)
+		for f in S.fighters:
+			var a: AnimFighter = RenderAnim.fighter(S, f)
+			if a.version == 0:
+				continue
+			live_n += 1
+			if not AnimJoints.violations(a.q, a._rd.shape_key).is_empty():
+				live_bad += 1
+			if a.audit.has("D") and not (a.audit["D"] as Array).is_empty():
+				src_bad += 1
+	RenderAnim.joint_audit = false
+	_expect(live_bad == 0 and live_n > 1000, "joint limits: %d of %d live fighter-frames reach the screen past a limit" % [live_bad, live_n])
+	print("joint limits: %d poses and %d sequence frames inside the limits; a flipped thigh is brought in; the limited IK keeps %d targets legal (worst %.4f rad); ragdoll hinges kept; live %d frames, %d reach the screen past a limit (the sources alone leave %d for the last pass)" % [AnimJointLint.sum(rp.groups, "frames") / 10, AnimJointLint.sum(rs.groups, "frames"), n_ik, worst_tw, live_n, live_bad, src_bad])
+
+
 ## The active ragdoll (overhaul unit A): the same match at one tick a frame and at two ticks a frame ends with the same ragdoll state
 ## (it is stepped per sim tick, never per frame); reduced motion shrinks the motion; the overhaul can be switched off; the ground
 ## events of World's plan (a stub shaped like docs/world/ground-contact.md) move the body. The gameplay hash is compared in the main loop.
@@ -1013,6 +1098,7 @@ func _run() -> void:
 	_test_flight()
 	_test_quality()
 	_test_win_ko()
+	_test_joints()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""
 	RenderAnim.debug_checks = false

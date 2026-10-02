@@ -98,6 +98,130 @@ static func ik2(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVector3A
 	gp[c] = T
 
 
+## Two-bone IK that keeps to the joint limits (data/anim/joints.json): the end reaches `target` exactly as with `ik2` + `hinge_fix`, and the only choice
+## the solve has, the plane the elbow or knee bends in (the turn of the middle joint about the root-to-end axis), is made so the upper bone's twist is
+## inside its range. `pole` says the plane the pose asks for (a point the joint leans toward, or the joint's own place: "stay as you are"); it is kept when
+## its twist is legal and the bend is real, and otherwise moved the shortest way toward the neutral plane (twist 0: the knee in front, the elbow
+## behind) until it is legal. A limb that is almost straight takes the neutral plane (its tiny bend could point anywhere and flip the foot or hand).
+## `s` is the hinge's sign (+1 elbow, -1 knee). The end never moves, so a blow's contact point and a foot on the ground stay put, except when `retarget`
+## (a number of units, used by the pose bake only) allows an authored target that no comfortable bend can reach (a hand behind its own shoulder) to
+## slide forward by up to that much, to the nearest place a comfortable bend can.
+static func ik_limb(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVector3Array, a: int, b: int, c: int, target: Vector3, pole: Vector3, s: float, shape: String = "", retarget: float = 0.0) -> void:
+	if not AnimJoints.ik_limits or not AnimJoints.loaded:
+		ik2(lq, gq, gp, a, b, c, target, pole)
+		hinge_fix(lq, gq, gp, a, b, c, s)
+		return
+	if retarget <= 0.0:
+		# the usual case: the pose's own bend plane is legal. Solve as plainly as before and look at the upper bone; only an illegal one is solved again with a plan
+		var sq_a: Quaternion = lq[a]
+		var sq_b: Quaternion = lq[b]
+		var sg_a: Quaternion = gq[a]
+		var sg_b: Quaternion = gq[b]
+		var sg_c: Quaternion = gq[c]
+		var sp_b: Vector3 = gp[b]
+		var sp_c: Vector3 = gp[c]
+		var to_t: float = (target - gp[a]).length()
+		var l1: float = (gp[b] - gp[a]).length()
+		var l2: float = (gp[c] - gp[b]).length()
+		var pmx: float = AnimJoints.hinge_max[b] * AnimJoints.scale_of(shape, "hinge")
+		var dmn: float = sqrt(maxf(l1 * l1 + l2 * l2 + 2.0 * l1 * l2 * cos(pmx), 0.0)) if pmx < PI - 0.05 else 0.0
+		ik2(lq, gq, gp, a, b, c, target, pole)
+		hinge_fix(lq, gq, gp, a, b, c, s)
+		var fl: float = absf(AnimJoints.hinge_state(lq[b], b).x)
+		var ex2: Vector2 = AnimJoints.excess_at(lq[a], a, shape, fl)
+		if ex2.x <= 0.0001 and ex2.y <= 0.0001 and to_t >= dmn and fl > 0.21:
+			return
+		lq[a] = sq_a
+		lq[b] = sq_b
+		gq[a] = sg_a
+		gq[b] = sg_b
+		gq[c] = sg_c
+		gp[b] = sp_b
+		gp[c] = sp_c
+	var plan: Dictionary = _plan_limb(gq, gp, a, b, c, target, pole, s, shape)
+	if retarget > 0.0 and absf(float(plan.twist)) > AnimJoints.comfort:
+		var dx: float = 2.0
+		while dx <= retarget + 0.001:
+			var p2: Dictionary = _plan_limb(gq, gp, a, b, c, target + Vector3(dx, 0, 0), pole + Vector3(dx, 0, 0), s, shape)
+			if absf(float(p2.twist)) <= AnimJoints.comfort and float(p2.excess) <= 0.0001:
+				plan = p2
+				break
+			dx += 2.0
+	ik2(lq, gq, gp, a, b, c, plan.tgt, plan.E)
+	hinge_fix(lq, gq, gp, a, b, c, s)
+
+
+## Chooses the bend plane for a limb: returns {E (the joint's place), tgt (the end's place, drawn in if the joint cannot fold that far), phi, twist (rad, of the
+## upper bone for that plane), excess (rad past the limits)}.
+static func _plan_limb(gq: Array[Quaternion], gp: PackedVector3Array, a: int, b: int, c: int, target: Vector3, pole: Vector3, s: float, shape: String) -> Dictionary:
+	var A: Vector3 = gp[a]
+	var l1: float = (gp[b] - A).length()
+	var l2: float = (gp[c] - gp[b]).length()
+	var to: Vector3 = target - A
+	var u: Vector3 = to.normalized()
+	# the joint bends no further than its limit: a target nearer than that is met as near as the limb may fold
+	var dmin: float = absf(l1 - l2) + 0.01
+	var pmax: float = AnimJoints.hinge_max[b] * AnimJoints.scale_of(shape, "hinge")
+	if pmax < PI - 0.05:
+		dmin = maxf(dmin, sqrt(maxf(l1 * l1 + l2 * l2 + 2.0 * l1 * l2 * cos(pmax), 0.0)))
+	var d: float = clampf(to.length(), dmin, l1 + l2 - 0.01)
+	var tgt: Vector3 = A + u * d
+	var cos_a: float = (l1 * l1 + d * d - l2 * l2) / (2.0 * l1 * d)
+	var sin_a: float = sqrt(maxf(0.0, 1.0 - cos_a * cos_a))
+	var cos_b: float = clampf((l1 * l1 + l2 * l2 - d * d) / (2.0 * l1 * l2), -1.0, 1.0)
+	var psi: float = PI - acos(cos_b)   # the flexion at the joint
+	var pv: Vector3 = pole - A
+	pv = pv - u * pv.dot(u)
+	pv = pv.normalized() if pv.length() > 0.001 else Vector3(0, 0, 1)
+	var P: Quaternion = gq[AnimRig.parent[a]]
+	var rs := Quaternion(Vector3(0, -1, 0), P.inverse() * u)
+	var a0: Vector3 = P * (rs * Vector3(-s, 0, 0))   # about the neutral apex: where the joint points when the bone has no twist
+	a0 = (a0 - u * a0.dot(u)).normalized()
+	var a1: Vector3 = u.cross(a0)
+	var phi0: float = atan2(u.dot(a0.cross(pv)), a0.dot(pv))
+	var phi: float = phi0
+	var ev: Vector2 = _plane_eval(a0, a1, phi0, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
+	if psi < 0.21:
+		# a near-straight limb takes the neutral plane (its tiny bend could point anywhere and turn the foot or the hand over)
+		phi = 0.0
+		ev = _plane_eval(a0, a1, 0.0, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
+	elif ev.x > 0.0001:
+		# a limb whose asked-for plane is illegal takes the legal plane nearest to it
+		var best: float = 1.0e9
+		var bphi: float = 0.0
+		var k: int = 0
+		while k < 72:
+			var ph: float = -PI + float(k) * (TAU / 72.0)
+			var e2: Vector2 = _plane_eval(a0, a1, ph, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
+			var dist: float = absf(wrapf(ph - phi0, -PI, PI))
+			var score: float = e2.x * 100.0 + dist
+			if score < best:
+				best = score
+				bphi = ph
+			k += 1
+		phi = bphi
+		ev = _plane_eval(a0, a1, phi, u, l1, d, cos_a, sin_a, psi, P, s, a, shape)
+	var E: Vector3 = A + u * (l1 * cos_a) + (a0 * cos(phi) + a1 * sin(phi)) * (l1 * sin_a)
+	return {"E": E, "tgt": tgt, "phi": phi, "excess": ev.x, "twist": ev.y}
+
+
+## For the joint placed with its plane turned `phi` from neutral, the upper bone's frame as hinge_fix would give it: Vector2(the excess past the limits (rad,
+## twist plus swing), the twist (rad)).
+static func _plane_eval(a0: Vector3, a1: Vector3, phi: float, u: Vector3, l1: float, d: float, cos_a: float, sin_a: float, psi: float, P: Quaternion, s: float, a: int, shape: String) -> Vector2:
+	var e_off: Vector3 = u * (l1 * cos_a) + (a0 * cos(phi) + a1 * sin(phi)) * (l1 * sin_a)
+	var u1: Vector3 = e_off.normalized()
+	var u2: Vector3 = (u * d - e_off).normalized()
+	var w: Vector3 = u2 - u1 * u1.dot(u2)
+	if w.length() < 0.0001:
+		return Vector2.ZERO
+	w = w.normalized() * s
+	var yb: Vector3 = -u1
+	var qa: Quaternion = Basis(w, yb, w.cross(yb)).get_rotation_quaternion()
+	var ql: Quaternion = P.inverse() * qa
+	var ex: Vector2 = AnimJoints.excess_at(ql, a, shape, psi)
+	return Vector2(ex.x + ex.y, AnimJoints.twist_of(ql, AnimJoints.axis_of[a]))
+
+
 ## After ik2: makes the joint a pure human hinge. The upper bone twists about its own axis until the bend plane is the
 ## hinge plane (the elbow flexes toward +x of the bone's frame, the knee toward -x: `s` = +1 or -1) and the lower bone's
 ## local rotation is that hinge alone, never a sideways or backward bend. The joint position and the end do not move.
@@ -132,32 +256,17 @@ static func hinge_fix(lq: Array[Quaternion], gq: Array[Quaternion], gp: PackedVe
 const HINGE_MAX := 2.62
 const HINGE_GIVE := 0.05
 const ARM_BACK_SOFT := 0.8
+static var head_pass: bool = false         # the lint runs the last pass the solver had before the joint limits (joint_scan --head)
 static var limits_on: bool = true          # tools turn the pass off to measure what it fixes
 
 
-static func limit_limbs(lq: Array[Quaternion]) -> void:
+static func limit_limbs(lq: Array[Quaternion], shape: String = "") -> float:
 	if not limits_on:
-		return
-	var ix: Dictionary = AnimRig.index
-	for pair in [["forearm_l", 1.0], ["forearm_r", 1.0], ["shin_l", -1.0], ["shin_r", -1.0]]:
-		var i: int = ix[pair[0]]
-		var s: float = pair[1]
-		var v: Vector3 = lq[i] * Vector3(0, -1, 0)
-		var th: float = atan2(v.x, -v.y) * s
-		var tc: float = clampf(th, -HINGE_GIVE, HINGE_MAX)
-		if tc != th or absf(v.z) > 0.02:
-			lq[i] = Quaternion(Vector3(0, 0, 1), tc * s)
-	for nm in ["upper_arm_l", "upper_arm_r"]:
-		var i2: int = ix[nm]
-		var v2: Vector3 = lq[i2] * Vector3(0, -1, 0)
-		if v2.x < -ARM_BACK_SOFT:
-			# straight behind the body is out of range: squeeze the last of the way back (from 0.8 to 1.0 of the backward axis
-			# into 0.8 to 0.9), keeping the arm's up, down or sideways lean, so the map stays continuous
-			var xn: float = -ARM_BACK_SOFT - (-v2.x - ARM_BACK_SOFT) * 0.5
-			var r0: float = sqrt(maxf(1.0 - v2.x * v2.x, 0.0))
-			if r0 > 0.0001:
-				var k: float = sqrt(1.0 - xn * xn) / r0
-				lq[i2] = Quaternion(v2, Vector3(xn, v2.y * k, v2.z * k).normalized()) * lq[i2]
+		return 0.0
+	if head_pass:
+		AnimJointLint.old_pass(lq)
+		return 0.0
+	return AnimJoints.enforce(lq, shape)
 
 
 ## Bakes a pose from its sketch dictionary.
@@ -224,15 +333,17 @@ static func bake(pid: String, d: Dictionary) -> AnimPose:
 			fk(p.q, p.hips, gq, gp)
 		if d.has("hand_" + s):
 			var pole: Vector3 = gp[up] + (_v3(d["pole_hand_" + s]) if d.has("pole_hand_" + s) else Vector3(-3.0, -10.0, 6.0 * zs))
-			ik2(p.q, gq, gp, up, lo, en, _v3(d["hand_" + s]), pole)
-			hinge_fix(p.q, gq, gp, up, lo, en, 1.0)
+			ik_limb(p.q, gq, gp, up, lo, en, _v3(d["hand_" + s]), pole, 1.0, "", AnimJoints.retarget_max)
 		var th: int = ix["thigh_" + s]
 		var sh: int = ix["shin_" + s]
 		var ft: int = ix["foot_" + s]
 		if d.has("foot_" + s):
 			var pole2: Vector3 = gp[th] + (_v3(d["pole_foot_" + s]) if d.has("pole_foot_" + s) else Vector3(10.0, 1.0, 0.0))
-			ik2(p.q, gq, gp, th, sh, ft, _v3(d["foot_" + s]), pole2)
-			hinge_fix(p.q, gq, gp, th, sh, ft, -1.0)
+			ik_limb(p.q, gq, gp, th, sh, ft, _v3(d["foot_" + s]), pole2, -1.0)
+	if not p.additive:
+		for _k in range(4):   # a shoulder's range depends on the elbow below it, which a pass may have moved: until a pass changes nothing
+			if AnimJoints.enforce(p.q) < 0.0005:
+				break   # whatever the sketch left outside the limits (a free-form bone override, a tuck folded past the hip) is brought inside
 	var hs: Dictionary = d.get("hands", {})
 	p.curl = Vector2(float(CURL.get(String(hs.get("l", "relaxed")), 0.5)), float(CURL.get(String(hs.get("r", "relaxed")), 0.5)))
 	return p
@@ -281,18 +392,31 @@ func mirrored() -> AnimPose:
 static func mix(dst: Array[Quaternion], src: Array[Quaternion], w: float) -> void:
 	if w <= 0.0:
 		return
-	for i in range(AnimRig.N):
-		dst[i] = dst[i].slerp(src[i], w)
+	if AnimJoints.ik_limits:
+		# the shoulders and the hips blend as swing and twist (a plain slerp can pass through a twisted frame and fold a knee or an elbow the wrong way)
+		for i in AnimJoints.limb_bones:
+			var qa: Quaternion = dst[i]
+			var qb: Quaternion = src[i]
+			dst[i] = qa.slerp(qb, w) if absf(qa.dot(qb)) > 0.9 else AnimJoints.slerp_limb(qa, qb, w)
+		for i in AnimJoints.others:
+			dst[i] = dst[i].slerp(src[i], w)
+	else:
+		for i in range(AnimRig.N):
+			dst[i] = dst[i].slerp(src[i], w)
 
 
 ## dst[i] = slerp(dst[i], src[i], clamp(u - lag[i]) rescaled), the strike snap with the pelvis leading and the hands last.
 static func mix_lag(dst: Array[Quaternion], src: Array[Quaternion], u: float, lag: PackedFloat32Array, ease_pow: float) -> void:
+	var ik_on: bool = AnimJoints.ik_limits
 	for i in range(AnimRig.N):
 		var l: float = lag[i]
 		var t: float = clampf((u - l) / maxf(1.0 - l, 0.001), 0.0, 1.0)
 		if ease_pow != 1.0:
 			t = pow(t, ease_pow)
-		dst[i] = dst[i].slerp(src[i], t)
+		if ik_on and AnimJoints.is_limb[i] == 1:
+			dst[i] = AnimJoints.slerp_limb(dst[i], src[i], t)
+		else:
+			dst[i] = dst[i].slerp(src[i], t)
 
 
 ## dst *= slerp(identity, delta, w) for every bone: a pose used as an additive layer.

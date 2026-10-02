@@ -19,6 +19,7 @@ static var _last_tick: int = -1
 ## Cost counters for tools: microseconds spent in AnimFighter.solve, and how many solves.
 ## Tools set this to scan every bone for NaN each solve (the game checks two).
 static var debug_checks: bool = false
+static var joint_audit: bool = false   # the joint-limit lint: every fighter notes which stage first took a joint past its limits (AnimFighter.audit)
 ## The active ragdoll (docs/animation/overhaul-plan.md): tools turn it off for the A/B; the host sets reduced_motion from the
 ## player's setting (it scales the ragdoll to 35% and turns the contact smear off).
 static var ragdoll_enabled: bool = true

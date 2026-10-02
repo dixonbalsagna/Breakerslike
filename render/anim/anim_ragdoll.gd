@@ -287,19 +287,39 @@ func hit(dx: float, dy: float, force: float, region: int, u: float, u2: float) -
 		om[i] += f * (hit_k[i] if i < hit_k.size() else 1.0) * (hit_kx[k] * dx * (1.0 + hit_vx[i] * vv) + hit_ky[k] * dy + hit_kc[k] * cv)
 
 
+## An elbow or a knee the ragdoll moves keeps to its hinge: the turn it adds is cut to what is left between the pose's own bend and the hinge's end
+## (the elbow may not fold past its maximum, nor the knee, nor either bend the wrong way). A pure function of the pose and the turn, so replays agree.
+func _hinge_room(q: Array[Quaternion], bone: int, t: float) -> float:
+	var st: Vector2 = AnimJoints.hinge_state(q[bone], bone)   # the pose's bend in the direction of flexion
+	var sg: float = AnimJoints.hinge_sign[bone]
+	var add: float = t * sg                                     # the added turn in the direction of flexion
+	var lo_room: float = AnimJoints.hinge_min[bone] - st.x
+	var hi_room: float = AnimJoints.hinge_max[bone] * AnimJoints.scale_of(shape_key, "hinge") - st.x
+	return clampf(add, minf(lo_room, 0.0), maxf(hi_room, 0.0)) * sg
+
+
 ## Adds the motion to the solved pose, shown at weight w; `scale` (one factor a degree of freedom, optional) lets a limb move less (a broken arm hangs heavy).
 func apply(q: Array[Quaternion], w: float, scale: PackedFloat32Array = PackedFloat32Array()) -> void:
 	if w <= 0.001:
 		return
+	var limited: bool = AnimJoints.loaded and AnimJoints.enabled
 	for i in range(N):
 		var t: float = th[i] * w * (scale[i] if scale.size() == N else 1.0)
 		if absf(t) < 0.0005:
 			continue
+		var ab: int = bone_a[i]
 		var axis: Vector3 = Vector3(1, 0, 0) if is_x[i] == 1 else Vector3(0, 0, 1)
 		var b2: int = bone_b[i]
-		if b2 >= 0:
-			var sa: float = share_a[i]
-			q[bone_a[i]] = q[bone_a[i]] * Quaternion(axis, t * sa)
-			q[b2] = q[b2] * Quaternion(axis, t * (1.0 - sa))
+		if b2 < 0:
+			var nq: Quaternion = q[ab] * Quaternion(axis, t)
+			if limited and is_x[i] == 0 and not AnimJoints.fast_ok(nq, ab, shape_key):
+				# the turn would take an elbow, a knee, a shoulder or a hip past its limit: cut it to what is left of the range
+				if AnimJoints.kind[ab] == AnimJoints.KIND_HINGE:
+					nq = q[ab] * Quaternion(axis, _hinge_room(q, ab, t))
+				elif AnimJoints.is_limb[ab] == 1:
+					nq = q[ab] * Quaternion(axis, AnimJoints.flex_room(q[ab], ab, t, shape_key))
+			q[ab] = nq
 		else:
-			q[bone_a[i]] = q[bone_a[i]] * Quaternion(axis, t)
+			var sa: float = share_a[i]
+			q[ab] = q[ab] * Quaternion(axis, t * sa)
+			q[b2] = q[b2] * Quaternion(axis, t * (1.0 - sa))

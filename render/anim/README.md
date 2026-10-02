@@ -9,6 +9,8 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `anim_rig.gd` | Rig R1: 27 bones and a faceted rigid-skinned body built from a palette |
 | `anim_pose.gd` | A baked pose, the sketch-to-pose bake (FK, two-bone IK), mirroring and the blend helpers |
 | `anim_data.gd` | Loads and bakes `data/anim/*.json` |
+| `anim_joints.gd` | The joint limits (data/anim/joints.json; docs/animation/joint-limits.md): hinges (elbow, knee) and ball joints (swing cone, twist range), the solve's last pass `enforce`, the twist-safe blend, the limb tests the IK and the ragdoll use |
+| `anim_joint_lint.gd` | The lint's data scans (every pose, every sequence frame of every wave) shared by `joint_scan` and the `anim_check` gate |
 | `anim_ragdoll.gd` | The active ragdoll: 12 spring degrees of freedom stepped once per sim tick (data/anim/ragdoll.json, with ragdoll_motion.json: per-fighter shapes, the flail, the hit table) |
 | `anim_fighter.gd` | One fighter's solver: base pose, cue, approach and strike parts, beam, reactions, springs |
 | `render_anim.gd` | The hub: one solver per fighter, per-tick events in, one solve a frame |
@@ -30,6 +32,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/entry_lab.gd` | The entry lab: each entry of a wave played into the strike it favours (a path, a dummy defender), as a reel, a three-frame sheet, or the flow of its arrival into the wind-ups (`--measure`) |
 | `tools/strike_lab.gd` | The strike lab: each strike of a wave against a dummy defender at its own distance, as a captioned reel, a contact sheet, or (`--measure`, `--sweep`) the reach, the step-in and the clipping |
 | `tools/socket_check.gd` | The reach envelope of every striking limb against every region (`data/anim/sockets.json`) |
+| `tools/joint_scan.gd` | Joint-limit lint: poses, sequences and live matches against joints.json, with the stage that broke each limit and the size of every correction (`--strict` fails on one; `--head`, `--legacy`, `--nopass` show the before) |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 
 ```

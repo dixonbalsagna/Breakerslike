@@ -1,0 +1,167 @@
+{
+  "schema": "anim.joints/1",
+  "_about": "The joint limits of rig R1 (render/anim/anim_joints.gd; docs/animation/joint-limits.md). hinges: the elbow and the knee turn about their own z axis only, one way (sign +1 flexes the lower bone toward +x, the elbow; -1 toward -x, the knee), from min_deg (a little give past straight) to max_deg, with no sideways bend. balls: every other jointed bone is split into a swing (the bone's axis within swing_deg of its rest axis) and a twist (the turn about its own axis, twist_deg [lo, hi] for the right-hand side; the left is mirrored). A ball joint over a hinge (the shoulder, the hip) may twist further while the hinge is nearly straight (straight_twist_deg, relaxed below straight_below_deg of flexion and back to twist_deg by bent_above_deg), because a straight limb hides its twist. axis names the bone's own axis the twist is measured about (y unless stated; the clavicle lies along z). The twist of the thigh and the upper arm decides which side the knee or elbow below it folds to, so it is the limit that matters most. arm_back_soft: an upper arm may not point straight back along the body (its backward reach is squeezed into 0.8 to 0.9 of the axis). Bones named in neither list (the pelvis, the root, the pack and the sashes) are free. shapes: a scale on those limits for each fighter shape (P circles, A the crouched wedge, E wedges and sweeps, C squares; default for any other). A new fighter's rig must list every jointed bone here (docs/animation/joint-limits.md). retarget_units, comfort_twist_deg: the pose bake only: a hand target that no bend with less than comfort_twist_deg of twist can reach (a hand behind its own shoulder) may slide forward by up to retarget_units to the nearest place one can. Angles in degrees. Render only, outside the sim's data hash.",
+  "give_deg": 2.8,
+  "hinges": {
+    "elbow": {
+      "bones": [
+        "forearm_l",
+        "forearm_r"
+      ],
+      "sign": 1.0,
+      "min_deg": -2.8,
+      "max_deg": 160.0
+    },
+    "knee": {
+      "bones": [
+        "shin_l",
+        "shin_r"
+      ],
+      "sign": -1.0,
+      "min_deg": -2.8,
+      "max_deg": 155.0
+    }
+  },
+  "balls": {
+    "shoulder": {
+      "bones": [
+        "upper_arm_l",
+        "upper_arm_r"
+      ],
+      "swing_deg": 175.0,
+      "swing_in_deg": 155.0,
+      "twist_deg": [
+        -100.0,
+        100.0
+      ],
+      "straight_twist_deg": [
+        -175.0,
+        175.0
+      ]
+    },
+    "hip": {
+      "bones": [
+        "thigh_l",
+        "thigh_r"
+      ],
+      "swing_fwd_deg": 170.0,
+      "swing_back_deg": 45.0,
+      "swing_out_deg": 105.0,
+      "swing_in_deg": 60.0,
+      "twist_deg": [
+        -70.0,
+        70.0
+      ],
+      "straight_twist_deg": [
+        -85.0,
+        85.0
+      ]
+    },
+    "clavicle": {
+      "bones": [
+        "clavicle_l",
+        "clavicle_r"
+      ],
+      "axis": "z",
+      "swing_deg": 60.0,
+      "twist_deg": [
+        -30.0,
+        30.0
+      ]
+    },
+    "lower_spine": {
+      "bones": [
+        "spine_1"
+      ],
+      "swing_deg": 45.0,
+      "twist_deg": [
+        -30.0,
+        30.0
+      ]
+    },
+    "upper_spine": {
+      "bones": [
+        "spine_2"
+      ],
+      "swing_deg": 55.0,
+      "twist_deg": [
+        -40.0,
+        40.0
+      ]
+    },
+    "neck": {
+      "bones": [
+        "neck"
+      ],
+      "swing_deg": 50.0,
+      "twist_deg": [
+        -50.0,
+        50.0
+      ]
+    },
+    "head": {
+      "bones": [
+        "head"
+      ],
+      "swing_deg": 70.0,
+      "twist_deg": [
+        -50.0,
+        50.0
+      ]
+    },
+    "ankle": {
+      "bones": [
+        "foot_l",
+        "foot_r"
+      ],
+      "swing_deg": 70.0,
+      "twist_deg": [
+        -30.0,
+        30.0
+      ]
+    },
+    "wrist": {
+      "bones": [
+        "hand_l",
+        "hand_r"
+      ],
+      "swing_deg": 90.0,
+      "twist_deg": [
+        -90.0,
+        90.0
+      ]
+    }
+  },
+  "shapes": {
+    "default": {
+      "swing": 1.0,
+      "twist": 1.0,
+      "hinge": 1.0
+    },
+    "P": {
+      "swing": 1.0,
+      "twist": 1.0,
+      "hinge": 1.0
+    },
+    "A": {
+      "swing": 1.0,
+      "twist": 1.0,
+      "hinge": 1.0
+    },
+    "E": {
+      "swing": 1.0,
+      "twist": 1.0,
+      "hinge": 1.0
+    },
+    "C": {
+      "swing": 1.0,
+      "twist": 1.0,
+      "hinge": 1.0
+    }
+  },
+  "straight_below_deg": 15.0,
+  "bent_above_deg": 45.0,
+  "arm_back_soft": 0.8,
+  "retarget_units": 12.0,
+  "comfort_twist_deg": 75.0
+}

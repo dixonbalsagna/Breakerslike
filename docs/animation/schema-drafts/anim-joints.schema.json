@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "anim-joints.schema.json",
+  "title": "anim.joints/1",
+  "description": "Joint limits of rig R1 (render/anim/anim_joints.gd; docs/animation/joint-limits.md). Draft by Animation for Tools to adopt as tools/schemas/anim-joints.schema.json.",
+  "type": "object",
+  "required": [
+    "schema",
+    "give_deg",
+    "hinges",
+    "balls",
+    "shapes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.joints/1"
+    },
+    "_about": {
+      "type": "string"
+    },
+    "give_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "arm_back_soft": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1
+    },
+    "straight_below_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 90
+    },
+    "bent_above_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180
+    },
+    "retarget_units": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 30
+    },
+    "comfort_twist_deg": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 180
+    },
+    "hinges": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "bones",
+          "sign",
+          "min_deg",
+          "max_deg"
+        ],
+        "properties": {
+          "bones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "sign": {
+            "enum": [
+              1.0,
+              -1.0
+            ]
+          },
+          "min_deg": {
+            "type": "number",
+            "maximum": 0
+          },
+          "max_deg": {
+            "type": "number",
+            "minimum": 90,
+            "maximum": 180
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "balls": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "bones",
+          "twist_deg"
+        ],
+        "properties": {
+          "bones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "axis": {
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "swing_deg": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "swing_fwd_deg": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "swing_back_deg": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "swing_out_deg": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "swing_in_deg": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "twist_deg": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "straight_twist_deg": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "shapes": {
+      "type": "object",
+      "required": [
+        "default"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "swing": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "twist": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "hinge": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

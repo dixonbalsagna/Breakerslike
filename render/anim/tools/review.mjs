@@ -2,7 +2,7 @@
 // A/B pairs per wave. No dependencies (Node 24 built-ins). Run from the repo root.
 //
 //   node render/anim/tools/review.mjs wave --name strikes [--ids strike.] [--seeds 4,12345] [--ticks 3000] [--no-match] [--project DIR]
-//       Runs pose_lint, silhouette_lint, stacking_lint and (unless --no-match) limb_scan, pop_scan and anim_check, merges their findings
+//       Runs pose_lint, silhouette_lint, stacking_lint and (unless --no-match) limb_scan, joint_scan, pop_scan and anim_check, merges their findings
 //       into art/animation/review/<name>/: exceptions.md (what Orb sees, with a reason and a suggested action for each), summary.json
 //       (every finding, machine readable) and exceptions-sheet.png (a contact sheet of the flagged poses).
 //   node render/anim/tools/review.mjs reel --name strikes --seed 4 --from 1800 --count 400 [--step 3] [--crop 260x150] [--args "--style=fluid"]
@@ -116,6 +116,14 @@ function wave() {
     runGodot('limb_scan', [`--seeds=${seeds}`, `--ticks=${ticks}`, `--json=${join(rawDir, 'limb_scan.json')}`]);
     const ls = readJson(join(rawDir, 'limb_scan.json'));
     for (const [k, v] of Object.entries(ls?.counts ?? {})) add('error', 'limb_scan', k, `${v} frames over ${ls.frames} fighter-frames`, 'a limb left human range in play: find the layer that did it');
+    // the joint limits (data/anim/joints.json): no pose, sequence frame or live frame may be past a limit or bent the wrong way
+    runGodot('joint_scan', [`--seeds=${seeds}`, `--ticks=${ticks}`, `--json=${join(rawDir, 'joint_scan.json')}`]);
+    const js = readJson(join(rawDir, 'joint_scan.json'));
+    if (js && js.bad > 0) {
+      const sum = (g, k) => Object.values(g ?? {}).reduce((n, r) => n + (r[k] ?? 0), 0);
+      add('error', 'joint_scan', 'joint limits', `${sum(js.report.poses, 'bad_frames')} pose frames, ${sum(js.report.sequences, 'bad_frames')} sequence frames and ${js.report.live_output?.bad_frames ?? 0} live frames are past a limit or bent the wrong way`, 'raw/joint_scan.json names each; docs/animation/joint-limits.md says what each rule is');
+    }
+    else if (js) add('note', 'joint_scan', 'joint limits', `0 past a limit in ${js.report.live_frames} live fighter-frames, every pose and every sequence frame (the sources alone leave ${js.report.live_stages?.D?.bad_frames ?? 0} live frames for the solve's last pass)`, 'none');
     runGodot('pop_scan', [`--seeds=${seeds}`, `--ticks=${ticks}`, `--json=${join(rawDir, 'pop_scan.json')}`]);
     const ps = readJson(join(rawDir, 'pop_scan.json'));
     // A join above the limit is an eased swing, not a jump (inertialisation, pose-pipeline 9.x); only a turn past 3 rad (more than
@@ -130,7 +138,7 @@ function wave() {
       if (r.contact_gap_worst > 1.0) add('review', 'anim_check', `contact gap (${r.seed}, ${r.mode})`, `${r.contact_gap_worst.toFixed(2)} units short of the defender`, 'the reach (arm, lunge, step-in) is not enough for this strike');
       if (r.contacts_beyond_reach > 0 && r.mode === 'mix') add('note', 'anim_check', `blows beyond reach (${r.seed})`, `${r.contacts_beyond_reach} of ${r.contacts_beyond_reach + r.contacts_within_reach}`, 'the sim lands blows farther than the animator can reach (Combat/Encounter spacing)');
     }
-    matchNote = `${seeds} for ${ticks} ticks: limb_scan ${ls ? 'clean' : 'no data'}, anim_check ${ac ? (ac.failures.length ? ac.failures.length + ' failed' : 'passed, ' + ac.checks + ' checks') : 'no data'}`;
+    matchNote = `${seeds} for ${ticks} ticks: limb_scan ${ls ? 'clean' : 'no data'}, joint_scan ${js ? (js.bad ? js.bad + ' past a limit' : 'clean') : 'no data'}, anim_check ${ac ? (ac.failures.length ? ac.failures.length + ' failed' : 'passed, ' + ac.checks + ' checks') : 'no data'}`;
   }
   // the sheet of flagged poses
   const rank = { error: 0, review: 1, note: 2 };

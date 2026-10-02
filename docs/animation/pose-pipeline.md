@@ -1253,6 +1253,10 @@ All checks pass with the switch on (`anim_check`, `determinism`, `pane_check`, `
 - Reduced motion plays all of it at 60%.
 - `anim_check`: a last stand test (the shape picks its sequence, the end kinds, reduced motion). GIFs: `art/animation/laststand-pa-before-after.gif` (P and A, left the cue off, right on: both reach the brink, then the window expires for the left one and is used by the right) and `laststand-ec.gif` (E and C), from `laststand_lab.gd`.
 
+### 9.21 Joint limits: no knee or elbow can bend the wrong way (2026-10-01)
+
+Orb saw knees bending the wrong way in kicks and elbows turned inward. The cause was an unlimited twist of the thigh or upper arm (the bend plane came from a fixed point in the world, so a kick had its thigh twisted 170 degrees), plus blends and the ragdoll that nothing held inside a joint's range. One table of limits (`data/anim/joints.json`), one module (`anim_joints.gd`) and a lint (`tools/joint_scan.gd`, gated in `anim_check`) now keep every source inside it: the bake and the limb solves (`AnimPose.ik_limb`), the blends, the ragdoll and the last pass of every solve. Full account, counts and the rules a new fighter's rig must declare: `docs/animation/joint-limits.md`.
+
 ---
 
 ## 10. How we will know it works

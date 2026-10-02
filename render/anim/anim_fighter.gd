@@ -166,6 +166,7 @@ var _contact_now: bool = false
 # leg is favoured; which one is a hash of the fighter's slot, since the sim keeps no side).
 var _worn: float = 0.0
 var _brinkp: float = 0.0
+var audit: Dictionary = {}               # joint audit (RenderAnim.joint_audit): stage -> the violations found there (A before the contact solve, B after it, C after the ragdoll, D after every layer)
 var _arm_broken: bool = false
 var _leg_broken: bool = false
 var _hang_right: bool = false
@@ -592,10 +593,10 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			# the arms and hands follow the torso a little later (a guard comes up with overlap, not as one block)
 			var e0: float = 1.0 - k
 			for i in range(AnimRig.N):
-				_base[i] = _base[i].slerp(_tq[i], 1.0 - pow(e0, _base_r[i]))
+				var kt: float = 1.0 - pow(e0, _base_r[i])
+				_base[i] = AnimJoints.slerp_limb(_base[i], _tq[i], kt) if (AnimJoints.ik_limits and AnimJoints.is_limb[i] == 1) else _base[i].slerp(_tq[i], kt)
 		else:
-			for i in range(AnimRig.N):
-				_base[i] = _base[i].slerp(_tq[i], k)
+			AnimPose.mix(_base, _tq, k)
 		_base_hips = _base_hips.lerp(_tq_hips, k)
 		_base_curl = _base_curl.lerp(_tq_curl, k)
 	elif _settle == 41:
@@ -696,12 +697,18 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 		if RenderAnim.debug_checks:
 			debug["feet_usec"] += Time.get_ticks_usec() - tf
 			debug["feet_n"] += 1
+	if RenderAnim.joint_audit:
+		audit = {"A": AnimJoints.violations(q, _rd.shape_key)}
 	# 5b. the striking limb reaches the defender (the contact solve)
 	if _ci_w > 0.001:
 		_contact_ik(S, f)
+	if RenderAnim.joint_audit:
+		audit["B"] = AnimJoints.violations(q, _rd.shape_key)
 	# 5c. the active ragdoll: the body's own motion on top of the pose (the pose is in charge while a blow is thrown)
 	if _rd.out_w > 0.001:
 		_rd.apply(q, _rd.out_w * (0.3 if (_part != "" or _ci_w > 0.001) else 1.0), _rd_scale())
+	if RenderAnim.joint_audit:
+		audit["C"] = AnimJoints.violations(q, _rd.shape_key)
 	# 5d00. flight overhaul (unit G): the burst and the brake poses, the bank, the shudder of a nearby impact
 	if RenderAnim.layer("flight"):
 		_flight_layers(T, f)
@@ -749,7 +756,9 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 	if RenderAnim.debug_checks:
 		layers = ("cue:" + String(_cue.get("kind", "")) + " " if not _cue.is_empty() else "") + ("rush " if _rushing else "") + ("react " if not _reacts.is_empty() else "") + ("ik " if _ci_w > 0.001 else "") + ("beam " if f.beamCharge != null else "") + (f.state + " ")
 	# 6b. the limb pass: elbows and knees stay hinges in human range, arms stay out of the shoulder's blind spot
-	AnimPose.limit_limbs(q)
+	if RenderAnim.joint_audit:
+		audit["D"] = AnimJoints.violations(q, _rd.shape_key)
+	debug["limit_fix"] = AnimPose.limit_limbs(q, _rd.shape_key)
 	# 7. sockets: only the chains the views read (the head and the near hand); the rest is on demand
 	AnimPose.fk_chain(q, hips, gq, gp, SOCKET_CHAIN)
 	_full_fk = false
@@ -957,8 +966,7 @@ func _blend_target(id: String, w: float) -> void:
 	if w <= 0.001:
 		return
 	var p: AnimPose = AnimData.pose(id)
-	for i in range(AnimRig.N):
-		_tq[i] = _tq[i].slerp(p.q[i], w)
+	AnimPose.mix(_tq, p.q, w)
 	_tq_hips = _tq_hips.lerp(p.hips, w)
 	_tq_curl = _tq_curl.lerp(p.curl, w)
 
@@ -1449,11 +1457,12 @@ func _contact_one(S: SimState, f, base_limb: String, second: bool) -> void:
 		gap = maxf(0.0, (ik_t - gp[a]).length() - reach)
 	else:
 		var pole: Vector3 = gp[b]   # the elbow (knee) stays on the side the authored pose has it, so the solved limb is its neighbour
-		AnimPose.ik2(q, gq, gp, a, b, c, ik_t, pole)
-		AnimPose.hinge_fix(q, gq, gp, a, b, c, 1.0 if kind == "hand" else -1.0)
-		q[a] = qa0.slerp(q[a], _ci_w)
+		AnimPose.ik_limb(q, gq, gp, a, b, c, ik_t, pole, 1.0 if kind == "hand" else -1.0, _rd.shape_key)
+		q[a] = AnimJoints.slerp_limb(qa0, q[a], _ci_w) if AnimJoints.ik_limits else qa0.slerp(q[a], _ci_w)
 		q[b] = qb0.slerp(q[b], _ci_w)
 		gap = maxf(0.0, (ik_t - gp[c]).length())
+		if gap > 0.0 and (gp[c] - gp[a]).length() > (ik_t - gp[a]).length():
+			gap = 0.0   # the limb folds no further than its joint allows, so it ends past a target that is nearer than that (inside the defender), not short of it
 	hips.x += lunge
 	debug["ik_frames"] += 1
 	if second:
@@ -1817,8 +1826,7 @@ func _ground_feet(S: SimState, f, dt: float) -> void:
 			continue   # this foot is already where the ground is
 		var tgt := Vector3(gp[c].x, gp[c].y + want, gp[c].z)
 		var pole: Vector3 = gp[b]
-		AnimPose.ik2(q, gq, gp, a, b, c, tgt, pole)
-		AnimPose.hinge_fix(q, gq, gp, a, b, c, -1.0)
+		AnimPose.ik_limb(q, gq, gp, a, b, c, tgt, pole, -1.0, _rd.shape_key)
 	if _leg_dq.size() != 4:
 		_leg_dq.resize(4)
 	for kk in range(4):

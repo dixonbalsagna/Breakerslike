@@ -58,6 +58,7 @@ static func load_all() -> void:
 	AnimPose.hunch_up_max = float(hj.get("up_max", 2.0))
 	effector_poses = ej.get("poses", {})
 	sockets = _read("sockets.json")
+	AnimJoints.setup(_read("joints.json"))
 	shapes = _read("shapes.json").get("shapes", {})
 	ground = _read("ground.json")
 	intro = _read("intro.json")
@@ -94,25 +95,7 @@ static func load_all() -> void:
 						names.append(wn0)
 			names.sort()
 			for wn in names:
-				var wp: Dictionary = _read("waves/" + wn + ".poses.json").get("poses", {})
-				for id in wp:
-					poses[id] = AnimPose.bake(id, wp[id])
-					raw[id] = wp[id]
-					wave_of[id] = wn
-				if FileAccess.file_exists(DIR + "waves/" + wn + ".keysets.json"):
-					var wk: Dictionary = _read("waves/" + wn + ".keysets.json").get("keysets", {})
-					for kid in wk:
-						keysets[kid] = wk[kid]
-				if FileAccess.file_exists(DIR + "waves/" + wn + ".sequences.json"):
-					var wsq: Dictionary = _read("waves/" + wn + ".sequences.json").get("sequences", {})
-					for sid in wsq:
-						entries[sid] = wsq[sid]
-				if FileAccess.file_exists(DIR + "waves/" + wn + ".cues.json"):
-					cue_map.merge(_read("waves/" + wn + ".cues.json").get("cues", {}), true)
-				if FileAccess.file_exists(DIR + "waves/" + wn + ".entries.json"):
-					var we: Dictionary = _read("waves/" + wn + ".entries.json").get("entries", {})
-					for eid in we:
-						entries[eid] = we[eid]
+				_load_wave(wn)
 	var prj: Dictionary = _read("profiles.json")
 	profiles = prj.get("profiles", {})
 	default_profile = String(prj.get("default", "snappy"))
@@ -130,6 +113,52 @@ static func load_all() -> void:
 	personality = _read("personality.json")
 	winner = _read("winner.json")
 	quality_levels = _read("quality.json").get("levels", {})
+
+
+## One parked wave's files (poses, key sets, sequences, cues, entries).
+static func _load_wave(wn: String) -> void:
+	var wp: Dictionary = _read("waves/" + wn + ".poses.json").get("poses", {})
+	for id in wp:
+		poses[id] = AnimPose.bake(id, wp[id])
+		raw[id] = wp[id]
+		wave_of[id] = wn
+	if FileAccess.file_exists(DIR + "waves/" + wn + ".keysets.json"):
+		var wk: Dictionary = _read("waves/" + wn + ".keysets.json").get("keysets", {})
+		for kid in wk:
+			keysets[kid] = wk[kid]
+	if FileAccess.file_exists(DIR + "waves/" + wn + ".sequences.json"):
+		var wsq: Dictionary = _read("waves/" + wn + ".sequences.json").get("sequences", {})
+		for sid in wsq:
+			entries[sid] = wsq[sid]
+	if FileAccess.file_exists(DIR + "waves/" + wn + ".cues.json"):
+		cue_map.merge(_read("waves/" + wn + ".cues.json").get("cues", {}), true)
+	if FileAccess.file_exists(DIR + "waves/" + wn + ".entries.json"):
+		var we: Dictionary = _read("waves/" + wn + ".entries.json").get("entries", {})
+		for eid in we:
+			entries[eid] = we[eid]
+
+
+## Every parked wave not yet loaded (the joint-limit lint checks all the data, whichever flags a run switched on). Only tools call this: a live match
+## would not play them, but the poses join the pool once loaded.
+static func load_every_wave() -> void:
+	load_all()
+	var da := DirAccess.open(DIR + "waves")
+	if da == null:
+		return
+	var names: Array = []
+	for fn in da.get_files():
+		if fn.ends_with(".poses.json"):
+			var wn: String = fn.trim_suffix(".poses.json")
+			var have := false
+			for id in wave_of:
+				if wave_of[id] == wn:
+					have = true
+					break
+			if not have:
+				names.append(wn)
+	names.sort()
+	for wn in names:
+		_load_wave(wn)
 
 
 static func pose_exists(id: String) -> bool:
