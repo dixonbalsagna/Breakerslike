@@ -28,10 +28,11 @@ const P = {
   ai: 'ai:level=medium',
 };
 const ENERGY = [
-  ['E1', 'masher:energy=1' + F, P.masher, 'a blaster (energy held, a bolt every 8 ticks) against a melee masher', null, null],
-  ['E2', 'masher:energy=1' + F, P.ai, 'a blaster against the medium AI', null, null],
+  ['E1', 'masher:energy=1' + F, P.masher, 'a bolt-only player (energy held, a bolt every 8 ticks) against a melee masher: must finish at least 95% (agency pass 16; the win share is reported, see the decided count)', null, null],
+  ['E2', 'masher:energy=1' + F, P.ai, 'a bolt-only player against the medium AI (agency pass 16: 20 to 40%)', 20, 40],
   ['E3', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.ai, 'a timed blaster against the medium AI', null, null],
   ['E4', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.timed, 'a timed blaster against a timed melee player', null, null],
+  ['E5', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.timed, 'a blast-heavy timed script against a rush-heavy timed script (agency pass 15.6: 40 to 60%)', 40, 60],
 ];
 const acc = a => `tapper:acc=${a}:win=4:mix=LLH${F}`;
 

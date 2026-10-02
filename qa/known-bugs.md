@@ -153,7 +153,7 @@ Separate from the prototype register above (and from its test). IDs are `GB-nnn`
 **Effect.** Any session where F9 is pressed an even number of times after the first press (detach, attach) ends grey for good; restart is the only way out. Not a sim bug: determinism and the baseline are unaffected.
 **Test to add once fixed.** A Godot scene test: attach, detach, attach, then assert `panes.size() == 2` and that pane 0's parent is `viewports[0]`.
 
-### GB-002: A pale vertical "aura" in the far sky when flying high (tier 3 and 4 sky reaction) (reopened 2026-10-02)
+### GB-002: A pale vertical "aura" in the far sky when flying high (tier 3 and 4 sky reaction) (reopened 2026-10-02, fixed again 632f6c9)
 
 **Reported by:** Orb, playing the Godot game, 2026-10-02 (two screenshots: a soft blue-white column near the horizon, off to one side of the fighter, with vertical streaks; it moves with the fighters; both fighters at tier 4).
 **Verdict:** not a rendering fault: it is the designed sky reaction (`docs/design/rule-of-cool.md` feature 12), which reads as a smear.
@@ -162,6 +162,7 @@ Separate from the prototype register above (and from its test). IDs are `GB-nnn`
 **Effect.** Looks like a bug to a first-time player; no effect on the sim or the baselines.
 **Status: fixed in 8fd6aba** (Rendering): the sky reaction is a cloud gap with a lit edge, no pale fill, and only for a fighter on screen. Not re-verified by QA in play.
 **Reopened 2026-10-02 (Orb, two screenshots on the live web build, both fighters tier 4).** The cloud gap with a lit edge still reads as a big glowing texture over each fighter in the clouds at high altitude (top right in the first shot, top left in the second), and as the fighter moves left and right the clouds shimmer. So the fix removed the pale pillar but not the complaint: a gap and lit rim that follow a fighter's direction across the sky are the problem, not the fill. Not verified in the current source (`render/shaders/sky.gdshader` at 8fd6aba still lights the clouds' edge round the gap, `tint` and `rim`); Orb's build may or may not include 8fd6aba. Options for the owners: drop the reaction (the feature is rule-of-cool 12 and was never in Orb's pitch list), make it a still, world-anchored effect that does not track a fighter (a fixed cloud parting that does not move with him), or fade it out above a height where it only shows as a patch; if it stays, put it behind a setting and `sky_calm`. Status: open, with Rendering and Game Design.
+**Fixed again in 632f6c9** (Rendering, per the EP's status line): the sky reaction is off by default, plain clouds at every tier, and a cloud shimmer above 4,800 units is fixed. Not yet seen by Orb; QA has not re-verified in play.
 
 ### Open observations from Orb's two-player playtest (2026-10-02; direction in `docs/ep/vision.md`, last section)
 
@@ -172,7 +173,7 @@ Reported through the EP. QA has not reproduced or measured these; each has an ow
 | GB-003 | The split-screen camera jolts when a player is knocked away. | Camera | open, with Camera |
 | GB-004 | A ranged attack press locks both fighters during the fly-in. Raised as a design question, not a fault. | Game Design | open, design call |
 | GB-005 | Mountain tumbles gain too much momentum from a glancing bounce. | World | open, with World |
-| GB-006 | A launched fighter flies at speed feet first, laid out along the flight line (Orb, 2026-10-02, a screenshot of VORR on the live web build: body horizontal, legs leading, a bright speed streak behind). Looks silly in motion | Animation (the `launch` body profile and spin, `anim_fighter.gd`), with Rendering (the pivot's rotation from `f.rot` and the pose) | open, unreproduced by QA; a launch's spin and pose are Animation's |
+| GB-006 | A launched fighter flies at speed feet first, laid out along the flight line (Orb, 2026-10-02, a screenshot of VORR on the live web build: body horizontal, legs leading, a bright speed streak behind). Looks silly in motion | Animation (the `launch` body profile and spin, `anim_fighter.gd`), with Rendering (the pivot's rotation from `f.rot` and the pose) | **fixed in cce8a59** (a launched body flies head first once its spin dies; Animation's `lead_scan` guards it); not re-verified by QA in play |
 
 QA has no band for any of the three yet. For GB-005 the harness already counts bounces per bounced journey and journeys longer than 4,000 units (`5c.bounces`, `5c.long`); a per-journey momentum or speed-gain row would need a field from World's journey events. For GB-003 a camera-motion metric would need Camera's rig output; ask the EP when a band is wanted.
 
