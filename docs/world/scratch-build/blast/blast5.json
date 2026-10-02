@@ -1,0 +1,68 @@
+{
+  "schema": "biomes.blast/1",
+  "_about": "What an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind (data/fight/shots.json): craterE the crater's energy at tier 1 (1 is a scuff: a slam at 900 speed; the bowl radius is 160 units times its square root), radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake. tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. The structure reach by tier (fighter ladder reach.structure) and the casualty window apply as for any blast.",
+  "kinds": {
+    "bolt": {
+      "craterE": 0.12,
+      "radius": 70,
+      "damage": 40,
+      "debris": 3,
+      "dust": 1,
+      "ringR": 160,
+      "shake": 1.5,
+      "splash": 4
+    },
+    "shard": {
+      "craterE": 0.07,
+      "radius": 55,
+      "damage": 24,
+      "debris": 2,
+      "dust": 1,
+      "ringR": 120,
+      "shake": 1.0,
+      "splash": 3
+    },
+    "arc": {
+      "craterE": 0.64,
+      "radius": 128,
+      "damage": 128,
+      "debris": 6,
+      "dust": 3,
+      "ringR": 336,
+      "shake": 4.8,
+      "splash": 8
+    },
+    "charged": {
+      "craterE": 0.8,
+      "radius": 160,
+      "damage": 160,
+      "debris": 8,
+      "dust": 3,
+      "ringR": 420,
+      "shake": 6.0,
+      "splash": 10
+    },
+    "lob": {
+      "craterE": 0.5,
+      "radius": 120,
+      "damage": 100,
+      "debris": 6,
+      "dust": 2,
+      "ringR": 320,
+      "shake": 4.0,
+      "splash": 8
+    }
+  },
+  "tierEnergy": [
+    1.0,
+    1.3,
+    1.7,
+    2.2
+  ],
+  "tierDamage": [
+    1.0,
+    1.4,
+    2.0,
+    2.8
+  ]
+}

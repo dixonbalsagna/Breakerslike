@@ -1,0 +1,38 @@
+--- a/sim/world/contact.gd
++++ b/sim/world/contact.gd
+@@ -910,3 +910,35 @@
+ 	if S.slides.size() > WorldSlide.LIST_MAX:
+ 		S.slides.remove_at(0)
+ 	SimFx.slideEvent(S, rec)
++
++
++## The first obstacle a slide along the ground meets: ground that rises steeper than the wall rule (leave.wall) within dist of x, in
++## direction dir at depth z. Returns {"hit": bool, "d": the distance to it (units), "x", "kind": "wall", "heap" (a rubble heap) or "rim"
++## (a crater's edge), "rise"}; {"hit": false, "d": dist} when the way is clear. Pure: the director's slide plan stops short of it.
++static func slideObstacle(S: SimState, x: float, z: float, dir: float, dist: float) -> Dictionary:
++	var COL: float = SimConst.COL
++	var n: int = int(ceil(dist / COL))
++	var gprev: float = WorldTerrain.groundY(S, x, z)
++	for k in range(1, n + 1):
++		var xk: float = SimWrap.wrap(x + dir * float(k) * COL)
++		var g: float = WorldTerrain.groundY(S, xk, z)
++		var rise: float = (g - gprev) / COL
++		if rise > K_WALL:
++			var col: int = int(floor(xk / COL)) % SimConst.NC
++			var kind: String = "heap" if S.rubble[col] > 0.0 else ("rim" if _nearRim(S, xk) else "wall")
++			return {"hit": true, "d": float(k) * COL, "x": xk, "kind": kind, "rise": rise}
++		gprev = g
++	return {"hit": false, "d": dist}
++
++
++## A slide carried along the ground meets an obstacle (slideObstacle) and ends there: a light brunt, no rebound. The fighter takes the
++## stop-impact's damage by his speed, a rim or a wall takes a small dent (a heap takes none), and the ground shakes a little. By is
++## the striker (the dent's owner and tier); spN the slide's normalised speed at the obstacle. Returns the damage taken.
++static func bump(S: SimState, f, by, kind: String, spN: float) -> float:
++	var dmg: float = spN * WorldSlide.STOP_DMG
++	if kind != "heap":
++		WorldCrater.dig(S, f.x, WorldCrater.impactEnergy(spN, by.tier) * WorldSlide.STOP_E, by, "impact", 0.0, 1.0, false, f.z)
++	SimDamage.hurt(S, f, dmg, by)
++	SimFx.shake(S, minf(10.0, spN * 0.004), f.x, f.z)
++	SimFx.debris(S, f.x, f.y + 8.0, 3, "#6d6a66", 400.0, f.z)
++	return dmg
