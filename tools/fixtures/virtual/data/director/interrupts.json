@@ -91,6 +91,31 @@
         "minTicks": 6,
         "maxTicks": 90
       }
+    },
+    "hysteresisBh": 0.5,
+    "taunt": {
+      "enabled": true,
+      "windowTicks": 60
+    },
+    "charge": {
+      "light": {
+        "holdTicks": 30,
+        "speed": 4000,
+        "minTicks": 6,
+        "maxTicks": 90
+      },
+      "heavy": {
+        "holdTicks": 60,
+        "speed": 4000,
+        "minTicks": 6,
+        "maxTicks": 90
+      }
+    },
+    "meet": {
+      "speed": 4000,
+      "minTicks": 3,
+      "maxTicks": 20,
+      "chargerEdge": 10
     }
   }
 }

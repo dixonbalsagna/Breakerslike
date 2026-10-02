@@ -63,6 +63,25 @@ static func aiInput(S: SimState, f) -> void:
 			w = [0.0, 0.0, 0.0, 1.0]
 		if f.state == "free":
 			a.st = float(pickW(S, w))
+	# A charge is a held button: the AI keeps its button down while its taunt or its approach lasts.
+	var hold: int = DirInterrupt.gi(f, DirInterrupt.AI_HOLD)
+	if hold > 0:
+		if DirBands.taunting(f) or DirBands.pending(f):
+			i.lightHeld = hold == 1
+			i.heavyHeld = hold == 2
+		else:
+			DirInterrupt.si(f, DirInterrupt.AI_HOLD, 0)
+	# The rival is coming, or taunting (DirBands): the answer the AI chose, once its reaction time is up. It guards,
+	# dodges, or presses to meet him.
+	var ans: int = DirBands.aiAnswer(f, o) if f.state == "free" else DirBands.R_NONE
+	if ans == DirBands.R_GUARD:
+		a.st = 1.0
+	elif ans == DirBands.R_DODGE:
+		a.st = 2.0
+	elif ans == DirBands.R_LIGHT:
+		i.light = true
+	elif ans == DirBands.R_HEAVY:
+		i.heavy = true
 	var st: float = a.st
 	# The held states for the chosen stance: Guard holds guard; Dodge re-taps the dodge before its window lapses; Escape
 	# sprints (and moves away, below); Press holds nothing. They are written in every state, so a downed AI keeps its guard.
@@ -158,7 +177,7 @@ static func aiInput(S: SimState, f) -> void:
 		i.dash = true
 	# A hunter sometimes swings blind at the last-seen spot (it pays the lock-lost cost: 2 ki and a 0.5 s cooldown).
 	# A beat is not spent on a press the director would refuse (the cooldown, or a target in the air): it waits.
-	var ready: bool = S.dirS.cool <= 0.0 and o.state != "launched" and o.state != "locked" and DirBands.who(S) < 0
+	var ready: bool = S.dirS.cool <= 0.0 and o.state != "launched" and o.state != "locked" and DirBands.who(S) < 0 and not DirBands.taunting(o)
 	var blind: bool = a.atk <= 0.0 and ready and o.hidden and st == 0.0 and S.dirS.ex == null and S.rng.next() < BLIND_SWING
 	if a.atk <= 0.0 and ready and (not o.hidden or blind) and st != 3.0 and S.dirS.ex == null:
 		# Each attack beat either attacks or holds (repositions, charges): holding fills the downtime between exchanges.
@@ -176,6 +195,22 @@ static func aiInput(S: SimState, f) -> void:
 				i.heavy = true   # step 3: a rival that only guards gets the guard-breaker (a heavy) at the level's rate
 			else:
 				i.light = true
+			if (i.light or i.heavy) and DirBands.farOn() and DirBands.band(f, o) == DirBands.FAR and not DirBands.taunting(o):
+				var u: float = S.rng.next()
+				var ft: float = float(lv().get("farTaunt", 0.0)) if not DirBands.tauntSpent(f) else 0.0
+				var urge: bool = S.T - SimMathx.jmax(f.exT, o.exT) > GAP_URGE   # no lull: after a long gap it always goes
+				if u < ft and not urge:
+					pass   # a tap: the taunt
+				elif urge or u < ft + float(lv().get("farCharge", 1.0)):
+					if i.heavy and S.rng.next() >= float(lv().get("farHeavy", 1.0)):
+						i.heavy = false   # the heavy charge is slow and committed: more often it charges light
+						i.light = true
+					DirInterrupt.si(f, DirInterrupt.AI_HOLD, 2 if i.heavy else 1)   # it holds the button: the charge
+					i.lightHeld = i.light
+					i.heavyHeld = i.heavy
+				else:
+					i.light = false   # it holds this beat
+					i.heavy = false
 		# Attack cadence (dynamic feel): AGGRESSIVE every 0.5 to 1.2 s, DEFENSIVE 1.0 to 2.0 s, the others 0.8 to 1.6 s.
 		# S2/S3b ran 1.2 to 2.5, 2.0 to 3.6 and 1.6 to 3.0; the prototype 0.35 to 1.0, 1.2 to 2.5 and 0.9 to 1.8.
 		a.atk = S.rng.range_(0.5, 1.2) if st == 0.0 else (S.rng.range_(1.0, 2.0) if st == 1.0 else S.rng.range_(0.8, 1.6))

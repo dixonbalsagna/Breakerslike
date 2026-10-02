@@ -49,6 +49,8 @@ static func requestAttack(S: SimState, A, kind: String) -> void:
 		return
 	var m: float = A.input.mx * SimMathx.jsign(SimWrap.sdx(A.x, SimRoster.opp(S, A).x))
 	var entry: int = 1 if m > SimAct.awayDead else (-1 if m < -SimAct.awayDead else 0)   # toward, neutral or away (step 4 reads it)
+	if kind != "sig" and DirBands.farPressNow(S, A, KIND.find(kind), entry):
+		return   # the far band: the press fires on its tick as a taunt, an answer or (held) a charge; it never waits
 	SimAct.push(A, KIND.find(kind), A.act.mode, entry, S.tick)
 	_drain(S)
 
@@ -63,10 +65,12 @@ static var planStale: int = 0
 static var planTick: int = -1   # the tick of the request being started (its press in the log), -1 outside _drain
 static var engaging: bool = false   # true while an approach's end starts its exchange (DirBands._engage); not state
 static var planOpen: int = 0        # ... and the opening that approach began with (DirInterrupt.OPEN_*, or 0)
+static var planMeet: bool = false   # ... and whether it is the meeting after an answered taunt: the rival is pressing too
+static var planMeetEdge: float = 0.0   # ... and the edge of a rival met while he held a heavy charge (off the attacker's clash chance)
 
 
-## Starts the oldest queued request the director can take: the older one first; on a tie of age the fighter who did not
-## start the last exchange (two players pressing at one fixed gap could phase-lock the queue), then the slots alternating. A request
+## Starts a queued request the director can take. When both fighters have one waiting, the fighter who did not start
+## the last exchange goes first; if neither did, the older request, then the slots alternating. A request
 ## that cannot start yet (the cooldown, an exchange running, a target in the air) waits in its queue until it expires.
 static func _drain(S: SimState) -> void:
 	if S.dirS.ex != null or S.game.ko != null:
@@ -81,7 +85,9 @@ static func _drain(S: SimState) -> void:
 	var order: Array = [0, 1]
 	var l0: int = DirInterrupt.gi(S.fighters[0], DirInterrupt.LAST_START)
 	var l1: int = DirInterrupt.gi(S.fighters[1], DirInterrupt.LAST_START)
-	if q0.is_empty() or (not q1.is_empty() and (q1[3] < q0[3] or (q1[3] == q0[3] and (l1 < l0 or (l1 == l0 and S.tick % 2 == 1))))):
+	# The starts floor (agency-pass.md section 11, 4): when both have a press waiting, the one who did not start the
+	# last exchange starts this one, whichever press is older. A patient player is not shut out by a masher.
+	if q0.is_empty() or (not q1.is_empty() and (l1 < l0 or (l1 == l0 and (q1[3] < q0[3] or (q1[3] == q0[3] and S.tick % 2 == 1))))):
 		order = [1, 0]
 	for k in order:
 		var f = S.fighters[k]
@@ -158,11 +164,25 @@ static func _start(S: SimState, A, kind: String) -> int:
 	# The ranged press (agency-pass.md section 1): outside the close band only the attacker's approach starts. Nothing
 	# is decided, and the rival stays free, until it ends; the exchange then starts here again (engaging). An opening
 	# (a riposte, a reversal, a punish) begins its approach through the cooldown and is kept for the engage.
-	if kind != "sig" and not engaging and DirBands.on() and DirBands.band(A, D) != DirBands.CLOSE:
-		DirBands.begin(S, A, D, KIND.find(kind), planEntry, planTick if planTick >= 0 else S.tick, opn)
-		if opn != 0:
-			DirInterrupt.si(A, DirInterrupt.OPEN_UNTIL, 0)
-		return APPROACH
+	if kind != "sig" and not engaging and DirBands.on():
+		var pt: int = planTick if planTick >= 0 else S.tick
+		var bd: int = DirBands.band(A, D)
+		# The far taunt is a challenge: the rival's attack press while it plays answers it, and both rush to meet.
+		if DirBands.taunting(D) and opn == 0:
+			if bd != DirBands.CLOSE:
+				DirBands.meet(S, A, D, KIND.find(kind), planEntry, pt)
+				return APPROACH
+			DirBands.endTaunt(S, D, true)   # already in reach: the exchange itself is the answer
+		# A far press fires on its own tick (requestAttack): a taunt, an answer or a charge. A request that waited in the
+		# queue and comes up in the far band was pressed somewhere else, and is dropped.
+		if bd == DirBands.FAR and opn == 0 and A.act.v2 and DirBands.farOn():
+			return DROPPED
+		if bd != DirBands.CLOSE:
+			DirBands.begin(S, A, D, KIND.find(kind), planEntry, pt, opn)
+			if opn != 0:
+				DirInterrupt.si(A, DirInterrupt.OPEN_UNTIL, 0)
+			return APPROACH
+	DirBands.endTaunt(S, A, false, "cut")   # his own taunt, if one was playing, ends as his attack starts
 	if A.hidden:
 		if A.canHide:
 			A.hidden = false
@@ -401,6 +421,9 @@ static func endEx(S: SimState, ex) -> void:
 	# S3b: a broken head dazes the fighter who lost the exchange (SimWounds.daze checks the head).
 	if ex.loser >= 0 and S.game.ko == null:
 		SimWounds.daze(S, S.fighters[ex.loser])
+	if DirInterrupt.on() and S.game.ko == null:
+		var le: int = DirInterrupt.gi(ex.A, DirInterrupt.LAST_END)
+		SimFx.exchangeEnd(S, ex.A, "launch" if le == DirInterrupt.END_LAUNCH else ("knockback" if le == DirInterrupt.END_KNOCK else "continue"))
 	S.dirS.ex = null
 	S.dirS.cool = cooldownAfter(ex)
 	DirInterrupt.onEnd(S, ex)   # step 3: a fully blocked string leaves its attacker behind
@@ -430,6 +453,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 	if S.dirS.cool > 0.0:
 		S.dirS.cool -= dt
 	DirBands.tick(S)   # the approach before an exchange: it counts down, and the exchange starts at its end
+	DirAlchemy.tick(S)   # the flow count lapses
 	_queues(S)   # step 2: upgrades, expiry, and the next queued request once the director can take it
 	var ex = S.dirS.ex
 	if ex == null:

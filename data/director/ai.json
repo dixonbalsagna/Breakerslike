@@ -18,6 +18,9 @@
     "heavyAdd": 0.1,
     "_note": "stance-matrix.md R5: the chance the AI perfect-blocks a strike with a window, by the state it holds (guard, press; none while dodging or escaping), plus heavyAdd against a heavy or an ender. Each level multiplies it by perfectBlockMul (moveset-rules.md section 11(g): 0.35, 0.6, 1.0)"
   },
+  "reactTicks": 14,
+  "answerTicks": 20,
+  "_far": "The far band and the free approach (sim/director/bands.gd). reactTicks: the AI's reaction time to a rival's approach; an approach shorter than this gets no answer. answerTicks: how long after a rival's far taunt begins it presses its answer (past a heavy's 16-tick hold, so it answers a taunt and not a charge being gathered). Per level: farTaunt, the chance its attack beat in the far band is a taunt (a tap); farCharge, the chance it is otherwise a charge (it holds the button); below 1 it sometimes holds the beat instead, which measured slower (matches ran to the time cap at 0.5). After 6 s with no exchange it always charges. farHeavy: when it charges with a heavy, the chance it stays a heavy charge (slow and committed); otherwise it charges light. answerTaunt: the chance it answers a rival's far taunt with an attack press. approachReact: [guard, dodge, meet], the chances it answers a rival's approach by guarding, by dodging or by pressing to meet him; otherwise it carries on as it was",
   "level": "medium",
   "levels": {
     "_note": "beamAnswer: control-rules.md section 10 (0.15, 0.35, 0.60). perfectBlockMul: its share of the perfectBlock rates above (band: 3 to 8, 5 to 15 and 12 to 20 perfect blocks per 100 melee exchanges). guardRepeat: weight added to its Guard choice while the rival repeats one attack. punish: the chance it attacks in the punish window after it blocked a whole string, and punishHeavy the share of those attacks that are heavies. reversal: [after 2 s of guard with over 25 ki, otherwise]; medium is R4 (50%, 20%). breakGuard: the share of its attacks that are heavies against a rival it has found guarding twice running. riposte: the chance it takes its riposte after a perfect block. burstAtLink: the chain link at which it bursts out (0: never). launchIntent: the chance its heavy is thrown with a direction, to launch (the earned launch's third rule; its stick is its flight path, so this stands for a player's tilt). heldHeavy: the chance it charges a heavy by holding it (the first rule).",
@@ -32,7 +35,12 @@
       "burstAtLink": 0,
       "punishHeavy": 0,
       "launchIntent": 0.7,
-      "heldHeavy": 0.1
+      "heldHeavy": 0.1,
+      "farTaunt": 0.1,
+      "farCharge": 1.0,
+      "farHeavy": 1.0,
+      "answerTaunt": 0.7,
+      "approachReact": [0.1, 0.05, 0.1]
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -45,7 +53,12 @@
       "burstAtLink": 4,
       "punishHeavy": 1,
       "launchIntent": 1,
-      "heldHeavy": 0.25
+      "heldHeavy": 0.25,
+      "farTaunt": 0.06,
+      "farCharge": 1.0,
+      "farHeavy": 1.0,
+      "answerTaunt": 0.5,
+      "approachReact": [0.2, 0.1, 0.15]
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -58,7 +71,12 @@
       "burstAtLink": 3,
       "punishHeavy": 1,
       "launchIntent": 1,
-      "heldHeavy": 0.35
+      "heldHeavy": 0.35,
+      "farTaunt": 0.04,
+      "farCharge": 1.0,
+      "farHeavy": 1.0,
+      "answerTaunt": 0.3,
+      "approachReact": [0.3, 0.2, 0.2]
     }
   }
 }

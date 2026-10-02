@@ -11,6 +11,8 @@
   "beamAnswer": 0.35,
   "_beamAnswer": "kept for readers of the old shape: the medium level's value. The director reads levels.<level>.beamAnswer",
   "sigPick": 0.025,
+  "reactTicks": 12,
+  "answerTicks": 12,
   "_sigPick": "the chance an AI attack is the signature, with 50 ki and the cooldown over: about 3 signatures a match (band 2 to 4)",
   "perfectBlock": {
     "guard": 0.25,
@@ -35,7 +37,16 @@
       "burstAtLink": 0,
       "punishHeavy": 0,
       "launchIntent": 0.7,
-      "heldHeavy": 0.1
+      "heldHeavy": 0.1,
+      "farTaunt": 0.2,
+      "farCharge": 0.3,
+      "farHeavy": 0.3,
+      "answerTaunt": 0.5,
+      "approachReact": [
+        0.4,
+        0.3,
+        0.2
+      ]
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -51,7 +62,16 @@
       "burstAtLink": 4,
       "punishHeavy": 1,
       "launchIntent": 1,
-      "heldHeavy": 0.25
+      "heldHeavy": 0.25,
+      "farTaunt": 0.2,
+      "farCharge": 0.3,
+      "farHeavy": 0.3,
+      "answerTaunt": 0.5,
+      "approachReact": [
+        0.4,
+        0.3,
+        0.2
+      ]
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -67,7 +87,16 @@
       "burstAtLink": 3,
       "punishHeavy": 1,
       "launchIntent": 1,
-      "heldHeavy": 0.35
+      "heldHeavy": 0.35,
+      "farTaunt": 0.2,
+      "farCharge": 0.3,
+      "farHeavy": 0.3,
+      "answerTaunt": 0.5,
+      "approachReact": [
+        0.4,
+        0.3,
+        0.2
+      ]
     }
   }
 }

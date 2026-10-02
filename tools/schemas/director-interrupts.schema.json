@@ -374,7 +374,11 @@
         "midBh",
         "engageBh",
         "lunge",
-        "far"
+        "far",
+        "hysteresisBh",
+        "taunt",
+        "charge",
+        "meet"
       ],
       "properties": {
         "enabled": {
@@ -495,6 +499,153 @@
             }
           },
           "description": "The far band, by the press's weight.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "hysteresisBh": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The hysteresis, in body heights, at the edge of a band (Game Design's band rule): a pair that crossed a band edge must cross back by this much before it changes band again."
+        },
+        "taunt": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "windowTicks"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "The far taunt switch."
+            },
+            "windowTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The ticks the taunt's window stays open."
+            }
+          },
+          "description": "The far taunt.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "charge": {
+          "type": "object",
+          "required": [
+            "light",
+            "heavy"
+          ],
+          "properties": {
+            "light": {
+              "type": "object",
+              "required": [
+                "holdTicks",
+                "speed",
+                "minTicks",
+                "maxTicks"
+              ],
+              "properties": {
+                "holdTicks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "The ticks the press is held to count as a charge."
+                },
+                "speed": {
+                  "description": "Units a second.",
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "minTicks": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "maxTicks": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "description": "The held light press's charged flight.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            },
+            "heavy": {
+              "type": "object",
+              "required": [
+                "holdTicks",
+                "speed",
+                "minTicks",
+                "maxTicks"
+              ],
+              "properties": {
+                "holdTicks": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "The ticks the press is held to count as a charge."
+                },
+                "speed": {
+                  "description": "Units a second.",
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "minTicks": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "maxTicks": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "description": "The held heavy press's charged flight.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "description": "The held charge: a press held this long flies in on its own approach.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "meet": {
+          "type": "object",
+          "required": [
+            "speed",
+            "minTicks",
+            "maxTicks",
+            "chargerEdge"
+          ],
+          "properties": {
+            "speed": {
+              "description": "Units a second.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "minTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "At least this many whole ticks."
+            },
+            "maxTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "At most this many."
+            },
+            "chargerEdge": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Points off the attacker's chance when the rival is charging (the charger's edge); 0 to 100 (a share of 0 to 1 also fits)."
+            }
+          },
+          "description": "The meeting: both fighters closing on each other.",
           "additionalProperties": false,
           "patternProperties": {
             "^_": true

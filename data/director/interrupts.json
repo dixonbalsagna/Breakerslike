@@ -74,7 +74,7 @@
   "bands": {
     "enabled": true,
     "closeBh": 3,
-    "midBh": 12,
+    "midBh": 12.5,
     "engageBh": 2.5,
     "lunge": {
       "speed": 4000,
@@ -93,6 +93,33 @@
         "maxTicks": 90
       }
     },
-    "_note": "The ranged press (agency-pass.md section 1; sim/director/bands.gd). The bands are measured centre to centre, the shortest arc and the height together, in body heights (75 u): close within closeBh, mid to midBh, far beyond. A close press starts its exchange at once. A press from farther off starts only the attacker's approach: it ends engageBh from the rival, on the attacker's own side and at the rival's height, and the exchange is planned then (the wind-up follows). The rival is free until it ends. lunge (the mid band) and far.light, far.heavy (the far band, by the press's weight): the approach lasts the distance to cover at 'speed' (units a second), in whole ticks, at least minTicks and at most maxTicks. Until the far taunt and the held charge are built a far press flies in on a tap, at about the speed it had (4000 u a second; it was 2600 with the wind-up inside the flight); the charge's own flight (light 0.5 to 1.5 s, heavy 0.8 to 2.0 s) comes with the hold. On a slope the end point is brought in until the pair is inside the close band"
+    "_note": "The ranged press (agency-pass.md section 1; sim/director/bands.gd). The bands are measured centre to centre, the shortest arc and the height together, in body heights (75 u): close within closeBh, mid to midBh, far beyond. A close press starts its exchange at once. A press from farther off starts only the attacker's approach: it ends engageBh from the rival, on the attacker's own side and at the rival's height, and the exchange is planned then (the wind-up follows). The rival is free until it ends. lunge (the mid band) and far.light, far.heavy (the far band, by the press's weight): the approach lasts the distance to cover at 'speed' (units a second), in whole ticks, at least minTicks and at most maxTicks. Until the far taunt and the held charge are built a far press flies in on a tap, at about the speed it had (4000 u a second; it was 2600 with the wind-up inside the flight); the charge's own flight (light 0.5 to 1.5 s, heavy 0.8 to 2.0 s) comes with the hold. On a slope the end point is brought in until the pair is inside the close band",
+    "taunt": {
+      "enabled": true,
+      "windowTicks": 45
+    },
+    "charge": {
+      "light": {
+        "holdTicks": 8,
+        "speed": 4000,
+        "minTicks": 18,
+        "maxTicks": 60
+      },
+      "heavy": {
+        "holdTicks": 16,
+        "speed": 3000,
+        "minTicks": 30,
+        "maxTicks": 84
+      }
+    },
+    "meet": {
+      "speed": 4000,
+      "minTicks": 20,
+      "maxTicks": 60,
+      "chargerEdge": 10
+    },
+    "hysteresisBh": 0.5,
+    "_edge": "midBh is 12.5 (agency-pass.md section 12 b): a match opens with the pair 12 bh apart, and the opening press is a lunge. hysteresisBh: the band is held state, and an edge is crossed only half this much beyond it (going out it sits further out, coming in further in), so the band and its icon do not flicker for a pair hovering on a line",
+    "_far": "The far band (agency-pass.md section 1). taunt: a tap is a taunt, a challenge that plays for windowTicks while he keeps flying; the rival's attack press in that time answers it and both rush to the middle (meet: each covers half the distance at 'speed', in whole ticks between minTicks and maxTicks, and they arrive together, engageBh apart; chargerEdge: a rival met while he held a heavy charge enters the clash with this many points (of 100) off the attacker's chance, the interim form of Game Design's +5 until the fist clash on the pulse is wired). Answered, it pays in full; ignored, a half, a quarter, an eighth, then nothing until the two have traded blows. charge: a press still held holdTicks after it becomes a charge of that weight, flying at 'speed' for minTicks to maxTicks (section 12 a: a light goes after 8 ticks and flies 0.3 to 1.0 s; a heavy after 16 and flies 0.5 to 1.4 s). A light charge stops for nothing when the button is let go; a heavy charge is committed (only a dodge-cancel at its full cost stops it) and its heavy counts as held, so landing it earns a launch. taunt.enabled false: a far press flies in on a tap at far.light or far.heavy, as before"
   }
 }

@@ -29960,6 +29960,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -29996,7 +30021,32 @@
                   "maxTicks": 90
                 }
               },
-              "reach": 1
+              "reach": 1,
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
+              }
             }
           }
         }
@@ -30071,6 +30121,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30109,6 +30184,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30144,6 +30244,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30182,6 +30307,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30220,6 +30370,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30258,6 +30433,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30296,6 +30496,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30334,6 +30559,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30372,6 +30622,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30406,6 +30681,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30444,6 +30744,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30482,6 +30807,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30520,6 +30870,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30558,6 +30933,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30596,6 +30996,31 @@
                   "minTicks": 6,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30626,6 +31051,31 @@
                   "minTicks": 3,
                   "maxTicks": 20
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30669,6 +31119,31 @@
                   "minTicks": 3,
                   "maxTicks": 20
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30707,6 +31182,31 @@
                   "minTicks": 3,
                   "maxTicks": 20
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30745,6 +31245,31 @@
                   "minTicks": 100,
                   "maxTicks": 90
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -30783,6 +31308,31 @@
                   "minTicks": 3,
                   "maxTicks": 20
                 }
+              },
+              "hysteresisBh": 0.5,
+              "taunt": {
+                "enabled": true,
+                "windowTicks": 60
+              },
+              "charge": {
+                "light": {
+                  "holdTicks": 30,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                },
+                "heavy": {
+                  "holdTicks": 60,
+                  "speed": 4000,
+                  "minTicks": 6,
+                  "maxTicks": 90
+                }
+              },
+              "meet": {
+                "speed": 4000,
+                "minTicks": 3,
+                "maxTicks": 20,
+                "chargerEdge": 10
               }
             }
           }
@@ -32334,6 +32884,985 @@
         "rule": "xref:blast-kind",
         "pointer": "/kinds"
       }
+    },
+    {
+      "id": "director-interrupts-bands-hysteresis-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/bands/hysteresisBh"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-hysteresis-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/hysteresisBh": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bands/hysteresisBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-hysteresis-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/hysteresisBh": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-hysteresis-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/hysteresisBh": "some"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/hysteresisBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-edge-slack-retired",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/edgeSlackBh": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/bands/edgeSlackBh"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-notes-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/_edge": "comment",
+            "/bands/_far": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-taunt-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/bands/taunt"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-taunt-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/taunt": {
+              "enabled": true
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/taunt"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-taunt-enabled-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/taunt/enabled": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/taunt/enabled"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-taunt-window-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/taunt/windowTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bands/taunt/windowTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-taunt-window-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/taunt/windowTicks": 60.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/taunt/windowTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-taunt-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/taunt/mocking": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/bands/taunt/mocking"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-taunt-off-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/taunt/enabled": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-charge-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/bands/charge"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-weight-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge": {
+              "light": {
+                "holdTicks": 30,
+                "speed": 4000,
+                "minTicks": 6,
+                "maxTicks": 90
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/charge"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-unknown-weight",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge": {
+              "light": {
+                "holdTicks": 30,
+                "speed": 4000,
+                "minTicks": 6,
+                "maxTicks": 90
+              },
+              "heavy": {
+                "holdTicks": 60,
+                "speed": 4000,
+                "minTicks": 6,
+                "maxTicks": 90
+              },
+              "medium": {
+                "holdTicks": 30,
+                "speed": 4000,
+                "minTicks": 6,
+                "maxTicks": 90
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/bands/charge/medium"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/light": {
+              "speed": 4000,
+              "minTicks": 6,
+              "maxTicks": 90
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/charge/light"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-hold-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/light/holdTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bands/charge/light/holdTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-speed-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/heavy/speed": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bands/charge/heavy/speed"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-ticks-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/light/minTicks": 6.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/charge/light/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-light-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/light/minTicks": 100
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/charge/light/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-heavy-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/heavy/minTicks": 100
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/charge/heavy/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-hold-order",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/light/holdTicks": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/charge/light/holdTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charge-hold-equal",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/charge/light/holdTicks": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/charge/light/holdTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-meet-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/bands/meet"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-meet-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet": {
+              "speed": 4000,
+              "minTicks": 3,
+              "chargerEdge": 10
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/meet"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet": {
+              "speed": 4000,
+              "minTicks": 3,
+              "maxTicks": 20
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/bands/meet"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-points-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet/chargerEdge": 100
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-share-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet/chargerEdge": 0.1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet/chargerEdge": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-above-100",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet/chargerEdge": 120
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/bands/meet/chargerEdge"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet/chargerEdge": -5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/bands/meet/chargerEdge"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-charger-edge-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet/chargerEdge": "ten"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/bands/meet/chargerEdge"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-meet-speed-positive",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet": {
+              "speed": 0,
+              "minTicks": 3,
+              "maxTicks": 20,
+              "chargerEdge": 10
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/bands/meet/speed"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-meet-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet": {
+              "speed": 4000,
+              "minTicks": 30,
+              "maxTicks": 20,
+              "chargerEdge": 10
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:bands-order",
+        "pointer": "/bands/meet/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-bands-meet-equal-ticks-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/bands/meet": {
+              "speed": 4000,
+              "minTicks": 20,
+              "maxTicks": 20,
+              "chargerEdge": 10
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-far-note-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_far": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-react-ticks-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/reactTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-answer-ticks-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/answerTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-react-ticks-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/reactTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/reactTicks"
+      }
+    },
+    {
+      "id": "director-ai-react-ticks-integer",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/reactTicks": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/reactTicks"
+      }
+    },
+    {
+      "id": "director-ai-answer-ticks-zero-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/answerTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-far-taunt-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/farTaunt"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-far-charge-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/medium/farCharge"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/medium"
+      }
+    },
+    {
+      "id": "director-ai-far-heavy-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/farHeavy"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-answer-taunt-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/answerTaunt"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/approachReact"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-far-taunt-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/farTaunt": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/easy/farTaunt"
+      }
+    },
+    {
+      "id": "director-ai-far-charge-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/farCharge": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/medium/farCharge"
+      }
+    },
+    {
+      "id": "director-ai-far-heavy-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/farHeavy": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/farHeavy"
+      }
+    },
+    {
+      "id": "director-ai-answer-taunt-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/answerTaunt": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/hard/answerTaunt"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-length",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/approachReact": [
+              0.4,
+              0.3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/levels/easy/approachReact"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-too-long",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/approachReact": [
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maxItems",
+        "pointer": "/levels/easy/approachReact"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-chance-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/approachReact": [
+              0.4,
+              1.5,
+              0.1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/easy/approachReact/1"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-sum-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/approachReact": [
+              0.5,
+              0.3,
+              0.2
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-approach-react-sum-above-one",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/approachReact": [
+              0.5,
+              0.4,
+              0.3
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-approach-react",
+        "pointer": "/levels/easy/approachReact"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-sum-above-one-hard",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/approachReact": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-approach-react",
+        "pointer": "/levels/hard/approachReact"
+      }
+    },
+    {
+      "id": "director-ai-approach-react-all-zero-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/approachReact": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

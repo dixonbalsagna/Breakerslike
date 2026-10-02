@@ -177,6 +177,8 @@ static func _flags(S: SimState, ctx: Dictionary, A, D) -> void:
 	ctx.defQueued = not dq.is_empty() or (S.T - D.lastAtkT) * TICKS_PER_SEC <= DEF_QUEUED_TICKS
 	if D.stunTicks > 0 and DirInterrupt.on():
 		ctx.defQueued = false   # step 3: a staggered fighter is not pressing, whatever waits in its queue
+	if DirExchange.planMeet:
+		ctx.defQueued = true   # the meeting after an answered taunt: both rushed in, so the rival is pressing too
 	var sp: float = SimDetMath.hypot(D.vx, D.vy)
 	var top: float = 430.0 * D.spd * (1.0 + D.ld.speed * (D.tier - 1.0))
 	var away: bool = D.vx * SimMathx.jsign(SimWrap.sdx(A.x, D.x)) > 0.0
@@ -238,7 +240,7 @@ static func _select(S: SimState, sel: Dictionary, ctx: Dictionary) -> String:
 				return sel.ifBelow
 			return sel["else"]
 		"bands":
-			var p2: float = _adjust(_linear(sel.p, ctx), ctx, "attacker")
+			var p2: float = _adjust(_linear(sel.p, ctx), ctx, "attacker") - DirExchange.planMeetEdge
 			var r2: float = S.rng.next()
 			if r2 < p2 + float(sel.below.offset):
 				return sel.below.branch

@@ -49,7 +49,12 @@ static func log(S: SimState, f, weight: int, family: int) -> void:
 		tilt = [[8, 1, 2], [7, 0, 3], [6, 5, 4]][1 - ay][ax + 1] if not (ax == 0 and ay == 0) else 0
 	var n: int = f.act.dirI[COUNT]
 	var rhythm: int = PLAIN
-	if _timed(S, f):
+	var timed: bool = _timed(S, f)
+	# The flow count (agency-pass.md section 2): a timed press adds 1, up to FLOW_MAX; a press off the beat sets it back
+	# to 0 (and so do FLOW_LIFE ticks without a press: tick). Nothing reads it yet but the HUD and QA.
+	if DirInterrupt.on():
+		SimAct.setFlow(S, f, mini(FLOW_MAX, f.act.flow + 1) if timed else 0)
+	if timed:
 		rhythm = TIMED
 	elif n >= 2 and S.tick - f.act.dirI[T0 + (n - 2) % RING] <= MASH_TICKS:
 		rhythm = MASHED
@@ -65,13 +70,39 @@ static func log(S: SimState, f, weight: int, family: int) -> void:
 	f.act.dirI[COUNT] = n + 1
 
 
+const FLOW_MAX: int = 5     # the flow count's ceiling
+const FLOW_LIFE: int = 90   # ticks without a press after which it lapses
+
+
+## Once a live tick: a fighter's flow lapses FLOW_LIFE ticks after his last press.
+static func tick(S: SimState) -> void:
+	for f in S.fighters:
+		if f.act.flow <= 0:
+			continue
+		_size(f)
+		var n: int = f.act.dirI[COUNT]
+		if n == 0 or S.tick - f.act.dirI[T0 + (n - 1) % RING] > FLOW_LIFE:
+			SimAct.setFlow(S, f, 0)
+
+
 ## The layout's hold edge: his newest press was held (a charged blow).
 static func held(f) -> void:
 	_size(f)
 	var n: int = f.act.dirI[COUNT]
 	if n > 0:
 		var k: int = P0 + (n - 1) % RING
-		f.act.dirI[k] = (f.act.dirI[k] & ~(3 << 8)) | (HELD << 8)
+		f.act.dirI[k] = (f.act.dirI[k] & ~(3 << 8)) | (HELD << 8) | SimAct.HEAVY   # held, and the heavy the hold made it
+
+
+## The press he made on that tick was held (a charge from the far band), and is the weight it ended as (a Simple
+## layout's hold turns a light into a heavy on the way).
+static func heldAt(f, tick: int, weight: int) -> void:
+	_size(f)
+	var n: int = f.act.dirI[COUNT]
+	for k in range(n - 1, maxi(-1, n - 1 - RING), -1):
+		if f.act.dirI[T0 + k % RING] == tick:
+			f.act.dirI[P0 + k % RING] = (f.act.dirI[P0 + k % RING] & ~(3 << 8) & ~1) | (HELD << 8) | (weight & 1)
+			return
 
 
 ## True when one of f's own blows lands within TIMED_TICKS of now (the beat list knows every contact tick).

@@ -33,7 +33,15 @@ const LAST_END: int = 16    # how the last launch beat of its exchange ended: EN
 const APPR_LEFT: int = 17  # ticks left of his approach (DirBands): the exchange starts when it reaches 0; 0 when none is on
 const APPR_REQ: int = 18   # ... the press that began it: weight | (entry + 1) << 2 | its opening << 4
 const APPR_TICK: int = 19  # ... and that press's tick (its place in the press log)
-const N: int = 20
+const TAUNT_AGE: int = 20  # ticks his far taunt has played (DirBands); 0 when none is open
+const TAUNT_N: int = 21    # far taunts of his that were ignored since the two last traded blows (the guard against farming)
+const AI_REACT: int = 22   # the AI's chosen answer to the rival's approach or taunt (DirBands.R_*)
+const REACT_AT: int = 23   # ... and the ticks left of its reaction time
+const AI_HOLD: int = 24    # the AI is holding an attack button for a charge: 1 light, 2 heavy
+const GUARD_AT: int = 25   # S.tick of his last fresh guard press (two within the lockout's length start the lockout)
+const BAND: int = 26       # the range band the pair is in, plus 1 (DirBands; held with hysteresis; 0 before the first tick)
+const N: int = 27
+const END_NONE: int = -1   # LAST_END before any launch beat or launch: the exchange has sent nobody anywhere
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
 const END_STAY: int = 2
@@ -81,6 +89,7 @@ static func _size(f) -> void:
 	if f.act.dirI.size() < N:
 		f.act.dirI.resize(N)
 		f.act.dirI[BLOCKED] = NEVER
+		f.act.dirI[GUARD_AT] = NEVER
 		f.act.dirI[HIT_AT] = NEVER
 		f.act.dirI[REV_TRIED] = -1
 		f.act.dirI[STALE_KEY] = -1
@@ -120,9 +129,11 @@ static func onStart(S: SimState, ex, weight: int, mode: int, entry: int) -> int:
 	si(D, LANDED, 0)
 	si(D, TAKEN, 0)
 	si(A, TAKEN, 0)
+	si(A, TAUNT_N, 0)   # blows are traded: an ignored far taunt pays again
+	si(D, TAUNT_N, 0)
 	var pp: int = DirAlchemy.at(A, DirExchange.planTick if DirExchange.planTick >= 0 else S.tick)
 	si(A, PHRASE_P, pp if pp >= 0 and (pp & 1) == mini(weight, 1) else mini(weight, 1))   # the press log's newest press, when it is this one
-	si(A, LAST_END, END_LAUNCH)
+	si(A, LAST_END, END_NONE)
 	si(D, GUARDED, gi(D, GUARDED) + 1 if ex.sD == 1.0 else 0)
 	si(A, WEIGHT_RUN, gi(A, WEIGHT_RUN) + 1 if gi(A, WEIGHT_KEY) == weight else 1)
 	si(A, WEIGHT_KEY, weight)
@@ -198,6 +209,24 @@ static func _windowBeat(S: SimState, ex, f):
 	return null
 
 
+## True when a strike on f is visibly winding up: the exchange's next strike on him with a perfect-block window lands
+## within the longest wind-up (a heavy's), or a signature aimed at him is in its tell.
+static func _windupShowing(ex, f) -> bool:
+	if ex == null:
+		return false
+	if ex.kind == "sig":
+		return f == ex.D and ex.branch == ""
+	var role: String = "A" if f == ex.A else "D"
+	var longest: float = float(DirData._prof().tempo.get("heavyWindup", 20.0))
+	for b in ex.beats:
+		if b.done or b.op != "strike" or b.args.d != role or b.args.o == null:
+			continue
+		if _window(f, String(b.args.o.get("class", "")), ex.kind == "heavy") < 0.0:
+			continue
+		return (b.t - ex.t) * DirData.TICKS_PER_SEC <= longest + 0.5
+	return false
+
+
 ## A fresh guard press by f. Inside a window, and not locked out, it marks the strike: the block resolves when the
 ## strike lands. Outside a window, or during the lockout, it (re)starts the lockout. The guard itself is unaffected.
 static func guardPress(S: SimState, f) -> bool:
@@ -205,9 +234,15 @@ static func guardPress(S: SimState, f) -> bool:
 		return false
 	var b = _windowBeat(S, S.dirS.ex, f)
 	var assist: bool = SimAct.assisted(f, "perfectBlockAssist")
+	var last: int = gi(f, GUARD_AT)
+	si(f, GUARD_AT, S.tick)
 	if b == null or (S.tick < gi(f, PB_LOCK) and not assist):
-		if not assist:
-			si(f, PB_LOCK, S.tick + int(data().timing.antiMashLockout))
+		# The lockout starts only when the press came during a visible wind-up and missed its window, or when two guard
+		# presses come within the lockout's length of each other (agency-pass.md section 11, 3b). A single press with no
+		# wind-up showing starts nothing: raising a guard as a rival flies in must not cost the perfect block.
+		var lock: int = int(data().timing.antiMashLockout)
+		if not assist and (_windupShowing(S.dirS.ex, f) or S.tick - last <= lock):
+			si(f, PB_LOCK, S.tick + lock)
 		return false
 	if b.op == "beamFire":
 		b.args["perfect"] = true

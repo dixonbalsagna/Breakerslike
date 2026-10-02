@@ -11,7 +11,9 @@
     "sigPick",
     "perfectBlock",
     "level",
-    "levels"
+    "levels",
+    "reactTicks",
+    "answerTicks"
   ],
   "properties": {
     "schema": {
@@ -127,7 +129,12 @@
             "riposte",
             "burstAtLink",
             "launchIntent",
-            "heldHeavy"
+            "heldHeavy",
+            "farTaunt",
+            "farCharge",
+            "farHeavy",
+            "answerTaunt",
+            "approachReact"
           ],
           "properties": {
             "beamAnswer": {
@@ -197,6 +204,41 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "farTaunt": {
+              "description": "The chance it taunts from far off.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "farCharge": {
+              "description": "The chance it holds a charge from far off.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "farHeavy": {
+              "description": "The chance a far press is a heavy.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "answerTaunt": {
+              "description": "The chance it answers a taunt.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "approachReact": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "description": "Three chances for how it reacts to an approach; they sum to at most 1 (the rest: nothing)."
             }
           },
           "additionalProperties": false,
@@ -217,7 +259,12 @@
             "riposte",
             "burstAtLink",
             "launchIntent",
-            "heldHeavy"
+            "heldHeavy",
+            "farTaunt",
+            "farCharge",
+            "farHeavy",
+            "answerTaunt",
+            "approachReact"
           ],
           "properties": {
             "beamAnswer": {
@@ -287,6 +334,41 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "farTaunt": {
+              "description": "The chance it taunts from far off.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "farCharge": {
+              "description": "The chance it holds a charge from far off.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "farHeavy": {
+              "description": "The chance a far press is a heavy.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "answerTaunt": {
+              "description": "The chance it answers a taunt.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "approachReact": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "description": "Three chances for how it reacts to an approach; they sum to at most 1 (the rest: nothing)."
             }
           },
           "additionalProperties": false,
@@ -307,7 +389,12 @@
             "riposte",
             "burstAtLink",
             "launchIntent",
-            "heldHeavy"
+            "heldHeavy",
+            "farTaunt",
+            "farCharge",
+            "farHeavy",
+            "answerTaunt",
+            "approachReact"
           ],
           "properties": {
             "beamAnswer": {
@@ -377,6 +464,41 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "farTaunt": {
+              "description": "The chance it taunts from far off.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "farCharge": {
+              "description": "The chance it holds a charge from far off.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "farHeavy": {
+              "description": "The chance a far press is a heavy.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "answerTaunt": {
+              "description": "The chance it answers a taunt.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "approachReact": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "description": "Three chances for how it reacts to an approach; they sum to at most 1 (the rest: nothing)."
             }
           },
           "additionalProperties": false,
@@ -390,6 +512,16 @@
       "patternProperties": {
         "^_": true
       }
+    },
+    "reactTicks": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Ticks the AI takes to react."
+    },
+    "answerTicks": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Ticks the AI takes to answer."
     }
   },
   "additionalProperties": false,

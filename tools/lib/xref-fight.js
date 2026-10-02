@@ -684,6 +684,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
       }
     }
+    for (const name of order) { const ar = isObj(lv[name]) ? lv[name].approachReact : undefined; if (Array.isArray(ar) && ar.every((x) => typeof x === 'number') && ar.reduce((s2, x) => s2 + x, 0) > 1 + 1e-9) err(AI, `/levels/${name}/approachReact`, 'ai-approach-react', `the three chances sum to ${ar.reduce((s2, x) => s2 + x, 0).toFixed(3)}, more than 1`); }
     const med = isObj(lv.medium) ? lv.medium.beamAnswer : undefined;
     if (typeof dai.beamAnswer === 'number' && typeof med === 'number' && dai.beamAnswer !== med) err(AI, '/beamAnswer', 'ai-level-beam', `beamAnswer ${dai.beamAnswer} differs from the medium level's ${med} (it is kept for readers of the old shape)`, 'warning');
   }
@@ -704,8 +705,9 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const bd = itr.bands;
     if (isObj(bd)) {
       if (typeof bd.closeBh === 'number' && typeof bd.midBh === 'number' && bd.closeBh >= bd.midBh) err(IT, '/bands/closeBh', 'bands-order', `closeBh ${bd.closeBh} is not below midBh ${bd.midBh}, so there would be no mid band`);
+      if (isObj(bd.charge) && isObj(bd.charge.light) && isObj(bd.charge.heavy) && typeof bd.charge.light.holdTicks === 'number' && typeof bd.charge.heavy.holdTicks === 'number' && bd.charge.light.holdTicks >= bd.charge.heavy.holdTicks) err(IT, '/bands/charge/light/holdTicks', 'bands-order', `the light charge's holdTicks ${bd.charge.light.holdTicks} is not below the heavy's ${bd.charge.heavy.holdTicks}`);
       if (typeof bd.engageBh === 'number' && typeof bd.closeBh === 'number' && bd.engageBh > bd.closeBh) err(IT, '/bands/engageBh', 'bands-order', `engageBh ${bd.engageBh} is above closeBh ${bd.closeBh}, so an approach would end outside the close band`);
-      for (const [path, o] of [['lunge', bd.lunge], ['far/light', isObj(bd.far) ? bd.far.light : undefined], ['far/heavy', isObj(bd.far) ? bd.far.heavy : undefined]]) if (isObj(o) && typeof o.minTicks === 'number' && typeof o.maxTicks === 'number' && o.minTicks > o.maxTicks) err(IT, `/bands/${path}/minTicks`, 'bands-order', `minTicks ${o.minTicks} is above maxTicks ${o.maxTicks}`);
+      for (const [path, o] of [['lunge', bd.lunge], ['far/light', isObj(bd.far) ? bd.far.light : undefined], ['far/heavy', isObj(bd.far) ? bd.far.heavy : undefined], ['charge/light', isObj(bd.charge) ? bd.charge.light : undefined], ['charge/heavy', isObj(bd.charge) ? bd.charge.heavy : undefined], ['meet', bd.meet]]) if (isObj(o) && typeof o.minTicks === 'number' && typeof o.maxTicks === 'number' && o.minTicks > o.maxTicks) err(IT, `/bands/${path}/minTicks`, 'bands-order', `minTicks ${o.minTicks} is above maxTicks ${o.maxTicks}`);
     }
     const rv = itr.reversal;
     if (isObj(rv) && typeof rv.kiPatient === 'number' && typeof rv.ki === 'number' && rv.kiPatient > rv.ki) err(IT, '/reversal/kiPatient', 'interrupts-order', `kiPatient ${rv.kiPatient} is above ki ${rv.ki}; patience should be cheaper`);

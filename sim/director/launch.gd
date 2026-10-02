@@ -304,6 +304,8 @@ static func predictFlight(S: SimState, x0: float, y0: float, vx0: float, vy0: fl
 static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, special: bool = false) -> void:
 	var fm: float = plan.fm if plan.has("fm") else 1.0
 	var f: float = force * fm * (1.0 + att.ld.launch * (att.tier - 1.0))   # D1b: ladder.json
+	if S.dirS.ex != null and String(plan.get("name", "")) != "KNOCK BACK":
+		DirInterrupt.si(S.dirS.ex.A, DirInterrupt.LAST_END, DirInterrupt.END_LAUNCH)
 	tgt.state = "launched"
 	tgt.launchBy = att
 	tgt.bounces = 0.0
@@ -396,6 +398,7 @@ static func knock(S: SimState, att, tgt) -> void:
 		tgt.launchT = 1.0          # no travel boost: a knock-back is a short slide, not a flight across the map
 		tgt.vx = s * sp            # ... and its speed is the data's, whatever the tier scaling of a launch
 		tgt.vy = float(kb.skidUy) * sp
+		SimFx.knockback(S, tgt, att, "slideLong", dist, S.tick + int(ceil(2.0 * dist / sp * DirData.TICKS_PER_SEC)))   # the end is an estimate (a steady brake); World's journey decides
 		return
 	var r := SimState.Rush.new()
 	r.px = SimWrap.wrap(tgt.x + s * dist)
@@ -404,6 +407,7 @@ static func knock(S: SimState, att, tgt) -> void:
 	r.py = g2 if slide else SimMathx.jmax(tgt.y, g2)
 	r.end = S.T + float(kb.slideTicks if slide else kb.driftTicks) * SimConst.DT
 	tgt.rush = r
+	SimFx.knockback(S, tgt, att, "slideShort" if slide else "drift", dist, S.tick + int(kb.slideTicks if slide else kb.driftTicks))
 	tgt.vx = 0.0
 	tgt.vy = 0.0
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 300.0, "#ffffff", 0.25, 12.0)
