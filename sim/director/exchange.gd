@@ -277,7 +277,8 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirMelee.opWind(S, ex, a)
 		"press":
 			var who = A if a.who == "A" else D
-			var ender: bool = a.get("queue", false) and DirInterrupt.on() and DirLaunch.data().get("earned", {}).get("enabled", false) and DirInterrupt.gi(who, DirInterrupt.LANDED) >= int(DirLaunch.data().earned.enderAfter)
+			# The AI's ender: a heavy once the string is full. How often it uses an earner is its level's earnerUse (section 13, rule 7).
+			var ender: bool = a.get("queue", false) and DirInterrupt.on() and DirLaunch.data().get("earned", {}).get("enabled", false) and DirInterrupt.gi(who, DirInterrupt.LANDED) >= int(DirLaunch.data().earned.enderAfter) and S.rng.next() < float(DirAI.lv().get("earnerUse", 1.0))
 			if a.get("queue", false) or a.get("blast", false):
 				DirAlchemy.log(S, who, SimAct.HEAVY if (a.get("blast", false) or ender) else SimAct.LIGHT, 1 if a.get("blast", false) else who.act.mode)
 			if a.get("sig", false):
@@ -402,6 +403,33 @@ static func chain(S: SimState, ex) -> void:
 	DirInterrupt.onChainLink(S, ex)   # step 3: the defender's burst at its link (the AI, the Simple layout's autoBurst)
 
 
+## A blur always closes (agency-pass.md section 13, rule 2). True when the chain window has just lapsed with no link
+## taken and the string stands at enderAfter landed strikes or more with both fighters still in reach.
+static func _blurDue(S: SimState, ex) -> bool:
+	var bl: Dictionary = DirLaunch.data().get("blur", {})
+	if bl.is_empty() or not DirInterrupt.on() or ex.kind == "sig" or ex.cancel or S.game.ko != null or finisherPlanned(ex):
+		return false
+	var A = ex.A
+	if A.state != "locked" or A.stunTicks > 0 or ex.D.state == "launched":
+		return false
+	return DirInterrupt.gi(A, DirInterrupt.LAST_END) == DirInterrupt.END_STAY and DirInterrupt.gi(A, DirInterrupt.LANDED) >= int(bl.enderAfter)
+
+
+## The blur's own ender: one more link the player did not press and does not pay for. Its launch beat is the knock-back
+## (DirMelee.launchBeat: a light after enderAfter landed strikes).
+static func _blurEnder(S: SimState, ex) -> void:
+	ex.ext = null
+	ex.combo += 1.0
+	DirInterrupt.si(ex.A, DirInterrupt.PHRASE_P, SimAct.LIGHT)
+	SimEvents.feed(S, ex.A.name + " BLUR CLOSES", "no press came: the blur plays its ender")
+	var chk = null
+	if planCheck.is_valid():
+		chk = _planByCode(S, ex, "chain")
+	DirData.planChain(ex)
+	if chk != null:
+		planCheck.call(chk, ex, S.rng.a, "chain")
+
+
 static func endEx(S: SimState, ex) -> void:
 	if ex.A.state == "locked":
 		ex.A.state = "free"
@@ -485,6 +513,8 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 				var lp: int = DirAlchemy.at(A, int(rq[3]))
 				DirInterrupt.si(A, DirInterrupt.PHRASE_P, lp if lp >= 0 and (lp & 1) == mini(int(rq[0]), 1) else mini(int(rq[0]), 1))   # the link's press, for the earned launch
 			chain(S, ex)
+	elif ex.ext != null and _blurDue(S, ex):
+		_blurEnder(S, ex)   # the window lapsed unpressed after a blur's four landed strikes: it plays its own ender
 	var pending: bool = false
 	for b in ex.beats:
 		if not b.done:

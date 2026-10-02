@@ -678,7 +678,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const lv = isObj(dai.levels) ? dai.levels : {};
     if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
     const order = ['easy', 'medium', 'hard'];
-    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy']) {
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse']) {
       for (let i = 1; i < order.length; i++) {
         const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');

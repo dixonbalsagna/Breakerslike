@@ -54,12 +54,19 @@
     "driftTicks": 20,
     "chain": false,
     "slideUnderBh": 4,
-    "slideTicks": 18
+    "slideTicks": 18,
+    "wear": 0.5,
+    "impactPerSpeed": 0.018
   },
   "earned": {
     "enabled": true,
     "enderAfter": 4,
     "cleanTaken": 1,
     "forceMul": 1.6
+  },
+  "blur": {
+    "enderAfter": 4,
+    "enderDist": 0.6,
+    "strikeMul": 0.8
   }
 }

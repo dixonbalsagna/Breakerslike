@@ -295,6 +295,12 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 	var brokenBefore: int = _broken(d)
 	if dmg > 0.0:
 		DirInterrupt.si(d, DirInterrupt.HIT_AT, S.tick)
+		# Mashed lights do blur.strikeMul of a light each (section 13, rule 5): the blow of a light press that was mashed.
+		var bl: Dictionary = DirLaunch.data().get("blur", {})
+		if not bl.is_empty() and DirInterrupt.on():
+			var pp: int = DirLaunch.phrase(S, ex, a)
+			if pp >= 0 and (pp & 1) == SimAct.LIGHT and ((pp >> 8) & 3) == DirAlchemy.MASHED:
+				dmg *= float(bl.strikeMul)
 	SimDamage.hit(S, ex, a, d, dmg, o)
 	if dmg > 0.0 and not o.get("ignoreStance", false) and (ex.sD if d == ex.D else ex.sA) == 1.0:
 		DirInterrupt.onBlock(S, ex, d)   # a normal block: the reversal's window
@@ -328,6 +334,20 @@ static func _breakChapter(S: SimState, ex, a, d) -> void:
 	DirExchange.schedule(ex, ex.t + BREAK_LAUNCH_AT, "breakLaunch", {"w": "A" if a == ex.A else "D", "force": BREAK_FORCE})
 
 
+## A knock-back is a decisive exchange (agency-pass.md section 13, rule 1): being driven back means he lost it. It
+## counts for the brink's set-up and the finisher as a launch does. The kind is the exchange's own clause when it has
+## one (a clash won, a guard break, a charge interrupt), and otherwise knockback.
+static func _knockDecisive(S: SimState, ex, att, tgt) -> void:
+	var why: String = "knockback"
+	if ex.tag.begins_with("HEAVY CLASH"):
+		why = "clash"
+	elif ex.tag == "GUARD BREAK":
+		why = "guard_break"
+	elif ex.tag == "CHARGE INTERRUPT":
+		why = "interrupt"
+	DirExchange.decisive(S, ex, att, tgt, why)
+
+
 ## longOnly: a break or finisher launch, chosen among the long-haul candidates only (no "no launch").
 ## args (the launch beat's own): "ends" and "sends" are Combat's hooks (alchemist-content.md): a piece that ends "level"
 ## never sends the rival away, and "sends" keeps only the launch candidates in that direction.
@@ -343,11 +363,17 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 		why = DirLaunch.earned(S, ex, att, tgt) if ends != "level" else ""
 		if why == "":
 			var heavy: bool = DirLaunch.heavyBlow(S, ex, att) and ends != "level"
-			DirInterrupt.si(ex.A, DirInterrupt.LAST_END, DirInterrupt.END_KNOCK if heavy else DirInterrupt.END_STAY)
-			SimFx.launchPlan(S, att, tgt, "", "KNOCK BACK" if heavy else "STAY")
-			if heavy:
-				DirLaunch.knock(S, att, tgt)
-				SimEvents.feed(S, "KNOCK BACK", "a heavy, but no launch was earned")
+			# A blur always closes (section 13): the light that follows enderAfter landed strikes is the blur's own ender,
+			# a knock-back the player did not have to earn, at enderDist of the distance. Never a launch.
+			var bl: Dictionary = DirLaunch.data().get("blur", {})
+			var ender: bool = not heavy and ends != "level" and not bl.is_empty() and DirInterrupt.gi(att, DirInterrupt.LANDED) - 1 >= int(bl.enderAfter)
+			var sent: bool = heavy or ender
+			DirInterrupt.si(ex.A, DirInterrupt.LAST_END, DirInterrupt.END_KNOCK if sent else DirInterrupt.END_STAY)
+			SimFx.launchPlan(S, att, tgt, "", "KNOCK BACK" if sent else "STAY")
+			if sent:
+				DirLaunch.knock(S, att, tgt, 1.0 if heavy else float(bl.enderDist))
+				SimEvents.feed(S, "KNOCK BACK" if heavy else "BLUR ENDER", "a heavy, but no launch was earned" if heavy else "the light after " + str(DirInterrupt.gi(att, DirInterrupt.LANDED) - 1) + " landed strikes: the blur closes with its own knock-back")
+				_knockDecisive(S, ex, att, tgt)
 			else:
 				SimEvents.feed(S, "STAYS IN REACH", "a light: the brawl goes on")
 			return
@@ -370,9 +396,11 @@ static func launchBeat(S: SimState, ex, att, tgt, force: float, longOnly: bool =
 		else:
 			DirLaunch.knock(S, att, tgt)
 		SimEvents.feed(S, "KNOCK BACK", "  |  ".join(parts))
-		# A shove is decisive only when the exchange meets another clause: a heavy clash won, a GUARD BREAK, or a
-		# CHARGE INTERRUPT (it stops a fill).
-		if ex.tag.begins_with("HEAVY CLASH") or ex.tag == "GUARD BREAK" or ex.tag == "CHARGE INTERRUPT":
+		if not DirData.contact().is_empty():
+			_knockDecisive(S, ex, att, tgt)
+		# In the old profiles a shove is decisive only when the exchange meets another clause: a heavy clash won, a
+		# GUARD BREAK, or a CHARGE INTERRUPT (it stops a fill).
+		elif ex.tag.begins_with("HEAVY CLASH") or ex.tag == "GUARD BREAK" or ex.tag == "CHARGE INTERRUPT":
 			DirExchange.decisive(S, ex, att, tgt, "clash" if ex.tag.begins_with("HEAVY CLASH") else ("guard_break" if ex.tag == "GUARD BREAK" else "interrupt"))
 		return
 	DirLaunch.doLaunch(S, att, tgt, r.best, force, longOnly)

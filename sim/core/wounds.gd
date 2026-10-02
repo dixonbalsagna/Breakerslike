@@ -271,7 +271,7 @@ static func gateIntent(f, i: SimIntent) -> void:
 ## "" has no Rally.
 ## The mend (f.wd.rallyWear, 89 wear: battered, one good hit from breaking again) and the cooldown (f.wd.rallyCool, 15 s,
 ## Orb's looser limit) are data.
-const BY_HAND: Array = ["launch", "clash", "guard_break", "interrupt"]   # decisive kinds won without a signature
+const BY_HAND: Array = ["launch", "clash", "guard_break", "interrupt", "knockback"]   # decisive kinds won without a signature (a knock-back: agency-pass.md section 13)
 const RALLY_ORDER: Array = [CORE, HEAD, ARMS, LEGS]
 const SPITE_ORDER: Array = [ARMS, CORE, HEAD, LEGS]
 

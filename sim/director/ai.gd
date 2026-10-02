@@ -202,7 +202,7 @@ static func aiInput(S: SimState, f) -> void:
 				if u < ft and not urge:
 					pass   # a tap: the taunt
 				elif urge or u < ft + float(lv().get("farCharge", 1.0)):
-					if i.heavy and S.rng.next() >= float(lv().get("farHeavy", 1.0)):
+					if i.heavy and S.rng.next() >= float(lv().get("farHeavy", 1.0)) * float(lv().get("earnerUse", 1.0)):   # a heavy charge is an earner too
 						i.heavy = false   # the heavy charge is slow and committed: more often it charges light
 						i.light = true
 					DirInterrupt.si(f, DirInterrupt.AI_HOLD, 2 if i.heavy else 1)   # it holds the button: the charge

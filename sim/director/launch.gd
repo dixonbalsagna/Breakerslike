@@ -383,17 +383,19 @@ static func heavyBlow(S: SimState, ex, att) -> bool:
 ##  - On the ground, under slideUnderBh: he slides back upright. The director carries him that far along the ground
 ##    over slideTicks. It is not a launch: no journey, no trench.
 ##  - In the air, over the sea, or with groundMode "shove": he is carried back that far, upright, over driftTicks.
-static func knock(S: SimState, att, tgt) -> void:
+## mul scales the distance (the plain blur's ender goes blur.enderDist of it). A knock-back the director carries pays
+## its wear here (knockBack.wear of a launch's impact at the speed he is carried); a skid's wear is the journey's.
+static func knock(S: SimState, att, tgt, mul: float = 1.0) -> void:
 	var kb: Dictionary = data().knockBack
 	var ti: int = clampi(int(att.tier) - 1, 0, 3)
 	var s: float = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(att.x, tgt.x)), att.face)
 	var g: float = WorldTerrain.groundY(S, tgt.x)
-	var dist: float = float(kb.distBh[ti]) * BH
+	var dist: float = float(kb.distBh[ti]) * BH * mul
 	var ground: bool = String(kb.groundMode) == "skid" and tgt.y - g <= float(kb.groundWithinBh) * BH and not WorldTerrain.seaAt(S, tgt.x)
 	if ground:
 		SimFx.cue(S, tgt, "slide_brace", "", "")   # Combat's cue for the slide on the feet
-	if ground and float(kb.distBh[ti]) >= float(kb.get("slideUnderBh", 0.0)):
-		var sp: float = float(kb.skidSpeed[ti])
+	if ground and dist >= float(kb.get("slideUnderBh", 0.0)) * BH:
+		var sp: float = float(kb.skidSpeed[ti]) * sqrt(mul)   # a skid's length goes with the square of its speed
 		doLaunch(S, att, tgt, {"name": "KNOCK BACK", "ux": s, "uy": float(kb.skidUy), "slide": "feet", "dist": dist}, sp, false)
 		tgt.launchT = 1.0          # no travel boost: a knock-back is a short slide, not a flight across the map
 		tgt.vx = s * sp            # ... and its speed is the data's, whatever the tier scaling of a launch
@@ -405,12 +407,17 @@ static func knock(S: SimState, att, tgt) -> void:
 	var g2: float = WorldTerrain.groundY(S, r.px)
 	var slide: bool = ground and not WorldTerrain.seaAt(S, r.px)   # the upright slide ends on the ground; a drift keeps its height
 	r.py = g2 if slide else SimMathx.jmax(tgt.y, g2)
-	r.end = S.T + float(kb.slideTicks if slide else kb.driftTicks) * SimConst.DT
+	var ticks: float = float(kb.slideTicks if slide else kb.driftTicks)
+	r.end = S.T + ticks * SimConst.DT
 	tgt.rush = r
-	SimFx.knockback(S, tgt, att, "slideShort" if slide else "drift", dist, S.tick + int(kb.slideTicks if slide else kb.driftTicks))
+	SimFx.knockback(S, tgt, att, "slideShort" if slide else "drift", dist, S.tick + int(ticks))
 	tgt.vx = 0.0
 	tgt.vy = 0.0
 	SimFx.ring(S, tgt.x, tgt.y + 34.0, 300.0, "#ffffff", 0.25, 12.0)
+	# A knock-back hurts (agency-pass.md section 13, rule 4): half of what a launch's impact costs at that speed.
+	var wear: float = float(kb.get("wear", 0.0)) * float(kb.get("impactPerSpeed", 0.0)) * dist / (ticks * SimConst.DT)
+	if wear > 0.0:
+		SimDamage.hurt(S, tgt, wear, att)
 
 
 ## No launch in the old profiles: the strike shoves the (locked) target back along the attacker's facing.

@@ -10,7 +10,8 @@
     "uppercut",
     "craterSlam",
     "knockBack",
-    "earned"
+    "earned",
+    "blur"
   ],
   "properties": {
     "schema": {
@@ -187,7 +188,9 @@
         "driftTicks",
         "chain",
         "slideUnderBh",
-        "slideTicks"
+        "slideTicks",
+        "wear",
+        "impactPerSpeed"
       ],
       "properties": {
         "score": {
@@ -249,6 +252,16 @@
           "type": "integer",
           "minimum": 1,
           "description": "The ticks the slide lasts."
+        },
+        "wear": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A knock-back hurts (agency-pass.md section 13, rule 4): it costs this share of a launch's impact at the speed he is carried."
+        },
+        "impactPerSpeed": {
+          "type": "number",
+          "minimum": 0,
+          "description": "World's single-impact figure: damage per unit a second of the first contact (sim/world/contact.gd)."
         }
       },
       "description": "The knock-back: a short send that is not a launch across the map (agency-pass.md section 3).",
@@ -287,6 +300,38 @@
         }
       },
       "description": "The earned launch (agency-pass.md section 3): a launch beat launches only when earned.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "blur": {
+      "type": "object",
+      "required": [
+        "enderAfter",
+        "enderDist",
+        "strikeMul"
+      ],
+      "properties": {
+        "enderAfter": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The light that follows this many landed strikes of the string is the blur's own ender, a knock-back and never a launch."
+        },
+        "enderDist": {
+          "description": "The share of the tier's knock-back distance the plain blur's ender goes.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "strikeMul": {
+          "description": "The damage multiplier of a blow from a mashed light press.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "The blur (agency-pass.md section 13): a mashed light string always closes with a knock-back.",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

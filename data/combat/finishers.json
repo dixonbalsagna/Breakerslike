@@ -11,7 +11,7 @@
   "contest": {
     "base": 0.30, "tiltAfter": 480, "tiltPerMinute": 0.10, "floor": 0.0,
     "rallyPenalty": 0.10,
-    "brinkSetups": 2,
+    "brinkSetups": 1,
     "timeCapAt": 660,
     "_timeCapAt": "seconds (11:00): the director's stand-in for the time-cap event. From then on every decisive win against a fighter on the brink is a finisher, with no set-up needed. 0 or absent is off. The full event (both on the brink, no Rallies, the 60 s winner rule) is Game Design's and Simulation's",
     "_brinkSetups": "the brink chapter (spec-wounds.md section 1b): decisive wins the rival needs against a fighter on the brink before it is open to a finisher. The exchange that causes the brink is never one. Game Design: 2 if brink to KO stays under a 45 s median",

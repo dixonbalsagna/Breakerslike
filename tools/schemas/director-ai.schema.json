@@ -134,7 +134,8 @@
             "farCharge",
             "farHeavy",
             "answerTaunt",
-            "approachReact"
+            "approachReact",
+            "earnerUse"
           ],
           "properties": {
             "beamAnswer": {
@@ -239,6 +240,12 @@
                 "maximum": 1
               },
               "description": "Three chances for how it reacts to an approach; they sum to at most 1 (the rest: nothing)."
+            },
+            "earnerUse": {
+              "description": "How often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the far heavy that stays a heavy charge.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,
@@ -264,7 +271,8 @@
             "farCharge",
             "farHeavy",
             "answerTaunt",
-            "approachReact"
+            "approachReact",
+            "earnerUse"
           ],
           "properties": {
             "beamAnswer": {
@@ -369,6 +377,12 @@
                 "maximum": 1
               },
               "description": "Three chances for how it reacts to an approach; they sum to at most 1 (the rest: nothing)."
+            },
+            "earnerUse": {
+              "description": "How often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the far heavy that stays a heavy charge.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,
@@ -394,7 +408,8 @@
             "farCharge",
             "farHeavy",
             "answerTaunt",
-            "approachReact"
+            "approachReact",
+            "earnerUse"
           ],
           "properties": {
             "beamAnswer": {
@@ -499,6 +514,12 @@
                 "maximum": 1
               },
               "description": "Three chances for how it reacts to an approach; they sum to at most 1 (the rest: nothing)."
+            },
+            "earnerUse": {
+              "description": "How often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the far heavy that stays a heavy charge.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,

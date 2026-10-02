@@ -46,8 +46,17 @@
     "chain": false,
     "slideUnderBh": 4.0,
     "slideTicks": 18,
+    "wear": 0.5,
+    "impactPerSpeed": 0.018,
+    "_wear": "A knock-back hurts (agency-pass.md section 13, rule 4): a knock-back the director carries (the upright slide, the drift in the air) costs 'wear' of a launch's impact at the speed he is carried: wear x impactPerSpeed x distance over its time. impactPerSpeed is World's single-impact figure (damage per unit a second of the first contact, sim/world/contact.gd). The skid of 4 bh and over is a journey and pays World's own slide wear",
     "_slide": "slideUnderBh: a ground knock-back shorter than this is the upright slide: the director carries him back distBh along the ground over slideTicks (Combat's 18), with no launch, no journey and no trench. At this length and over it is the skid: a launch whose plan carries slide 'feet' and the distance in units, for World's slide on the feet",
     "_note": "The knock-back: a short send that is not a launch across the map (agency-pass.md section 3; Combat's brawl-endings-and-trades.md section 2). score: its base score against the launch candidates (it was the planner's NONE, 25). distBh: how far it sends the rival, in body heights, by the striker's tier (Combat's proposal). On the ground (within groundWithinBh of it, not over the sea) with groundMode 'skid' it is a low send with no travel boost that the ground-contact model skids: skidSpeed is its speed by tier, in units a second, sized to slide about distBh on open ground, and skidUy its small lift. Otherwise ('shove', or in the air: the drift) the rival is carried back distBh over driftTicks and stays upright. chain: whether a chain window may open after it"
+  },
+  "blur": {
+    "enderAfter": 4,
+    "enderDist": 0.6,
+    "strikeMul": 0.8,
+    "_note": "A blur always closes (agency-pass.md section 13). enderAfter: the light that follows this many landed strikes of the string is the blur's own ender, a knock-back and never a launch; if no press comes, the chain window's end plays it, free. enderDist: the share of the tier's knock-back distance the plain blur's ender goes. strikeMul: the damage of a blow from a mashed light press (three presses inside 20 ticks)"
   },
   "earned": {
     "enabled": true,

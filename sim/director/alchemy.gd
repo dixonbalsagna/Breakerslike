@@ -62,8 +62,10 @@ static func log(S: SimState, f, weight: int, family: int) -> void:
 	# intent is a number: the chance its heavy is thrown to launch (ai.json launchIntent), one draw per heavy press.
 	var intent: bool = tilt != 0
 	if f.ai != null:
-		intent = weight == SimAct.HEAVY and S.rng.next() < float(DirAI.lv().get("launchIntent", 0.0))
-		if weight == SimAct.HEAVY and S.rng.next() < float(DirAI.lv().get("heldHeavy", 0.0)):
+		# How often it uses an earner at all is its level's earnerUse (agency-pass.md section 13, rule 7).
+		var use: float = float(DirAI.lv().get("earnerUse", 1.0))
+		intent = weight == SimAct.HEAVY and S.rng.next() < float(DirAI.lv().get("launchIntent", 0.0)) * use
+		if weight == SimAct.HEAVY and S.rng.next() < float(DirAI.lv().get("heldHeavy", 0.0)) * use:
 			rhythm = HELD   # ... and the chance it charges the heavy (heldHeavy)
 	f.act.dirI[P0 + n % RING] = weight | (family << 1) | (dir << 2) | (tilt << 4) | (rhythm << 8) | (INTENT if intent else 0)
 	f.act.dirI[T0 + n % RING] = S.tick

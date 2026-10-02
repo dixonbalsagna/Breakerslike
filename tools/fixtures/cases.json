@@ -27184,7 +27184,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27219,7 +27221,9 @@
               "chain": false,
               "push": 1,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27290,7 +27294,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27326,7 +27332,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27363,7 +27371,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27400,7 +27410,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27437,7 +27449,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27474,7 +27488,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27506,7 +27522,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27543,7 +27561,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27580,7 +27600,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27617,7 +27639,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27654,7 +27678,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27688,7 +27714,9 @@
               "driftTicks": 20,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27725,7 +27753,9 @@
               "driftTicks": 20.5,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27762,7 +27792,9 @@
               "driftTicks": 0,
               "chain": false,
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -27799,7 +27831,9 @@
               "driftTicks": 20,
               "chain": "no",
               "slideUnderBh": 4,
-              "slideTicks": 18
+              "slideTicks": 18,
+              "wear": 0.5,
+              "impactPerSpeed": 0.018
             }
           }
         }
@@ -34217,6 +34251,471 @@
                 -6
               ]
             }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-wear-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/knockBack/wear"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockBack"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-impact-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/knockBack/impactPerSpeed"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/knockBack"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-wear-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/wear": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/wear"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-wear-zero-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/wear": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-knock-back-wear-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/wear": "half"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/wear"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-impact-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/impactPerSpeed": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/knockBack/impactPerSpeed"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-impact-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/impactPerSpeed": "low"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/knockBack/impactPerSpeed"
+      }
+    },
+    {
+      "id": "director-launch-knock-back-wear-note-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/knockBack/_wear": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-blur-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/blur"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-launch-blur-valid",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur": {
+              "enderAfter": 4,
+              "enderDist": 0.6,
+              "strikeMul": 0.8
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-blur-note-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-blur-unknown-key",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/spin": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blur/spin"
+      }
+    },
+    {
+      "id": "director-launch-blur-ender-after-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/blur/enderAfter"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blur"
+      }
+    },
+    {
+      "id": "director-launch-blur-ender-dist-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/blur/enderDist"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blur"
+      }
+    },
+    {
+      "id": "director-launch-blur-strike-mul-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/blur/strikeMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blur"
+      }
+    },
+    {
+      "id": "director-launch-blur-ender-after-zero",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/enderAfter": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blur/enderAfter"
+      }
+    },
+    {
+      "id": "director-launch-blur-ender-after-integer",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/enderAfter": 4.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blur/enderAfter"
+      }
+    },
+    {
+      "id": "director-launch-blur-ender-dist-range",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/enderDist": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/blur/enderDist"
+      }
+    },
+    {
+      "id": "director-launch-blur-ender-dist-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/enderDist": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blur/enderDist"
+      }
+    },
+    {
+      "id": "director-launch-blur-strike-mul-range",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/strikeMul": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/blur/strikeMul"
+      }
+    },
+    {
+      "id": "director-launch-blur-edges-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/enderDist": 1,
+            "/blur/strikeMul": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-earner-use-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/earnerUse"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-hard-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/earnerUse"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/earnerUse": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/medium/earnerUse"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/earnerUse": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/easy/earnerUse"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/earnerUse": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/earnerUse"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/earnerUse": 0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/earnerUse"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-medium-order-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/earnerUse": 0.9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/medium/earnerUse"
+      }
+    },
+    {
+      "id": "director-ai-earner-use-equal-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/earnerUse": 0.6
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-notes-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_earnerUse": "comment",
+            "/levels/_medium": "comment"
           }
         }
       ],
