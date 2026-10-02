@@ -16,6 +16,7 @@ Owner: Narrative and Fighter Identity. Version 2, 2026-10-01. For Orb.
 | `cyborg.csv` | Cyborg | 160 |
 | `kai.csv` | KAI (the prototype Hero, a placeholder) | 130 |
 | `vorr.csv` | VORR (the prototype villain, a placeholder) | 131 |
+| `staredown-last-stand.csv` | Extra staredown lines (said while both fighters stand, about 2.4 s, one short line each) and last-stand lines (when the free signature turns on, and when its window runs out unused), all six fighters. Same columns. The last-stand lines already in each fighter's file are the ones the game uses today; these are alternates. | 64 |
 | `known-tells.md` | The patterns you called out as machine-written, with examples. Read it first. | |
 | `batch-01-protagonist.csv` | Your earlier batch. **Untouched.** If you already edited it, those edits still count; the new Protagonist file keeps the same lines. | |
 
