@@ -27,7 +27,7 @@ func _init() -> void:
 
 func _match(seed: int, every: int) -> void:
 	var S := SimCore.createSim()
-	SimCore.newMatch(S, seed)
+	SimCore.newMatch(S, seed, {}, {"intro": false})
 	var base0 := S.base.duplicate()
 	var steps: int = 0
 	var worst := {}

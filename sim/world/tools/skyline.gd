@@ -19,7 +19,7 @@ func _init() -> void:
 		return
 	var d: Dictionary = WorldSettle.data()
 	var S := SimCore.createSim()
-	SimCore.newMatch(S, 1)
+	SimCore.newMatch(S, 1, {}, {"intro": false})
 	var all: Array = []
 	var total: int = 0
 	var total_pop: int = 0

@@ -35,7 +35,7 @@ func check(ok: bool, what: String) -> void:
 
 func fresh(seed: int = 1) -> SimState:
 	var S := SimCore.createSim()
-	SimCore.newMatch(S, seed)
+	SimCore.newMatch(S, seed, {}, {"intro": false})   # a flat start: the probe assumes untouched ground at tick 0 (the intro digs two entrance craters)
 	S.out.fx.clear()
 	return S
 
