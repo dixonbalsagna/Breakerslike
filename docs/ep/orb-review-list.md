@@ -61,3 +61,5 @@ Written by the EP on 2026-10-01. Paths are from the project folder. The fuller s
 
 - The sky reaction at tiers 3 and 4 (the "strange aura" Orb saw): fixed to a gap in the clouds with a lit edge. It is now subtle, and shows nothing under clear sky. Before and after: docs/rendering/img/sky-gb002-high-before.png and sky-gb002-high-after.png. Decide whether it is now too faint (a stronger lit edge, or clouds gathering round the fighter).
 - Cyborg directions and the refine sheets: art/concepts/refine/README.md.
+- Player agency (from the two-player playtest): docs/design/agency-pass.md (rules and two pitches), docs/controls/agency-input.md, docs/director/agency-evidence.md, docs/combat/alchemist-content.md.
+- Taunt lines that stay fresh: docs/narrative/taunt-system.md (five questions for Orb in section 12) and 160 draft lines to edit in docs/narrative/voice-lab/taunts-draft.csv.
