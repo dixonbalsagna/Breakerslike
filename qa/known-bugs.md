@@ -153,7 +153,7 @@ Separate from the prototype register above (and from its test). IDs are `GB-nnn`
 **Effect.** Any session where F9 is pressed an even number of times after the first press (detach, attach) ends grey for good; restart is the only way out. Not a sim bug: determinism and the baseline are unaffected.
 **Test to add once fixed.** A Godot scene test: attach, detach, attach, then assert `panes.size() == 2` and that pane 0's parent is `viewports[0]`.
 
-### GB-002: A pale vertical "aura" in the far sky when flying high (tier 3 and 4 sky reaction) (fixed, 8fd6aba)
+### GB-002: A pale vertical "aura" in the far sky when flying high (tier 3 and 4 sky reaction) (reopened 2026-10-02)
 
 **Reported by:** Orb, playing the Godot game, 2026-10-02 (two screenshots: a soft blue-white column near the horizon, off to one side of the fighter, with vertical streaks; it moves with the fighters; both fighters at tier 4).
 **Verdict:** not a rendering fault: it is the designed sky reaction (`docs/design/rule-of-cool.md` feature 12), which reads as a smear.
@@ -161,6 +161,7 @@ Separate from the prototype register above (and from its test). IDs are `GB-nnn`
 **Not QA's to change** (Rendering, Camera and VFX own the look; Game Design the feature). Options for them: shrink or soften the opening (`SKY_REACT_R`, the strength curve), show it only while the fighter is on screen, give it a visible cause (a ring or the cloud edge lit more than the pale fill), or put it behind the reduced-motion `sky_calm` option and a settings toggle.
 **Effect.** Looks like a bug to a first-time player; no effect on the sim or the baselines.
 **Status: fixed in 8fd6aba** (Rendering): the sky reaction is a cloud gap with a lit edge, no pale fill, and only for a fighter on screen. Not re-verified by QA in play.
+**Reopened 2026-10-02 (Orb, two screenshots on the live web build, both fighters tier 4).** The cloud gap with a lit edge still reads as a big glowing texture over each fighter in the clouds at high altitude (top right in the first shot, top left in the second), and as the fighter moves left and right the clouds shimmer. So the fix removed the pale pillar but not the complaint: a gap and lit rim that follow a fighter's direction across the sky are the problem, not the fill. Not verified in the current source (`render/shaders/sky.gdshader` at 8fd6aba still lights the clouds' edge round the gap, `tint` and `rim`); Orb's build may or may not include 8fd6aba. Options for the owners: drop the reaction (the feature is rule-of-cool 12 and was never in Orb's pitch list), make it a still, world-anchored effect that does not track a fighter (a fixed cloud parting that does not move with him), or fade it out above a height where it only shows as a patch; if it stays, put it behind a setting and `sky_calm`. Status: open, with Rendering and Game Design.
 
 ### Open observations from Orb's two-player playtest (2026-10-02; direction in `docs/ep/vision.md`, last section)
 
