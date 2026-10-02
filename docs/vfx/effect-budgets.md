@@ -72,3 +72,7 @@ Blast: spawns into the debris pool only (no draw call), at most 18 chunks, 20 du
 ## Energy blasts (2026-10-03)
 
 One MultiMesh, one draw call (the transformation's shader), 224 quads reserved: at most 32 shots (4 quads a bolt, 5 a charged shot), 14 for the hit and trade effects, 16 for the two charges. A miss on the ground spawns into the debris pool (about 8 bits). Counts: none scale with quality except the miss's dust. Not measured: the web build and an old laptop.
+
+## Blast explosions and mines (2026-10-03)
+
+Debris pool only (no draw call): a bolt's explosion about 9 bits, a full charged shot's about 32 plus 8 smouldering jobs; flames capped at 40 alive, sparks at 12 a tick and 100 alive, the pool at 460 (a test fires twenty full bursts in one tick: 292 bits). Quality low about 0.35 of the count, reduced motion half and no ring. Knocked-loose shots: up to six, a smoke puff each tick (every other at low). Mines: 7 to 13 quads each, at most 24 held, in the shots view's one draw (320 quads reserved). Not measured: the web build and an old laptop.

@@ -3,6 +3,8 @@
 //   0 streak: x = half-width at the head (UV.x = 1), y = at the tail; the tail fades
 //   1 ring: x = thickness as a share of the radius; the ring's outer edge is the quad's edge
 //   2 soft disc: x = falloff power (alpha = (1 - r) ^ x)
+//   4 hexagon: x = rim share, y = fill alpha; a regular hexagon with flat top and bottom, its points at the left and right edges of the quad
+//     (so the quad's height is 0.866 of its width), a flat fill and a rim line (the mines' plates)
 //   3 aura: x = lobes (0 none, 1 shoulders, 2 shoulders and a low round crest, 3 shoulders, crest and hips), y = fill alpha; a cel body: a flat fill and a
 //     rim line, every tip round (nothing pointed, nothing flame-shaped)
 // COLOR is the colour, alpha the step. Cel style: hard edges with a one-pixel anti-aliased edge, except the soft discs.
@@ -37,6 +39,14 @@ void fragment() {
 	} else if (v_custom.z < 2.5) {
 		float r = length(p);
 		a = pow(max(1.0 - r, 0.0), max(v_custom.x, 0.1));
+	} else if (v_custom.z > 3.5) {
+		vec2 q = vec2(abs(p.x) * 1.1547005, abs(p.y));
+		float d = max(q.y, q.x * 0.8660254 + q.y * 0.5) - 1.0;
+		float aa = max(fwidth(d), 0.002);
+		float rw = max(v_custom.x, 0.02);
+		float inside = 1.0 - smoothstep(-aa, aa, d);
+		float rim = 1.0 - smoothstep(rw - aa, rw + aa, abs(d + rw * 0.5));
+		a = max(inside * v_custom.y, rim);
 	} else {
 		// Body: an ellipse; shoulders: two round lobes; crest: one low round bump. Smooth union, so no corner anywhere.
 		vec2 q = vec2(abs(p.x), p.y);

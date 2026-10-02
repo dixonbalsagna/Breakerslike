@@ -190,6 +190,7 @@ func _run() -> void:
 	_blast()
 	_pressure()
 	_shots()
+	_explosions()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -2005,6 +2006,201 @@ func _shots() -> void:
 	VfxShots._data = saved
 	_check(fallback, "missing data falls back to the defaults")
 	view.queue_free()
+	SimCore.dispose(S)
+
+
+## Explosions, the knocked-loose look and the mines of concept (Orb, 2026-10-02): flame, sparks, smoke, chunks and a smouldering scorch by
+## the shot's power and where it goes off.
+func _explosions() -> void:
+	print("blast explosions")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f0 = S.fighters[0]
+	var f1 = S.fighters[1]
+	f0.x = plains
+	f0.y = g
+	f1.x = SimWrap.wrap(plains + 2400.0)
+	f1.y = g
+	_check(VfxLook.EXPLOSIONS_DEFAULT and VfxHub.new().explosions_enabled, "on by default")
+	var bh: float = VfxLook.BH
+	var R1: float = VfxExplode.radius_for("bolt", 8.67, 1)
+	var R2: float = VfxExplode.radius_for("arc", 52.8, 1)
+	var Rt: float = VfxExplode.radius_for("charged", 44.0, 1)
+	var R3: float = VfxExplode.radius_for("charged", 66.0, 1)
+	_check(absf(R1 - 0.5 * bh) < 0.01 and absf(R2 - 1.0 * bh) < 0.01 and absf(Rt - 1.5 * bh) < 0.01 and absf(R3 - 2.0 * bh) < 0.01, "Game Design's radii: a bolt 0.5 bh, an arc 1, a tapped charged shot 1.5, a full one 2 (%.0f, %.0f, %.0f, %.0f units)" % [R1, R2, Rt, R3])
+	_check(absf(VfxExplode.radius_for("bolt", 8.0, 3) - 0.625 * bh) < 0.01 and absf(VfxExplode.radius_for("charged", 66.0, 4) - 3.0 * bh) < 0.01, "times 1.25 at the shooter's tier 3 and 1.5 at tier 4")
+	_check(VfxExplode.smoke_s(R1) == 2.0 and absf(VfxExplode.smoke_s(R2) - 3.0) < 0.01 and absf(VfxExplode.smoke_s(Rt) - 4.0) < 0.01 and VfxExplode.smoke_s(R3) == 5.0, "the smoke stays 2, 3, 4 and 5 seconds by size, for show")
+	var kinds_of := func(d: VfxDebris) -> Dictionary:
+		var k: Dictionary = {}
+		for b in d.bits:
+			k[b.kind] = int(k.get(b.kind, 0)) + 1
+		return k
+	var fresh := func() -> VfxDebris:
+		var d := VfxDebris.new()
+		d.reset(6)
+		d.quality = VfxLook.Q_HIGH
+		d.reduced = false
+		return d
+	var d1: VfxDebris = fresh.call()
+	var a1: int = VfxExplode.at(S, d1, plains, g, 0.0, R1, "ground")
+	var d3: VfxDebris = fresh.call()
+	var a3: int = VfxExplode.at(S, d3, plains, g, 0.0, R3, "ground")
+	_check(a1 > 0 and a3 > a1, "more of everything for a charged shot than a bolt (%d, %d bits)" % [a1, a3])
+	var k3: Dictionary = kinds_of.call(d3)
+	_check(k3.has(VfxDebris.FLAME) and k3.has(VfxDebris.EMBER) and k3.has(VfxDebris.PUFF) and k3.has(VfxDebris.CHUNK) and k3.has(VfxDebris.RING), "a ground burst has flame, sparks, smoke, chunks and a ring (%s)" % str(k3))
+	var flat: bool = true
+	for b in d3.bits:
+		if b.kind == VfxDebris.RING and b.mode != 3:
+			flat = false
+	_check(flat, "the ring lies flat on the ground")
+	var falling: bool = true
+	for b in d3.bits:
+		if b.kind == VfxDebris.CHUNK and b.grav <= 0.0:
+			falling = false
+	_check(falling, "the chunks are thrown and fall")
+	_check(d3.jobs.size() > 0 and d3.jobs[0].kind == "smoulder", "the scorch smoulders: %d wisps queued over the next seconds" % d3.jobs.size())
+	var before: int = d3.spawned
+	for k in range(260):
+		S.T += SimConst.DT
+		d3.now = S.T
+		d3.step(S, SimConst.DT)
+	_check(d3.jobs.is_empty() and d3.spawned > before, "they come due and run (%d more bits), then it is over" % (d3.spawned - before))
+	var dfi: VfxDebris = fresh.call()
+	VfxExplode.at(S, dfi, f1.x, g + 40.0, 0.0, R3, "fighter")
+	var kf: Dictionary = kinds_of.call(dfi)
+	_check(kf.has(VfxDebris.FLAME) and not kf.has(VfxDebris.CHUNK) and not kf.has(VfxDebris.RING) and dfi.jobs.is_empty(), "on a fighter: flame, sparks, smoke; no chunks, ring or scorch")
+	var dsp: VfxDebris = fresh.call()
+	VfxExplode.at(S, dsp, f1.x, g + 40.0, 0.0, R3, "fighter", "spark")
+	var ksp: Dictionary = kinds_of.call(dsp)
+	_check(not ksp.has(VfxDebris.FLAME) and ksp.has(VfxDebris.EMBER), "a guard or a deflect: sparks and smoke, no flame")
+	var dwa: VfxDebris = fresh.call()
+	VfxExplode.at(S, dwa, plains, 0.0, 0.0, R3, "water")
+	var kw: Dictionary = kinds_of.call(dwa)
+	_check(not kw.has(VfxDebris.FLAME) and kw.has(VfxDebris.PUFF), "on water: steam, no flame")
+	# Budgets: twenty big bursts in one tick stay under the pool's flame and ember caps.
+	var dbig: VfxDebris = fresh.call()
+	for k in range(20):
+		VfxExplode.at(S, dbig, plains + float(k) * 40.0, g, 0.0, R3, "ground")
+	var kb: Dictionary = kinds_of.call(dbig)
+	_check(int(kb.get(VfxDebris.FLAME, 0)) <= int(VfxExplode.p("flame_cap")) and int(kb.get(VfxDebris.EMBER, 0)) <= VfxLook.EMBER_CAP and dbig.bits.size() <= VfxLook.DEBRIS_CAP, "twenty bursts at once: %d flames (cap %d), %d sparks (cap %d), %d bits (cap %d)" % [int(kb.get(VfxDebris.FLAME, 0)), int(VfxExplode.p("flame_cap")), int(kb.get(VfxDebris.EMBER, 0)), VfxLook.EMBER_CAP, dbig.bits.size(), VfxLook.DEBRIS_CAP])
+	var dlo: VfxDebris = fresh.call()
+	dlo.quality = VfxLook.Q_LOW
+	var alo: int = VfxExplode.at(S, dlo, plains, g, 0.0, R3, "ground")
+	var dre: VfxDebris = fresh.call()
+	dre.reduced = true
+	VfxExplode.at(S, dre, plains, g, 0.0, R3, "ground")
+	var kre: Dictionary = kinds_of.call(dre)
+	_check(alo < a3 and not kre.has(VfxDebris.RING), "thinned at quality low (%d against %d bits); no ring with reduced motion" % [alo, a3])
+	# By events: a missed shot, a hit, a guard, a deflect, a dodge.
+	var ev_end := func(cause: String, kind: String): return VfxMock.ev("shot_end", {"id": 1, "kind": kind, "x": plains + 800.0, "y": g, "z": 0.0, "cause": cause, "actor": 0})
+	var ev_hit := func(outcome: String, kind: String): return VfxMock.ev("shot_hit", {"actor": 0, "victim": 1, "kind": kind, "id": 1, "x": f1.x, "y": g + 40.0, "z": 0.0, "amount": 9.0, "outcome": outcome, "link": 0})
+	var hg := VfxHub.new()
+	hg.reset(S, 6)
+	_tick(S, hg, [ev_end.call("ground", "charged")])
+	var kg: Dictionary = kinds_of.call(hg.debris)
+	_check(hg.shots.explosions == 1 and kg.has(VfxDebris.FLAME) and kg.has(VfxDebris.EMBER), "a shot that misses and meets the ground explodes in flame and sparks (%d explosion)" % hg.shots.explosions)
+	var hh := VfxHub.new()
+	hh.reset(S, 6)
+	_tick(S, hh, [ev_hit.call("hit", "bolt")])
+	_check(hh.shots.explosions == 1 and kinds_of.call(hh.debris).has(VfxDebris.FLAME), "a bolt that hits a fighter bursts into flame")
+	var hq := VfxHub.new()
+	hq.reset(S, 6)
+	_tick(S, hq, [ev_hit.call("guard", "charged")])
+	var kq: Dictionary = kinds_of.call(hq.debris)
+	_check(hq.shots.explosions == 1 and not kq.has(VfxDebris.FLAME) and kq.has(VfxDebris.EMBER), "a guard throws sparks and smoke, not flame")
+	var hd := VfxHub.new()
+	hd.reset(S, 6)
+	_tick(S, hd, [ev_hit.call("dodge", "bolt")])
+	_check(hd.shots.explosions == 0, "a dodge: no explosion at him")
+	var hoff := VfxHub.new()
+	hoff.explosions_enabled = false
+	hoff.reset(S, 6)
+	_tick(S, hoff, [ev_end.call("ground", "charged"), ev_hit.call("hit", "bolt")])
+	_check(hoff.shots.explosions == 0 and not kinds_of.call(hoff.debris).has(VfxDebris.FLAME), "explosions_enabled off: the old dust and flash only")
+	# A shot knocked loose tumbles and trails smoke.
+	var ht := VfxHub.new()
+	ht.reset(S, 6)
+	var sh := SimState.Shot.new()
+	sh.kind = "charged"
+	sh.owner = 1
+	sh.x = plains + 600.0
+	sh.y = g + 60.0
+	sh.vx = -5400.0
+	sh.power = 3.0
+	sh.dmg = 66.0
+	sh.fresh = false
+	sh.deflected = 1
+	S.shots = [sh]
+	for k in range(30):
+		_tick(S, ht, [])
+	var trail_n: int = ht.shots.trails
+	sh.deflected = 0
+	for k in range(30):
+		_tick(S, ht, [])
+	_check(trail_n >= 20 and ht.shots.trails == trail_n, "a knocked-loose shot trails smoke (%d puffs in 30 ticks), a plain one none" % trail_n)
+	var host := FakeHost.new()
+	host.S = S
+	var view := VfxShotsView.new()
+	root.add_child(view)
+	sh.deflected = 0
+	view.update(ht, host, 1.0, plains + 600.0, 0.7, 1200.0)
+	var plain_quads: int = view.count
+	sh.deflected = 1
+	view.update(ht, host, 1.0, plains + 600.0, 0.7, 1200.0)
+	_check(view.count == plain_quads + 2, "and it is drawn tumbling: a turning cross of light on it (%d quads against %d)" % [view.count, plain_quads])
+	S.shots = []
+	# The mines of concept: arm, hold, the fuse, the blast; each fighter's own look; hovering and on the ground.
+	var hm := VfxHub.new()
+	hm.reset(S, 6)
+	var m1: VfxShots.Mine = hm.shots.add_mine(1, 0, plains + 400.0, g + 120.0, 0.0, "hover")
+	var m2: VfxShots.Mine = hm.shots.add_mine(2, 1, plains + 900.0, g + 10.0, 0.0, "ground")
+	_check(m1.state == "arming" and m2.state == "arming", "a new mine is arming")
+	for k in range(int(VfxShots.MINE_ARM_TICKS) + 2):
+		_tick(S, hm, [])
+	_check(m1.state == "armed" and m2.state == "armed", "it arms after %d ticks" % int(VfxShots.MINE_ARM_TICKS))
+	view.update(hm, host, 1.0, plains + 650.0, 0.7, 1200.0)
+	var armed_quads: int = view.count
+	_check(armed_quads >= 12, "both are drawn (%d quads: KAI's rings in the air, VORR's plates on the ground)" % armed_quads)
+	# Never a sphere (Legal, RL-062): hexagons and spikes, and no filled disc on a ground mine.
+	var hex_n: int = 0
+	var disc_n: int = 0
+	for q in range(view.count):
+		var sh_k: float = view._buf[q * VfxShotsView.STRIDE + 18]
+		if is_equal_approx(sh_k, VfxShotsView.SHAPE_HEX):
+			hex_n += 1
+		elif is_equal_approx(sh_k, VfxShotsView.SHAPE_RING) and view._buf[q * VfxShotsView.STRIDE + 16] >= 0.99:
+			disc_n += 1
+	_check(hex_n >= 4 and disc_n <= 1, "the mines are hexagonal plates and a caltrop's hexagonal hub, never a glowing sphere (%d hexagons, %d filled ellipses: the hovering one's shadow)" % [hex_n, disc_n])
+	var hk := VfxHub.new()
+	hk.reset(S, 6)
+	hk.shots.add_mine(1, 0, plains + 400.0, g + 120.0, 0.0, "hover").state = "armed"
+	view.update(hk, host, 1.0, plains + 650.0, 0.7, 1200.0)
+	var rings_quads: int = view.count
+	var hv := VfxHub.new()
+	hv.reset(S, 6)
+	hv.shots.add_mine(1, 1, plains + 400.0, g + 120.0, 0.0, "hover").state = "armed"
+	view.update(hv, host, 1.0, plains + 650.0, 0.7, 1200.0)
+	var plates_quads: int = view.count
+	_check(rings_quads != plates_quads, "each fighter has his own look (rings %d quads, plates %d)" % [rings_quads, plates_quads])
+	_tick(S, hm, [VfxMock.ev("mine_fuse", {"id": 1})])
+	_check(m1.state == "trigger", "mine_fuse puts it on the fuse")
+	var ex0: int = hm.shots.explosions
+	_tick(S, hm, [VfxMock.ev("mine_end", {"id": 1})])
+	_check(hm.shots.explosions == ex0 + 1 and hm.shots.mines.size() == 1, "mine_end: the blast, and it is gone")
+	_tick(S, hm, [VfxMock.ev("mine_end", {"id": 2})])
+	_check(kinds_of.call(hm.debris).has(VfxDebris.FLAME) and hm.shots.mines.is_empty(), "a ground mine's blast is a ground burst")
+	var hmx := VfxHub.new()
+	hmx.reset(S, 6)
+	_tick(S, hmx, [VfxMock.ev("mine_place", {"id": 7, "actor": 0, "x": plains + 300.0, "y": g + 90.0, "z": 0.0, "mode": "hover"}), VfxMock.ev("mine_armed", {"id": 7})])
+	_check(hmx.shots.mines.size() == 1 and hmx.shots.mines[0].state == "armed", "mine_place and mine_armed (the events a sim would send) are read")
+	view.queue_free()
+	var saved: Dictionary = VfxExplode._data
+	VfxExplode._data = {}
+	var fallback: bool = VfxExplode.p("flames") == 5.0
+	VfxExplode._data = saved
+	_check(fallback, "missing data falls back to the defaults")
 	SimCore.dispose(S)
 
 

@@ -170,6 +170,8 @@ func _run_job(S: SimState, j: Job) -> void:
 			_vent(S, j.a)
 		"blast_ring", "blast_pebbles", "blast_settle":
 			VfxBlast.run_job(self, S, j.kind, j.a)
+		"smoulder":
+			VfxExplode.run_job(self, j.kind, j.a)
 		"colpuff":
 			var a: Dictionary = j.a
 			_biome = VfxPalette.biome_key(a.x)

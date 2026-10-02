@@ -65,6 +65,7 @@ var pressure_enabled: bool = VfxLook.PRESSURE_DEFAULT   # a ring of shoved air a
 var pressure := VfxPressure.new()
 var shots_enabled: bool = VfxLook.SHOTS_DEFAULT   # energy blasts: every shot in S.shots drawn, the charge on the hand, the hits by outcome (shots.gd, shots_view.gd)
 var shots := VfxShots.new()
+var explosions_enabled: bool = VfxLook.EXPLOSIONS_DEFAULT   # the blasts erupt in flame, sparks, smoke and a smouldering scorch; a knocked-loose shot tumbles and smokes (explode.gd)
 var earth_enabled: bool = VfxLook.EARTH_DEFAULT   # material chunks for `debris`, cel flames for `fire`, and the ground-contact events (docs/vfx/earth-plan.md)
 var earth := VfxEarth.new()
 var debris := VfxDebris.new()
@@ -231,7 +232,8 @@ func _consume(S: SimState, events: Array) -> void:
 				earth.on_entrance_land(S, e)
 	_sync_cracks(S)
 	if shots_enabled:
-		shots.step(S, frozen)
+		shots.explode_enabled = explosions_enabled
+		shots.step(S, frozen, debris)
 		debris.quality = quality
 		debris.reduced = reduced_motion
 		shots.on_events(S, events, debris, water if water_enabled else null, quality, reduced_motion)

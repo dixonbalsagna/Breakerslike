@@ -202,3 +202,7 @@ Speed lines: a launch and a later heavy in the same exchange each keep their str
 ### Energy blasts drawn (2026-10-03)
 
 Encounter's blasts fire real shots and nothing drew them; `docs/vfx/shots-plan.md`: every shot in `S.shots` each frame in its owner's colour (a bolt small with a short tail, a charged shot bigger by its power and charge with a halo, a seeking shot on a slight arc), the charge on the hand (the Anti-hero's plates, the others' thin rings), and the hits by outcome (hit, guard, deflect, shrug, stop), the trade's burst and a miss's dust. Flag `shots_enabled`, on; one draw call; a child of the trail view, so `vfx_layer.gd` is untouched.
+
+### Blast explosions and mines of concept (2026-10-03)
+
+`docs/vfx/shots-plan.md`, last section: a shot's hit and end are explosions (flame, sparks, smoke, thrown chunks, a flat ring, a smouldering scorch) sized by Game Design's blast radii, a knocked-loose shot tumbles and trails smoke, and the mines are drawn as a look only (hexagonal plates and caltrops, never a sphere). Flag `explosions_enabled`, on. New: `render/vfx/explode.gd`; a hexagon shape in `transform.gdshader`.
