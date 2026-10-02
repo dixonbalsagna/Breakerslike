@@ -45,3 +45,12 @@ The signature limit stays as it is until Orb has played this.
 ## What I would build first
 
 1a. It needs the one new event, and it is the base for the bands, the taunt and the charge. Then the energy slice 3a, because Orb will not rule on beams before playing it. The recipes (2a) wait for Combat's phrases.
+
+## Where slice 8 stands (paused 2026-10-02)
+
+Slices 1 to 7 are committed (the as-built docs are `agency-slice-1.md` to `agency-slice-7.md`). Slice 8 is 3c, the beam plays: a 20-tick travel, the late answer, the perfect block's swat, split and walk by the stick, the wade on a held guard, and the dodge as a timed tap. It is built in scratch only (a new `sim/director/beamplay.gd` behind `interrupts.json` `beamPlays.enabled`), not in the tree.
+
+- All 15 scripted cases pass with either fighter attacking.
+- 100 AI matches against slice 7: median 8:31 to 8:16, structures 44.9% to 42.2%, KAI 60% to 45%; in 50 matches 18 deflects (4 splits, 7 swats, 7 walks), 24 wades and 18 late answers.
+- **One known fault to fix before it ships:** the AI never dodges a beam (0 dodges against 20 before). The check reads only the latest dodge tap, and the AI taps again after its tap in time. The fix is to record a tap inside the window when it happens. KAI's 15-point drop is probably this, so the 100 matches have to be run again after it.
+- Gates were stopped part way (goldens, parity, the loader check, determinism and seam had passed).
