@@ -14,7 +14,7 @@ extends SceneTree
 
 const DT := 1.0 / 60.0
 const SCENES := ["taunt", "charge_light", "charge_heavy", "charge_feint", "knock_short", "knock_long", "drift", "embed"]
-const ENERGY := ["swat", "mine", "spray", "curve", "chin", "chin_beam"]   # the parked energy poses (wave energy1, docs 9.24): the lab plays the sequence by hand (nothing fires these yet); needs --waves
+const ENERGY := ["swat", "mine", "spray", "curve", "chin", "chin_beam", "fin_flight"]   # the parked energy poses (wave energy1, docs 9.24): the lab plays the sequence by hand (nothing fires these yet); needs --waves
 
 var scene: String = "taunt"
 var scene_given: bool = false
@@ -182,7 +182,7 @@ func _run() -> void:
 					if k == 10:
 						evs.append(_ev("knockback", S.tick, {"victim": 0.0, "attacker": 1.0, "kind": kind, "amount": 60.0, "n": S.tick + int(dur * 60.0), "dur": dur}))
 				"swat", "mine", "spray":
-					var sq: String = {"curve": "pn.curve", "chin": "rv.on_the_chin", "chin_beam": "rv.chin_beam"}.get(sc, "en." + sc)   # (curve: the Protagonist's curving shot, protag3; chin and chin_beam: the rival's On the Chin, rival1)
+					var sq: String = {"curve": "pn.curve", "chin": "rv.on_the_chin", "chin_beam": "rv.chin_beam", "fin_flight": "pf.finisher"}.get(sc, "en." + sc)   # (curve: the Protagonist's curving shot, protag3; chin and chin_beam: the rival's On the Chin, rival1)
 					var at: Array = [10, 16, 22, 28] if sc == "spray" else [10]
 					if at.has(k) and AnimData.entries.has(sq):
 						var afe: AnimFighter = RenderAnim.fighter(S, f0)

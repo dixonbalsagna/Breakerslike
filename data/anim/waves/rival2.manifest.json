@@ -1,0 +1,105 @@
+{
+ "wave": "rival2",
+ "strikes": [
+  {
+   "id": "rb.body_ram",
+   "combat": "strike.body_ram",
+   "name": "body_ram",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "shoulder_r",
+   "limb2": null,
+   "offset": 34,
+   "reach": 68,
+   "band": "close",
+   "ticks": {
+    "load": 10,
+    "follow": 5,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {},
+   "from": null,
+   "legal": [
+    "no_cross_hold"
+   ],
+   "look": "Redesigned: a short step and the plated shoulder driven into the chest, the chin tucked behind it, the forearm guards close.",
+   "orig": "a short step and the plated shoulder driven into the chest, the chin tucked behind it, the forearm guards close against the ribs: shoulder first",
+   "poses": [
+    "rb.body_ram.chamber",
+    "rb.body_ram.contact",
+    "rb.body_ram.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "rb.body_hook",
+   "combat": "strike.body_hook",
+   "name": "body_hook",
+   "weight": "heavy",
+   "target": "gut",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "A heavy hook dug in along the ribs, the elbow a right angle, the hip turned through, the other forearm plate across his own chest.",
+   "orig": "a heavy hook dug in along the ribs, the elbow a right angle and the hip turned through, the other forearm plate across his own chest",
+   "poses": [
+    "rb.body_hook.chamber",
+    "rb.body_hook.contact",
+    "rb.body_hook.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "rb.rib_shot",
+   "combat": "strike.rib_shot",
+   "name": "rib_shot",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 54,
+   "reach": 98,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "A straight heavy blow to the chest from a low shoulder: arm, spine and rear leg one line.",
+   "orig": "a straight heavy blow to the chest from a low shoulder: the arm, the spine and the rear leg one long line",
+   "poses": [
+    "rb.rib_shot.chamber",
+    "rb.rib_shot.contact",
+    "rb.rib_shot.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  }
+ ],
+ "skipped": []
+}

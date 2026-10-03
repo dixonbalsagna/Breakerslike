@@ -4,8 +4,6 @@
 // never hands at a hip. No roar. The flurry's strikes are his own (protag1); `turn` is the arrival between them.
 const OPEN = { hands: { r: 'open', l: 'open' } };
 
-export const sequences = {};
-
 export const holds = {
   turn: { sketch: { family: 'airborne_neutral', lean: 10, hips: [6, 4, 0], spine: { lean: 4, twist: 30 }, head: { pitch: 4, yaw: 6 }, hand_r: [14, 58, 16], pole_hand_r: [-4, 50, 22], hand_l: [26, 56, -8],
       foot_r: [4, 24, 6], foot_l: [-4, 20, -6], ...OPEN, _legal: ['hands_open_or_claw', 'not_at_hip'] },
@@ -19,6 +17,16 @@ export const holds = {
   after: { sketch: { family: 'airborne_neutral', lean: -4, hips: [0, 4, 0], spine: { lean: -2 }, head: { pitch: 8 }, hand_r: [16, 37, 15], hand_l: [16, 42, -12],
       foot_r: [2, 22, 6], foot_l: [-2, 20, -6], ...OPEN, _legal: ['hands_open_or_claw', 'not_at_hip'] },
     orig: 'as the smoke clears: upright in the air, the throwing arm lowered, the head bowed, still' },
+};
+
+// the four poses as one run, for the review reel: an arrival, the gather above him, the blast, the smoke clearing
+export const sequences = {
+  finisher: { dur: 78, legal: ['hands_open_or_claw'], phases: [
+    { id: 'turn', ticks: 14, sketch: holds.turn.sketch, orig: holds.turn.orig },
+    { id: 'gather', ticks: 22, sketch: holds.gather.sketch, orig: holds.gather.orig },
+    { id: 'blast', ticks: 10, sketch: holds.blast.sketch, orig: holds.blast.orig },
+    { id: 'after', ticks: 32, sketch: holds.after.sketch, orig: holds.after.orig },
+  ] },
 };
 
 export const cues = {};
