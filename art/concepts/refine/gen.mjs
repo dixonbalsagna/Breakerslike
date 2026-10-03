@@ -78,8 +78,8 @@ function cyborgSheet() {
 // ------------------------------------------------------------------------------------------------------------------- the other three
 const OTHERS = {
   P: { name: 'Protagonist', file: 'protagonist-refine.svg', sig: 'laugh', sigName: 'a laugh',
-    changes: 'Heavier lids and an angled brow so the eyes are determined, not wide; a forelock that falls across the brow and curls forward (his hair has a direction); the temple arc kept.',
-    ask: 'Is this still the face you liked? Is the forelock too much, and which silhouette option (the long tuft or the big fists) is more him?' },
+    changes: 'Heavier lids and an angled brow so the eyes are determined, not wide; a swept tuft along the crown that sweeps back (his hair has a direction, and never curls on the forehead); the temple arc kept.',
+    ask: 'Is this still the face you liked? Is the swept tuft right, and which silhouette option (the long ribbon tuft or the big plated fists) is more him?' },
   A: { name: 'Anti-hero', file: 'anti-hero-refine.svg', sig: 'contempt', sigName: 'contempt',
     changes: 'Sharper, longer-lidded eyes and thinner brows; a long lock that falls past the cheek on the open side; the lit slash on the cheek kept (it is the one mark of him).',
     ask: 'Is he colder and sharper in the right way? Which option adds more to the silhouette, the longer tail with coat blades or the swept shoulder blade?' },

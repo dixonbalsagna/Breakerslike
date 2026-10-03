@@ -118,8 +118,8 @@ export function refined(fk, e, id, P, v = 'r') {
     o += eye(fk, -1, e, 'skin', P) + eye(fk, 1, e, 'skin', P) + brow(fk, -1, e, P) + brow(fk, 1, e, P) + mouth(fk, e, P, 'skin') + H.hairFront(fk, P);
     if (fk === 'P') {
       o += poly(ell(-120, -50, 20, 20, 14), 'none', `stroke="${P.acc}" stroke-width="12" stroke-dasharray="90 30"`);
-      // a forelock that falls across the brow and curls forward: his hair has a direction
-      o += poly([[40, -170], [100, -150], [136, -104], [128, -64], [106, -90], [76, -112], [30, -130]], P.hair, ST(P, 6)) + line([[60, -156], [100, -126], [114, -92]], P.hairSh, 5);
+      // a swept tuft: a flat lock that sweeps back along the crown (never a curl on the forehead)
+      o += poly([[34, -214], [-20, -246], [-104, -236], [-152, -204], [-96, -214], [-30, -196]], P.hair, ST(P, 6)) + line([[10, -224], [-60, -232], [-120, -214]], P.hairSh, 5);
       o += line([[-60, 10], [-30, 28]], P.skinSh, 5, 'opacity="0.7"');
     }
     if (fk === 'A') {

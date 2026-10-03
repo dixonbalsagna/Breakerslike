@@ -35,7 +35,7 @@ function glassedFigure(key, state, x, ground, s, flat = false) {
 const FR = [
   ['cuthex', 'A hexagonal lens cut asymmetrically (one corner chopped long, the outer corner a point): his hexagon in its smallest, most ordinary form.'],
   ['blade', 'Tapered wedge lenses with a sharp outer tip, the tips level, never upswept: the most blade-like, and the best at fight size.'],
-  ['chamfer', 'Chamfered plates (the portrait frame\'s own cut corners, opposite corners cut): quiet and generous; the least dramatic glare.'],
+  ['chamfer', 'Not available (Legal: avoid). Chamfered plates read as a plain rectangle, the least blade-like; kept here only to show what was set aside.'],
   ['shard', 'A tapered shard, wide at the nose and pointed at the temple: the coldest silhouette; reads almost as a slash of tint at 12 px.'],
   ['slash', 'A five-sided slash cut, no two sides parallel: the most unusual, and the one least like any ordinary glasses.'],
   ['kite', 'A kite with the high point toward the nose: a different rhythm to the others; the glare wedge sits well in it.'],

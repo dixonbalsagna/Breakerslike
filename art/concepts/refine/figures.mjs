@@ -194,13 +194,20 @@ export const OTHER_OPTS = {
     base: () => markedConcept('P'),
     options: [
       { name: 'Option 1: the long tuft', note: 'The tuft grows into a long swept ribbon that trails and hooks, and the belt knot gets bigger: a clearer wind line.', make: () => withBack(markedConcept('P'), (ctx, sk) => ctx.poly([[-4, 13], [-14, 15], [-26, 10], [-36, 2], [-40, -6], [-34, -4], [-26, 0], [-16, 3], [-5, 9]].map(([x, y]) => headPt(sk, x, y)), ctx.pal.hair.shadow, { sw: 1.3 }) + ctx.poly(Tm(sk, [[-6, 14], [-14, 18], [-18, 12], [-16, 6], [-8, 8]]), ctx.pal.gear.mid, { sw: 1.2 })) },
-      { name: 'Option 2: the big fists', note: 'The wrapped fists and shoulders swell into big round masses (his circles): a heavier, friendlier silhouette from the front.', make: () => withExtra(markedConcept('P'), (ctx, sk) => { let s = ''; const ring = (c, r) => Array.from({ length: 12 }, (_, i) => V(c.x + Math.cos(i / 12 * Math.PI * 2) * r, c.y + Math.sin(i / 12 * Math.PI * 2) * r)); s += ctx.poly(ring(sk.nearArm.F, 6.2), ctx.pal.gear.mid, { sw: 1.3 }) + ctx.poly(ring(sk.farArm.F, 5.4), ctx.pal.gear.shadow, { sw: 1.3 }) + ctx.poly(ring(add(sk.S, V(0.4, -0.4)), 6.4), ctx.pal.base.mid, { sw: 1.3 }); return s; }) },
+      { name: 'Option 2: the big plated fists', note: 'The fists and shoulders swell into big solid plated masses, dark like his tunic and wraps (never pale): a heavier, rounder silhouette from the front.', make: () => withExtra(markedConcept('P'), (ctx, sk) => {
+        const oct = (c, r) => Array.from({ length: 8 }, (_, i) => V(c.x + Math.cos((i + 0.5) / 8 * Math.PI * 2) * r, c.y + Math.sin((i + 0.5) / 8 * Math.PI * 2) * r));
+        const dark = ctx.pal.base.mid, plate = ctx.pal.base.shadow;
+        let s = ctx.poly(oct(sk.nearArm.F, 6.4), dark, { sw: 1.4 }) + ctx.poly(oct(sk.farArm.F, 5.6), plate, { sw: 1.4 });
+        s += ctx.line([add(sk.nearArm.F, V(-1.2, 5.4)), add(sk.nearArm.F, V(-1.2, -5.4))], plate, 1.6) + ctx.line([add(sk.nearArm.F, V(1.8, 5.2)), add(sk.nearArm.F, V(1.8, -5.2))], plate, 1.6);
+        s += ctx.poly(oct(add(sk.S, V(0.4, -0.4)), 6.4), dark, { sw: 1.3 });
+        return s;
+      }) },
     ],
   },
   A: {
     base: () => markedConcept('A'),
     options: [
-      { name: 'Option 1: the long tail and coat blades', note: 'The tail runs to the knee and three coat strips hang from the waist as blades: a longer, narrower slash.', make: () => withExtra(markedConcept('A'), (ctx, sk) => { let s = ctx.poly([[-3, 15], [-12, 12], [-20, 0], [-26, -18], [-34, -42], [-22, -22], [-13, -4], [-5, 8]].map(([x, y]) => headPt(sk, x, y)), ctx.pal.hair.mid, { sw: 1.3 }); for (let i = 0; i < 3; i++) s += ctx.poly(Tm(sk, [[-6 + i * 3.6, 8], [-1.4 + i * 3.6, 8], [-5.6 + i * 3.6, -22 - i * 3]]), i === 1 ? ctx.pal.accent.mid : ctx.pal.base.mid, { sw: 1.2 }); return s; }) },
+      { name: 'Option 1: the long tail and coat plates', note: 'The tail runs to the knee and three flat coat plates hang straight from the belt (plates, not wings or a pack): a longer, narrower slash.', make: () => withExtra(markedConcept('A'), (ctx, sk) => { let s = ctx.poly([[-3, 15], [-12, 12], [-20, 0], [-26, -18], [-34, -42], [-22, -22], [-13, -4], [-5, 8]].map(([x, y]) => headPt(sk, x, y)), ctx.pal.hair.mid, { sw: 1.3 }); for (let i = 0; i < 3; i++) { const x0 = -2 + i * 3.8; s += ctx.poly(Tm(sk, [[x0, 9], [x0 + 3.2, 9], [x0 + 3.2, -14 - i * 2], [x0 + 1.6, -17 - i * 2], [x0, -14 - i * 2]]), i === 1 ? ctx.pal.base.shadow : ctx.pal.base.mid, { sw: 1.2 }); if (!ctx.flat) s += ctx.line(Tm(sk, [[x0 + 0.4, 8], [x0 + 0.4, -13 - i * 2]]), ctx.pal.accent.mid, 0.9); } return s; }) },
       { name: 'Option 2: the swept shoulder blade', note: 'A swept blade of cloth streams back from one shoulder, low and long, not tall: a second line to the silhouette.', make: () => withExtra(markedConcept('A'), (ctx, sk) => ctx.poly(At(sk.S, [[-2, 4], [-12, 5], [-28, -4], [-40, -14], [-26, -8], [-12, -3], [-2, -1]]), ctx.pal.accent.mid, { sw: 1.3 }) + ctx.poly(At(sk.S, [[-2, 1], [-14, 0], [-30, -12], [-14, -5]]), ctx.pal.base.shadow, { sw: 1 })) },
     ],
   },

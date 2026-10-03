@@ -6,7 +6,7 @@ import { H } from '../closeups/engine.mjs';
 import * as FA from './faces.mjs';
 const { poly, line, ell, pts } = H;
 
-const FRAME_INK = '#4a3a86', FRAME_LIT = '#b79af0', TINT = '#2f2358', GLARE = '#cdb6ee', GLARE_HI = '#e3d4f9', GLARE_HALO = '#b79af0';
+const FRAME_INK = '#4a3a86', FRAME_LIT = '#b79af0', TINT = '#2f2358', GLARE = '#c0a0ee', GLARE_HI = '#d8c2f8', GLARE_HALO = '#a47ee8';
 // Legal's rules (RL-066): angular, tapered or hexagonal lenses cut asymmetrically, a thin frame in his violet; never thin round wire, never narrow tinted rectangles or a half-rim,
 // no bar or visor, no readout or scan bar on a lens. Normal lenses are a dark violet tint; the glare is one hard-edged pale-violet wedge, never white, held 0.4 s at most.
 const C = [68, -36];   // the centre of the right lens in face coordinates (the art faces right; the eyes are at x = +-62, y = -36)
