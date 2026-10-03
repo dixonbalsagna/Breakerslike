@@ -112,6 +112,10 @@ Slices 9, 10 and 11 of `docs/director/update-apply-order.md` (the spray, mine an
 
 For the split (`docs/combat/pending/apply-order.md` step 1). Run once from the repo root, in the commit where Combat renames `shapes.antihero` of `data/combat/finishers.json` (and `antihero` in `styles.json`'s traits and futureKinds) to `rival`, and re-keys the two finishers' `fighter` strings and `select.byFighter` to the roster ids Simulation lands: `node docs/tools/pending/apply-split-keys.cjs`. It does **not** edit `data/`. It renames the key under `shapes` in `combat-finishers.schema.json` (the styles schema does not name it, and `style-fighter` follows the keys of `shapes`), and adds the rule `finisher-fighter` (an error): a finisher's `fighter` is `*` or an id of `data/fighters/roster.json`, and every key of `select.byFighter` is a roster id. The rule skips a roster whose ids all start `FIXTURE_` (the self-test's own), so its cases swap in a two-id roster; 7 cases. Re-runnable. Tested on a clean `git archive HEAD` with the data keys renamed by a scratch copy of the edit: 2 errors before the script, 0 errors and 0 warnings after, self-test passes; with a bad `fighter` and a bad `byFighter` key the rule names both. Note: a finisher's `fighter` must still match `^(\*|[A-Z][A-Z0-9_]*)$`, so the roster ids must be upper case.
 
+## `apply-slice9.cjs`: Encounter's slice 9, the wild deflect, the spray and mines
+
+Keys from Encounter (`docs/director/update-apply-order.md` step 2). Run once from the repo root, in the commit that lands the slice's data: `node docs/tools/pending/apply-slice9.cjs`. It does **not** edit `data/`. `data/director/interrupts.json` `blast` gains the required closed `deflect` {freeApproachTicks (integer, 0 or more), context {ki}}, `spray` {measuredTicks (integer), perBolt, max, missShare, slopeMin, slopeMax, recoverPerSec (numbers, 0 or more)} and `mine` {enabled, kind, ki, shoveWithinBh, groundWithinBh, blowR} (`_note` allowed). `data/director/ai.json` gains the required `mineMinKi` (`_mine` allowed) and per level `mineShare` (a chance). Rules: `blast-mine-kind` (the mine's kind is a kind of `shots.json` that has a mine block), `blast-spray` (slopeMin at most slopeMax; missShare above 1 is a warning). The two fixtures get the keys; the earlier whole-blast cases are patched to carry them; 52 cases. `deflect.scatter` true needs no schema change. The new cue names (mine_lay, mine_refused, context_deflect_set, context_deflect, volley_fire) are sim render cues that nothing in tools checks, so nothing is added for them. Re-runnable. Tested on a clean `git archive HEAD` with scratch values for the keys: 7 errors before, then 0 errors and 0 warnings, self-test passes.
+
 ## Which script goes with which commit (the next big update)
 
 | Script | State | Goes in the commit of | Needs |
@@ -122,7 +126,8 @@ For the split (`docs/combat/pending/apply-order.md` step 1). Run once from the r
 | `apply-recipes.cjs` | ready | Combat's move of `docs/combat/pending/recipes.alchemist.json` to `data/combat/recipes.json` (the draft as it stands, with `_target`, `_status` and `_counts` dropped by Combat) | nothing else |
 | `apply-beamplay.cjs` | ready | Encounter's slice 8 (data: `interrupts.json` and `ai.json`) | nothing else |
 | `apply-split-keys.cjs` | ready | Combat's re-key at Simulation's split (`finishers.json`, `styles.json`, the roster ids) | the roster ids upper case |
-| (slices 9, 10, 11) | not drafted | Encounter's slices 9 to 11 | their data |
+| `apply-slice9.cjs` | ready | Encounter's slice 9 data (`interrupts.json` blast, `ai.json`) | nothing else |
+| (slices 10, 11) | not drafted | Encounter's slices 10 and 11 | their data |
 | (launch pair finishers and templates) | held | Combat's go-live of `launch-pair.json` finishers, `templates.agency.json` and `templates.brawl.json` | their live form (see the report) |
 
 The scripts are independent of each other and of the order (tested mixed). Each adds its own cases, so a run on a tree that already has its keys changes nothing.
