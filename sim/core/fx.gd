@@ -231,7 +231,8 @@ static func embed(S: SimState, f, x: float, y: float, depth: float, r: float, en
 ## (amount), its volley's group (link), its direction (ux, uy) and the slot it seeks (target, -1 for none). shot_hit: it
 ## met victim at x, y, z; amount is the damage and outcome what happened (hit by the plain rule; the director's blasts
 ## send guard, deflect and the rest). shot_clash: two opposing shots traded amount of power at x, y, z (id and b are
-## the two ids). shot_end: the shot is gone, at x, y, z; cause is hit, clash, ground, water or life.
+## the two ids). shot_end: the shot is gone, at x, y, z; cause is hit, clash, ground, water, life, building (a
+## building stopped it) or mine (a mine's blast).
 static func shotFire(S: SimState, sh) -> void:
 	var e := _ev(S, "shot_fire")
 	e.actor = float(sh.owner); e.kind = sh.kind; e.id = sh.id; e.x = sh.x; e.y = sh.y; e.z = sh.z
@@ -252,6 +253,19 @@ static func shotHit(S: SimState, sh, f, outcome: String) -> void:
 static func shotClash(S: SimState, a, b, x: float, y: float, power: float) -> void:
 	var e := _ev(S, "shot_clash")
 	e.id = a.id; e.b = float(b.id); e.x = x; e.y = y; e.z = (a.z + b.z) * 0.5; e.amount = power
+
+
+## shot_deflect: a deflect sent the shot (id, kind) wild from x, y, z: actor deflected it, and it lands at x1, y1 in dur
+## seconds unless something is in its way. mine_trip: a mine (id) at x, y, z was set off by actor (a slot, or -1) and blows
+## in dur seconds; kind is fighter, shot, blow or chain.
+static func shotDeflect(S: SimState, sh, by: int, dur: float) -> void:
+	var e := _ev(S, "shot_deflect")
+	e.id = sh.id; e.actor = float(by); e.kind = sh.kind; e.x = sh.x; e.y = sh.y; e.z = sh.z; e.x1 = sh.px; e.y1 = sh.py; e.dur = dur
+
+
+static func mineTrip(S: SimState, sh, cause: String, slot: int, dur: float) -> void:
+	var e := _ev(S, "mine_trip")
+	e.id = sh.id; e.actor = float(slot); e.kind = cause; e.x = sh.x; e.y = sh.y; e.z = sh.z; e.dur = dur
 
 
 static func shotEnd(S: SimState, sh, cause: String) -> void:

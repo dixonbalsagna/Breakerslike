@@ -145,7 +145,7 @@ Applied in the tree. The light digests, tick counts and full-state checkpoints d
 
 ## 13. The second round: buildings, wild deflects, the spray, mines (parked, 2026-10-02, on 2c91129)
 
-Orb's direction is in `docs/ep/vision.md` ("Orb on the energy blasts"), Game Design's rules in `agency-pass.md` section 15, Legal's screen in RL-060 and RL-061, and World's side in `docs/world/ground-contact.md` sections 27 and 28. This is the core's part of it. It is built and proven in a scratch copy of 2c91129 (after Encounter's slice 7) and parked as `docs/architecture/pending/shots2.py` with Tools' `shots2_schema.cjs`. Nothing is in the tree.
+Orb's direction is in `docs/ep/vision.md` ("Orb on the energy blasts"), Game Design's rules in `agency-pass.md` section 15, Legal's screen in RL-060 and RL-061, and World's side in `docs/world/ground-contact.md` sections 27 and 28. This is the core's part of it. It was built and proven in a scratch copy of 2c91129 (after Encounter's slice 7), parked, and **applied in the tree on cf0466f with both switches off** (EP's rulings: this swept building test is the one, with World's `shotBuilding` plugged into `hitStructure` in World's window; a mine's speed is 0; the let-pass line change is approved). In the tree the goldens came out byte for byte as in scratch: light digests and tick counts identical to HEAD's.
 
 | Piece | What it adds to the core | Does it change today's matches? |
 | :--- | :--- | :--- |
@@ -164,7 +164,7 @@ Both switches ship off, so the code part is neutral. Each switch is its own part
 - **The hand-over.** `SimShots.hitStructure(S, shot, building) -> bool`. True ends the shot with cause `building`. False lets it through, and `Shot.lastB` keeps it from being offered to that building again. The rule in the parked build ends the shot and does nothing to the building. World's body goes there: `WorldBlast.shotBuilding(...)` from its prototype. "One shot levels at most one building" is World's to count.
 - **Only entering counts.** A building the tick's movement starts inside is not met. So a shot fired from inside a footprint (fighters can stand in one today), or a seeking shot released there, flies out of it. Buildings of different rows overlap in x, and this rule covers that too.
 - **Lines.** 7 in the step and one function of about 60 (`_building`). World sized my side at 8 with the test in its own file. The brief put the swept test in the core, so the 60 are the test.
-- **Against World's prototype.** `WorldBlast.shotMeetsBuilding` samples the path every 24 units and tests straight shots only. This test replaces it and keeps World's `shotBuilding` as the hit. It also covers lobs, which a wild shot is. The EP picks one test, not both.
+- **Against World's prototype.** `WorldBlast.shotMeetsBuilding` samples the path every 24 units and tests straight shots only. This test replaces it (the EP's ruling) and keeps World's `shotBuilding` as the hit. It also covers lobs, which a wild shot is.
 - **Don't switch it on alone.** Today a shot flies through a building and its blast on the ground reaches it. With `structures` on and no World body, a building takes nothing from the shot it stops. So the switch goes on in World's window, with its `shotBuilding`.
 
 ## 15. A deflect sends the shot wild
@@ -281,7 +281,7 @@ KAI's share drops 5 points with `scatter` on. The interval on 100 matches is abo
 
 **Open points.**
 
-1. **One test for buildings, mine or World's** (section 14). The EP's call.
+1. **One test for buildings:** ruled, this one (EP, 2026-10-02). World's `shotBuilding` becomes the body of `hitStructure`.
 2. **Who a wild shot answers to.** The shooter, by Game Design's ruling. World's note asked which; the owner stays the shooter, so `hitWorld` passes him.
 3. **A shot hitting its own shooter** takes the plain rule (section 15) until Encounter's rule handles it.
 4. **The chain radius against the gap** (section 17). Game Design's.

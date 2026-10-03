@@ -232,7 +232,7 @@ func consume(S: SimState, events: Array) -> void:
 				dt = e.dt
 				frozen = e.frozen
 				_stepParts(S, dt * 0.1 if frozen else dt)
-			"region_stage", "region_broken", "brink_enter", "brink_exit", "brink_open", "brink_close", "tier_up", "transform_ready", "transform", "beam_outcome", "pause_start", "pause_end", "knockback", "exchange_end", "flow", "embed", "shot_fire", "shot_hit", "shot_clash", "shot_end", "last_stand_ready", "last_stand_end", "intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start", "hide_start", "found", "ko":
+			"region_stage", "region_broken", "brink_enter", "brink_exit", "brink_open", "brink_close", "tier_up", "transform_ready", "transform", "beam_outcome", "pause_start", "pause_end", "knockback", "exchange_end", "flow", "embed", "shot_fire", "shot_hit", "shot_clash", "shot_end", "shot_deflect", "mine_trip", "last_stand_ready", "last_stand_end", "intro_start", "entrance_fall", "entrance_land", "staredown_start", "clock_start", "hide_start", "found", "ko":
 				pass   # wound readouts are the renderer's and UI's (crown, cards); nothing to spawn here
 			"decisive", "finisher_start", "finisher_contest", "attack", "parry", "chain_end", "ambush", "lock_lost", "launch_plan", "window_open", "clash_draw", "hazard_telegraph", "searching", "danger", "launch", "rush", "cue", "struggle_press", "rally", "limb_break", "mood_band", "act_change", "style_label", "crowd_state", "building_hit":
 				pass   # director and Rally readouts are the HUD's, Camera's and Audio's; nothing to spawn here

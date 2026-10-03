@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/fight-shots",
   "title": "fight.shots/1 (docs/architecture/shots.md)",
-  "description": "data/fight/shots.json: energy blasts in flight (sim/core/shots.gd): the cap on live shots, the arrival bound of a seeking shot, the fighter's contact size, and each kind's speed (units a tick), radius, trade power, plain damage and flight times. Version field: schema. Policy: closed except keys starting with an underscore; the kinds are an open table of closed records.",
+  "description": "data/fight/shots.json: energy blasts in flight (sim/core/shots.gd): the cap on live shots, the arrival bound of a seeking shot, the fighter's contact size, what a deflect does, whether shots stop at buildings, the mine limits, and each kind's speed (units a tick), radius, trade power, plain damage and flight times. Version field: schema. Policy: closed except keys starting with an underscore; the kinds are an open table of closed records.",
   "type": "object",
   "required": [
     "schema",
@@ -53,8 +53,8 @@
         "properties": {
           "speed": {
             "type": "number",
-            "exclusiveMinimum": 0,
-            "description": "Units a tick (a minimum for a seeking shot)."
+            "description": "Units a tick (a minimum for a seeking shot). 0 only for a mine.",
+            "minimum": 0
           },
           "r": {
             "type": "number",
@@ -85,6 +85,72 @@
             "type": "number",
             "minimum": 0,
             "description": "A lobbed shot's height above the straight line."
+          },
+          "mine": {
+            "type": "object",
+            "description": "This kind is a mine: it stays where it is laid.",
+            "required": [
+              "trigR",
+              "blastR",
+              "chainR",
+              "armTicks",
+              "fuseTicks",
+              "chainTicks",
+              "ownShare",
+              "tierR"
+            ],
+            "properties": {
+              "trigR": {
+                "type": "number",
+                "minimum": 0,
+                "description": "A rival's centre within this sets it off."
+              },
+              "blastR": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Its blast hits every fighter within this."
+              },
+              "chainR": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Its blast sets off the mines within this."
+              },
+              "armTicks": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Ticks before it is armed."
+              },
+              "fuseTicks": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Ticks from set off to blast."
+              },
+              "chainTicks": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Ticks between the mines of a chain."
+              },
+              "ownShare": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of its damage its owner takes inside the blast."
+              },
+              "tierR": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "description": "The radii's growth by its owner's tier."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
           }
         },
         "additionalProperties": false,
@@ -92,6 +158,105 @@
           "^_": true
         }
       }
+    },
+    "structures": {
+      "type": "boolean",
+      "description": "A straight or lobbed shot stops at a standing front-row building its path crosses."
+    },
+    "deflect": {
+      "type": "object",
+      "description": "What a deflect does to a shot.",
+      "required": [
+        "scatter",
+        "nearMin",
+        "nearMax",
+        "farMin",
+        "farMax",
+        "farChance",
+        "awayChance",
+        "speed",
+        "minTicks",
+        "arcPer",
+        "safeTicks",
+        "backCos"
+      ],
+      "properties": {
+        "scatter": {
+          "type": "boolean",
+          "description": "true: the shot flies wild to a seeded spot on the ground. false: it flies back at its owner."
+        },
+        "nearMin": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The near band of landing distances, in units."
+        },
+        "nearMax": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "farMin": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The far band."
+        },
+        "farMax": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "farChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of deflects that land in the far band."
+        },
+        "awayChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share that land on the side away from the shooter."
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Units a tick along the flight."
+        },
+        "minTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The shortest flight."
+        },
+        "arcPer": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The arc's height per unit of landing distance."
+        },
+        "safeTicks": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ticks for which it cannot hit the fighter who deflected it."
+        },
+        "backCos": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "It never leaves within the angle with this cosine of the line back to the shooter."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "mineCap": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 32,
+      "description": "Mines one fighter may have laid at once."
+    },
+    "mineGap": {
+      "type": "number",
+      "minimum": 0,
+      "description": "A mine cannot be laid within this of another."
     }
   },
   "additionalProperties": false,

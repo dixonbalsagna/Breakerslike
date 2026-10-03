@@ -31853,12 +31853,12 @@
         {
           "file": "data/fight/shots.json",
           "set": {
-            "/kinds/bolt/speed": 0
+            "/kinds/bolt/speed": -1
           }
         }
       ],
       "expect": {
-        "rule": "exclusiveMinimum",
+        "rule": "minimum",
         "pointer": "/kinds/bolt/speed"
       }
     },

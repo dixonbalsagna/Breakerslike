@@ -55,7 +55,8 @@ func _init() -> void:
 	check("depth in the core", _depth())
 	check("the intro phase", _intro())
 	check("the last stand", _lastStand())
-	check("shots", _shots())
+	check("shots", _plainShots())
+	check("shots: buildings, wild deflects, the spray, mines", _shots2())
 	check("agency lines", _agencyLines())
 	check("the intro phase (golden)", "" if SimGolden.introHash() == g.get("intro", "") else "differs")
 	check("replay module", _replayModule())
@@ -533,6 +534,382 @@ func _pause() -> String:
 ## The agency pass's small core lines: the autoCharge assist reaches a slot from the setup; the flow count is 0 at the
 ## start and setFlow sends one flow event for a change and none for the same value; the embed fields start clear; the
 ## four events (knockback, exchange_end, flow, embed) carry their fields; and no default match sends any of them.
+## The first round's check, with the second round's two rules off whatever the data's switches say.
+func _plainShots() -> String:
+	if not SimShots.errors().is_empty():
+		return "; ".join(SimShots.errors())
+	var hadS: bool = SimShots.structures
+	var hadD: bool = SimShots.scatter
+	SimShots.structures = false
+	SimShots.scatter = false
+	var res: String = _shots()
+	SimShots.structures = hadS
+	SimShots.scatter = hadD
+	return res
+
+
+## The second round (docs/architecture/shots.md sections 13 to 17), each rule forced whatever the data's switches say.
+func _shots2() -> String:
+	if not SimShots.errors().is_empty():
+		return "; ".join(SimShots.errors())
+	var hadS: bool = SimShots.structures
+	var hadD: bool = SimShots.scatter
+	var res: String = _shots2Run()
+	SimShots.structures = hadS
+	SimShots.scatter = hadD
+	return res
+
+
+func _shots2Run() -> String:
+	var dt: float = SimConst.DT
+	var bolt: Dictionary = SimShots.kinds.bolt
+	if not SimShots.kinds.has("mine") or SimShots.kinds.mine.mine == null:
+		return "the data has no mine kind"
+	var mk: Dictionary = SimShots.kinds.mine
+	var md: Dictionary = mk.mine
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 5, {"p1": false, "p2": false}, {"intro": false})
+	var a = S.fighters[0]
+	var b = S.fighters[1]
+	var count := func(type: String, key: String = "", val = null) -> int:
+		var c: int = 0
+		for e in S.out.fx:
+			if e.type == type and (key == "" or e.get(key) == val):
+				c += 1
+		return c
+	var run := func(ticks: int) -> void:
+		for t in range(ticks):
+			SimShots.step(S, dt)
+	var clear := func() -> void:
+		for q in S.shots:
+			q.dead = true
+		SimShots.step(S, dt)
+		S.out.fx.clear()
+	# ---- buildings: a building in a blast's reach of the plane, with clear air on its left
+	var bi: int = -1
+	for i in range(S.buildings.size()):
+		var c = S.buildings[i]
+		if not c.alive or WorldStructures.dz(c) > WorldStructures.Z_REACH or WorldStructures.curH(c) < 120.0:
+			continue
+		var sx0: float = SimWrap.wrap(c.x - c.w * 0.5 - 200.0)
+		var free: bool = true
+		for o in S.buildings:
+			if o != c and o.alive and absf(SimWrap.sdx(sx0, o.x)) < o.w * 0.5 + 220.0:
+				free = false
+		if free:
+			bi = i
+			break
+	if bi < 0:
+		return "no building in reach of the plane with clear air beside it"
+	var bd = S.buildings[bi]
+	var base: float = WorldStructures.baseY(S, bd)
+	var top: float = base + WorldStructures.curH(bd)
+	b.x = SimWrap.wrap(bd.x + 60000.0); b.y = 9000.0
+	a.x = SimWrap.wrap(bd.x - bd.w * 0.5 - 200.0)
+	a.y = (base + top) * 0.5 - SimShots.chest
+	SimShots.scatter = false
+	SimShots.structures = false
+	var sh = SimShots.fire(S, 0, "bolt", {"ux": 1.0, "uy": 0.0})
+	run.call(12)
+	if sh.dead or SimWrap.sdx(bd.x, sh.x) < bd.w * 0.5:
+		return "with structures off a bolt did not fly through the building"
+	clear.call()
+	SimShots.structures = true
+	sh = SimShots.fire(S, 0, "bolt", {"ux": 1.0, "uy": 0.0})
+	run.call(12)
+	if not sh.dead or count.call("shot_end", "cause", "building") != 1 or absf(SimWrap.sdx(sh.x, bd.x) - (bd.w * 0.5 + bolt.r)) > 0.01:
+		return "a bolt did not stop on the building's face (dead %s, %s from its centre, half width %s)" % [str(sh.dead), str(SimWrap.sdx(sh.x, bd.x)), str(bd.w * 0.5)]
+	clear.call()
+	# over every roof along its way (a taller building of another row may stand behind this one)
+	var over: float = top
+	for o in S.buildings:
+		if o.alive and WorldStructures.dz(o) <= WorldStructures.Z_REACH and absf(SimWrap.sdx(SimWrap.wrap(a.x + 330.0), o.x)) < o.w * 0.5 + 400.0:
+			over = maxf(over, WorldStructures.baseY(S, o) + WorldStructures.curH(o))
+	a.y = over + bolt.r + 30.0 - SimShots.chest
+	sh = SimShots.fire(S, 0, "bolt", {"ux": 1.0, "uy": 0.0})
+	run.call(12)
+	if sh.dead:
+		return "a bolt over the roofs was stopped"
+	clear.call()
+	# from above, onto the roof
+	a.x = bd.x
+	a.y = top + 300.0 - SimShots.chest
+	sh = SimShots.fire(S, 0, "bolt", {"ux": 0.0, "uy": -1.0})
+	run.call(12)
+	if not sh.dead or count.call("shot_end", "cause", "building") != 1 or absf(sh.y - (top + bolt.r)) > 0.01:
+		return "a bolt from above did not stop on the roof (y %s, roof %s)" % [str(sh.y), str(top)]
+	clear.call()
+	# fired from inside it: it is let out
+	a.x = bd.x
+	a.y = (base + top) * 0.5 - SimShots.chest
+	sh = SimShots.fire(S, 0, "bolt", {"ux": -1.0, "uy": 0.0})
+	run.call(1 + int(ceil((bd.w * 0.5 + 100.0) / bolt.speed)))
+	if sh.dead or SimWrap.sdx(sh.x, bd.x) < bd.w * 0.5:
+		return "a bolt fired from inside a building did not leave it"
+	clear.call()
+	# a seeking shot is not stopped by it
+	a.x = SimWrap.wrap(bd.x - bd.w * 0.5 - 200.0)
+	a.y = (base + top) * 0.5 - SimShots.chest
+	b.x = SimWrap.wrap(bd.x + bd.w * 0.5 + 200.0)
+	b.y = a.y
+	sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+	run.call(sh.left + 1)
+	if count.call("shot_hit", "victim", 1.0) != 1 or count.call("shot_end", "cause", "building") != 0:
+		return "a seeking bolt was stopped by a building"
+	clear.call()
+	SimShots.structures = false
+	# ---- the wild deflect
+	SimShots.scatter = true
+	var D: Dictionary = SimShots.defl
+	var sides: Array = [0, 0]
+	var fars: int = 0
+	for n in range(60):
+		a.x = 40000.0; a.y = 3000.0
+		b.x = 40900.0; b.y = 3000.0 + float(n % 5) * 200.0
+		sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+		run.call(4)
+		var x0: float = sh.x
+		var y0: float = sh.y
+		SimShots.deflect(S, sh, 1)
+		if sh.owner != 0 or sh.mode != SimShots.LOB or not sh.wild or sh.safe != 1 or sh.tgt != -1 or sh.deflected != 1:
+			return "a wild deflect did not make the shot a wild lob of its shooter's"
+		var dist: float = absf(SimWrap.sdx(x0, sh.px))
+		if dist < D.nearMin - 0.001 or dist > D.farMax + 0.001 or sh.py != maxf(WorldTerrain.groundY(S, sh.px), WorldWater.surfaceAt(S, sh.px)):
+			return "a wild shot is bound %s away, to a point off the ground" % str(dist)
+		var key: int = sh.id * 16
+		var far: bool = SimRng.keyed(int(S.game.seed), "shot.deflect.far", key) < D.farChance
+		var u: float = SimRng.keyed(int(S.game.seed), "shot.deflect.dist", key)
+		var want: float = (D.farMin + (D.farMax - D.farMin) * u) if far else (D.nearMin + (D.nearMax - D.nearMin) * u)
+		if absf(dist - want) > 0.001:
+			return "a wild shot's distance is %s, the seeded draw says %s" % [str(dist), str(want)]
+		fars += 1 if far else 0
+		sides[0 if SimWrap.sdx(x0, sh.px) < 0.0 else 1] += 1
+		var lx: float = SimWrap.sdx(x0, sh.px)
+		var ly: float = sh.py - y0 + 4.0 * sh.arc
+		var tx: float = SimWrap.sdx(x0, a.x)
+		var ty: float = a.y + SimShots.chest - y0
+		var cosv: float = (lx * tx + ly * ty) / (SimDetMath.hypot(lx, ly) * SimDetMath.hypot(tx, ty))
+		if cosv > D.backCos + 0.000001:
+			return "a wild shot left within 30 degrees of the line back to its shooter (cosine %s)" % str(cosv)
+		sh.dead = true
+	if sides[0] == 0 or sides[1] == 0 or fars == 0 or fars > 30 or sides[1] <= sides[0]:
+		return "60 wild deflects: %d toward the shooter, %d away, %d far" % [sides[0], sides[1], fars]
+	if count.call("shot_deflect") != 60:
+		return "60 wild deflects sent %d shot_deflect events" % count.call("shot_deflect")
+	clear.call()
+	# it lands and ends there, hitting nobody who is not in its way: not the deflector it starts on
+	a.x = 40000.0; a.y = 3000.0
+	b.x = 40900.0; b.y = 3000.0
+	sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+	run.call(4)
+	b.x = sh.x; b.y = sh.y - SimShots.chest
+	SimShots.deflect(S, sh, 1)
+	var px: float = sh.px
+	a.x = SimWrap.wrap(a.x + 80000.0)
+	run.call(sh.left + 2)
+	if not S.shots.is_empty() or count.call("shot_hit") != 0 or count.call("shot_end", "cause", "ground") + count.call("shot_end", "cause", "water") != 1:
+		return "a wild shot did not land (hits %d)" % count.call("shot_hit")
+	if absf(SimWrap.sdx(sh.x, px)) > 0.001 and sh.y > WorldTerrain.groundY(S, sh.x) + 0.001 and sh.y > WorldWater.surfaceAt(S, sh.x) + 0.001:
+		return "a wild shot ended in the air"
+	clear.call()
+	# its own shooter, standing where it lands, is hit
+	a.x = 40000.0; a.y = 3000.0
+	b.x = 40900.0; b.y = 3000.0
+	sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+	run.call(4)
+	SimShots.deflect(S, sh, 1)
+	a.x = sh.px
+	a.y = sh.py
+	var hpA: float = a.hp
+	run.call(sh.left + 2)
+	if count.call("shot_hit", "victim", 0.0) != 1 or a.hp != hpA - bolt.dmg:
+		return "a wild shot did not hit its own shooter in its way"
+	clear.call()
+	# the deflector is safe for safeTicks, and not after
+	a.x = 40000.0; a.y = 3000.0
+	b.x = 40900.0; b.y = 3000.0
+	sh = SimShots.fire(S, 0, "bolt", {"target": 1})
+	run.call(4)
+	SimShots.deflect(S, sh, 1)
+	var hpB: float = b.hp
+	for t in range(int(D.safeTicks) + 3):
+		b.x = sh.x; b.y = sh.y - SimShots.chest   # he rides on it
+		run.call(1)
+		if t < int(D.safeTicks) and (sh.dead or b.hp != hpB):
+			return "a wild shot hit its deflector %d ticks after the deflect" % (t + 1)
+	if b.hp != hpB - bolt.dmg:
+		return "a wild shot never hit its deflector, who stayed in its way past the safe ticks"
+	clear.call()
+	SimShots.scatter = false
+	# ---- the spray
+	a.x = 40000.0; a.y = 3000.0
+	b.x = 41200.0; b.y = 3500.0
+	var lo: float = 9.0
+	var hi: float = -9.0
+	for n in range(40):
+		sh = SimShots.fire(S, 0, "bolt", {"aim": 1, "spread": 0.3})
+		var ex: float = SimWrap.sdx(sh.x, b.x)
+		var ey: float = b.y + SimShots.chest - sh.y
+		# the turn's slope: the cross product over the dot product of the exact aim and the shot's direction
+		var sl: float = (ex * sh.vy - ey * sh.vx) / (ex * sh.vx + ey * sh.vy)
+		var wantS: float = 0.3 * (SimRng.keyed(int(S.game.seed), "shot.spray", sh.id) * 2.0 - 1.0)
+		if sh.mode != SimShots.LINE or absf(sl - wantS) > 0.000001 or absf(sl) > 0.3:
+			return "a sprayed bolt is turned by %s, the seeded draw says %s" % [str(sl), str(wantS)]
+		if absf(SimDetMath.hypot(sh.vx, sh.vy) - bolt.speed * 60.0) > 0.001:
+			return "a sprayed bolt's speed is %s" % str(SimDetMath.hypot(sh.vx, sh.vy))
+		lo = minf(lo, sl)
+		hi = maxf(hi, sl)
+		sh.dead = true
+		if n % 20 == 19:
+			run.call(1)
+	if lo > -0.15 or hi < 0.15:
+		return "40 sprayed bolts covered only %s to %s of a cone of 0.3" % [str(lo), str(hi)]
+	clear.call()
+	sh = SimShots.fire(S, 0, "bolt", {"aim": 1})
+	if absf(sh.vx * (b.y + SimShots.chest - sh.y) - sh.vy * SimWrap.sdx(sh.x, b.x)) > 0.001:
+		return "an aimed bolt with no spread is not on its target"
+	clear.call()
+	# a seeking shot with a spread: a small one lands, a wide one passes him and flies on
+	for wide in [false, true]:
+		var hits: int = 0
+		var flew: int = 0
+		for n in range(12):
+			S.out.fx.clear()
+			sh = SimShots.fire(S, 0, "bolt", {"target": 1, "spread": 0.5 if wide else 0.02})
+			var offD: float = SimDetMath.hypot(sh.ax, sh.ay)
+			var reach: float = bolt.r + SimShots.bodyR
+			if absf(sh.ax * SimWrap.sdx(sh.x, b.x) + sh.ay * (b.y + SimShots.chest - sh.y)) > 0.001:
+				return "a sprayed seeking bolt's offset is not across its line of fire"
+			run.call(sh.left + 1)
+			var hitN: int = count.call("shot_hit", "victim", 1.0)
+			if (offD <= reach) != (hitN == 1):
+				return "a seeking bolt aimed %s beside him (reach %s) made %d hits" % [str(offD), str(reach), hitN]
+			hits += hitN
+			if hitN == 0:
+				if sh.dead or sh.mode != SimShots.LINE:
+					return "a sprayed seeking bolt that passed him did not fly on"
+				flew += 1
+			sh.dead = true
+		if (not wide and hits != 12) or (wide and flew == 0):
+			return "12 seeking bolts with a %s spread: %d hits, %d flew on" % ["wide" if wide else "small", hits, flew]
+	clear.call()
+	# ---- mines
+	a.x = 40000.0; a.y = 3000.0
+	b.x = 90000.0; b.y = 3000.0
+	var m = SimShots.fire(S, 0, "mine")
+	if m == null or m.mode != SimShots.MINE or m.arm != md.armTicks or m.fuse != -1 or m.left != mk.lifeTicks:
+		return "a mine was not laid"
+	if SimShots.fire(S, 0, "mine", {"x": a.x + SimShots.mineGap - 1.0}) != null or SimShots.fire(S, 1, "mine", {"x": a.x, "y": m.y + SimShots.mineGap - 1.0}) != null:
+		return "a mine was laid within the gap of another"
+	var idAfter: int = S.shotSeq
+	if idAfter != m.id:
+		return "a refused mine used up a shot id"
+	var mx0: float = m.x
+	var my0: float = m.y
+	# not armed yet: the rival beside it does not set it off, and neither does a blow
+	b.x = a.x + 20.0; b.y = a.y
+	run.call(int(md.armTicks) - 2)
+	if m.fuse >= 0 or SimShots.trip(S, m, "blow", 1) or count.call("mine_trip") != 0:
+		return "an unarmed mine was set off"
+	b.x = 90000.0
+	run.call(40)
+	if m.dead or m.x != mx0 or m.y != my0 or m.arm != 0 or m.fuse >= 0:
+		return "a mine moved, or its owner beside it set it off"
+	# the rival comes within the trigger radius: it blows, he takes its damage, its owner beside it takes his share
+	S.out.fx.clear()
+	hpA = a.hp
+	hpB = b.hp
+	b.x = a.x + md.trigR + 5.0; b.y = a.y
+	run.call(2)
+	if m.fuse >= 0:
+		return "a mine was set off from beyond its trigger radius"
+	b.x = a.x + md.trigR - 5.0
+	run.call(1 + int(md.fuseTicks))
+	if not m.dead or count.call("mine_trip", "kind", "fighter") != 1 or count.call("shot_end", "cause", "mine") != 1:
+		return "a rival within the trigger radius did not set the mine off"
+	if b.hp != hpB - mk.dmg or absf(a.hp - (hpA - mk.dmg * md.ownShare)) > 0.000001:
+		return "a mine's blast: the rival lost %s (its damage is %s), its owner %s" % [str(hpB - b.hp), str(mk.dmg), str(hpA - a.hp)]
+	clear.call()
+	# the cap per fighter: one more fizzles the oldest
+	b.x = 90000.0
+	var first = null
+	for n in range(SimShots.mineCap + 1):
+		var q = SimShots.fire(S, 0, "mine", {"x": 40000.0 + 400.0 * n})
+		if q == null:
+			return "mine %d of the cap was refused" % (n + 1)
+		if n == 0:
+			first = q
+	run.call(1)
+	if not first.dead or S.shots.size() != SimShots.mineCap or count.call("shot_end", "cause", "life") != 1:
+		return "one mine past the cap did not fizzle the oldest (%d live)" % S.shots.size()
+	clear.call()
+	# on the ground
+	m = SimShots.fire(S, 0, "mine", {"ground": true})
+	if m.y != WorldTerrain.groundY(S, m.x) + mk.r or not m.ground:
+		return "a ground mine does not rest on the ground"
+	clear.call()
+	# a shot that hits it sets it off, the rival's or its owner's, and ends there
+	for own in [false, true]:
+		S.out.fx.clear()
+		a.x = 40000.0; a.y = 3000.0
+		b.x = 41000.0; b.y = 3000.0
+		m = SimShots.fire(S, 0, "mine", {"x": 40500.0})
+		run.call(int(md.armTicks) + 1)
+		sh = SimShots.fire(S, 0 if own else 1, "bolt", {"ux": 1.0 if own else -1.0, "uy": 0.0})
+		run.call(12 + int(md.fuseTicks))
+		if not m.dead or not sh.dead or count.call("mine_trip", "kind", "shot") != 1 or count.call("shot_end", "cause", "mine") != 1 or count.call("shot_end", "cause", "clash") != 1:
+			return "%s bolt did not set the mine off" % ("its owner's" if own else "the rival's")
+		clear.call()
+	# a chain: two mines within the first one's chain radius follow it, the nearer first, one chain delay apart
+	a.x = 80000.0
+	b.x = 90000.0
+	var g: float = SimShots.mineGap
+	if md.chainR < g:
+		return "the chain radius is under the gap between mines: no chain can happen"
+	var m1 = SimShots.fire(S, 0, "mine", {"x": 40000.0, "y": 3000.0})
+	var m2 = SimShots.fire(S, 1, "mine", {"x": 40000.0 + g, "y": 3000.0})
+	var m3 = SimShots.fire(S, 0, "mine", {"x": 40000.0 - g * 0.8, "y": 3000.0 - g * 0.6})
+	var m4 = SimShots.fire(S, 0, "mine", {"x": 40000.0 + g * 2.0, "y": 3000.0})
+	if m1 == null or m2 == null or m3 == null or m4 == null:
+		return "the chain's mines were not laid"
+	run.call(int(md.armTicks) + 1)
+	if not SimShots.trip(S, m1, "blow", 1):
+		return "a blow did not set off an armed mine"
+	var ends: Array = [-1, -1, -1, -1]
+	for t in range(int(md.fuseTicks) + 3 * int(md.chainTicks) + 3):
+		run.call(1)
+		var ms: Array = [m1, m2, m3, m4]
+		for n in range(4):
+			if ms[n].dead and ends[n] < 0:
+				ends[n] = t
+	# m2 and m3 are both one gap from m1: the tie goes to the one laid first; m4 is in reach of m2 only
+	if ends[0] < 0 or ends[1] - ends[0] != md.chainTicks or ends[2] - ends[0] != 2 * md.chainTicks or ends[3] - ends[1] != md.chainTicks:
+		return "the chain blew at ticks %s, a chain delay is %d" % [str(ends), md.chainTicks]
+	if count.call("mine_trip", "kind", "chain") != 3 or count.call("shot_end", "cause", "mine") != 4:
+		return "the chain sent %d chain events and %d blasts" % [count.call("mine_trip", "kind", "chain"), count.call("shot_end", "cause", "mine")]
+	clear.call()
+	# its life: it fizzles, and hurts nobody
+	m = SimShots.fire(S, 0, "mine", {"x": 40000.0, "y": 3000.0})
+	b.x = 40000.0 + md.blastR - 10.0; b.y = 3000.0 - SimShots.chest
+	hpB = b.hp
+	b.state = "intro"   # (he cannot set it off)
+	run.call(int(mk.lifeTicks) + 1)
+	b.state = "free"
+	if not S.shots.is_empty() or count.call("shot_end", "cause", "life") != 1 or b.hp != hpB:
+		return "a mine did not fizzle at the end of its life"
+	# mines count toward the cap
+	clear.call()
+	var made: int = 0
+	for n in range(SimShots.cap):
+		if SimShots.fire(S, 0, "bolt", {"ux": 1.0, "uy": 0.0}) != null:
+			made += 1
+	if made != SimShots.cap or SimShots.fire(S, 1, "mine", {"x": 60000.0}) != null:
+		return "a mine was laid past the cap on live shots"
+	clear.call()
+	SimCore.dispose(S)
+	return ""
+
+
 func _agencyLines() -> String:
 	var S := SimCore.createSim()
 	SimCore.newMatch(S, 5, {"p1": false, "p2": false}, {"assists": [["autoCharge"], []]})

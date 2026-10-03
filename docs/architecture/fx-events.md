@@ -176,7 +176,9 @@ An intro tick is a pre-clock tick: `SimCore.step` returns false and consumes no 
 | `shot_fire` | actor, kind, id, x, y, z, target, spd, amount, link, ux, uy | a shot is fired by `actor`: its kind and id, where it starts, the slot it seeks (-1 for none), its speed and direction, its power (`amount`) and its volley's group (`link`) | VFX (the muzzle), Audio |
 | `shot_hit` | actor, victim, kind, id, x, y, z, amount, outcome, link | the shot met `victim`; `amount` is the damage; `outcome` is `hit` by the plain rule, and the director's blasts send their own (guard, deflect and the rest) | VFX, Audio, Camera, the HUD |
 | `shot_clash` | id, b, x, y, z, amount | two opposing shots (ids `id` and `b`) traded `amount` of power at x, y, z | VFX, Audio |
-| `shot_end` | id, kind, x, y, z, cause | the shot is gone; `cause` is hit, clash, ground, water or life | VFX (it stops drawing the shot) |
+| `shot_end` | id, kind, x, y, z, cause | the shot is gone; `cause` is hit, clash, ground, water, life, building (a building stopped it) or mine (a mine's blast; a mine that runs out of life fizzles with `life`) | VFX (it stops drawing the shot; `mine` is a blast) |
+| `shot_deflect` | id, actor, kind, x, y, z, x1, y1, dur | a deflect sent the shot wild from x, y, z: `actor` deflected it, and it lands at x1, y1 in `dur` seconds unless something is in its way (only with `deflect.scatter` on) | VFX, Audio, Camera |
+| `mine_trip` | id, actor, kind, x, y, z, dur | the mine `id` was set off by `actor` (a slot, or -1); `kind` is fighter, shot, blow or chain; it blows in `dur` seconds | VFX (the flash before the blast), Audio |
 | `knockback` | victim, attacker, kind, amount, dur, n, x, y, z | `victim` was sent back, not launched; `kind` is Combat's piece (a short slide, a long slide, a bump, a drift), `amount` the distance, `dur` its seconds, `n` the tick it ends | Animation, Camera, QA |
 | `exchange_end` | actor, kind | `actor`'s exchange ended: `continue` (both stay in reach), `knockback` or `launch` | QA, Camera |
 | `flow` | actor, n | `actor`'s flow count is now `n` | the HUD's recipe strip, QA |
