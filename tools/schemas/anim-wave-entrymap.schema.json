@@ -13,7 +13,7 @@
   "properties": {
     "wave": {
       "type": "string",
-      "pattern": "^(wave|protag)[0-9]+$"
+      "pattern": "^(wave|protag|rival)[0-9]+$"
     },
     "kind": {
       "const": "entries"

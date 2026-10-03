@@ -40281,7 +40281,9 @@
           "set": {
             "/fighters/Bad Name": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40310,7 +40312,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40364,7 +40368,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40394,7 +40400,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40424,7 +40432,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40451,7 +40461,9 @@
           "set": {
             "/fighters/test": {
               "shape": "PP",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40480,7 +40492,9 @@
           "set": {
             "/fighters/test": {
               "shape": "Z",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40509,7 +40523,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "Protag 1",
+              "waves": {
+                "strikes": "Protag 1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40526,7 +40542,7 @@
       ],
       "expect": {
         "rule": "pattern",
-        "pointer": "/fighters/test/wave"
+        "pointer": "/fighters/test/waves/strikes"
       }
     },
     {
@@ -40538,7 +40554,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag9",
+              "waves": {
+                "strikes": "protag9"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40555,7 +40573,7 @@
       ],
       "expect": {
         "rule": "xref:fighters-wave",
-        "pointer": "/fighters/test/wave"
+        "pointer": "/fighters/test/waves/strikes"
       }
     },
     {
@@ -40567,7 +40585,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40595,7 +40615,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40625,7 +40647,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "talon"
@@ -40654,7 +40678,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "talon": "open"
@@ -40683,7 +40709,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {},
                 "rise": 3,
@@ -40707,7 +40735,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40736,7 +40766,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40765,7 +40797,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40794,7 +40828,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40823,7 +40859,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40852,7 +40890,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40878,7 +40918,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40909,7 +40951,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40941,7 +40985,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -40973,7 +41019,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -41005,7 +41053,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -41037,7 +41087,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -41069,7 +41121,9 @@
           "set": {
             "/fighters/test": {
               "shape": "P",
-              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
               "pose_profile": {
                 "hand_states": {
                   "claw": "open"
@@ -41142,6 +41196,420 @@
           "file": "data/anim/waves/wave1.manifest.json",
           "set": {
             "/wave": "fighter1"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-required",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters/test"
+      }
+    },
+    {
+      "id": "anim-fighters-wave-retired",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "wave": "protag1",
+              "waves": {
+                "strikes": "protag1"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/fighters/test/wave"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-strikes-only-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-fighters-waves-all-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "entries": "protag2",
+                "energy": "protag3"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-fighters-waves-strikes-required",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "entries": "protag2"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/fighters/test/waves"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-unknown-key",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "taunts": "protag4"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/fighters/test/waves/taunts"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-entries-shape",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "entries": "Protag 2"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/fighters/test/waves/entries"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-energy-shape",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "energy": "e"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/fighters/test/waves/energy"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-entries-without-poses",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "entries": "protag9"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/entries"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-energy-without-poses",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "energy": "protag9"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/energy"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-strikes-without-keysets",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag2"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/strikes"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-rival-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "rival2",
+                "entries": "rival1"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-keysets-rival-wave-ok",
+      "schema": "anim-wave-keysets.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.keysets.json",
+          "set": {
+            "/keysets/w1.jab/_wave": "rival2"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-wave-manifest-rival-wave-schema-ok",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/wave": "rival2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:wave-manifest",
+        "pointer": "/wave"
+      }
+    },
+    {
+      "id": "anim-wave-manifest-other-wave-name",
+      "schema": "anim-wave-manifest.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/waves/wave1.manifest.json",
+          "set": {
+            "/wave": "boss1"
           }
         }
       ],

@@ -21,7 +21,10 @@ for (const f of ['anim-wave-keysets', 'anim-wave-manifest', 'anim-wave-entries',
 }
 
 // =============================== fighters schema ===============================
-wj('tools/schemas/anim-fighters.schema.json', {
+// the fighters schema later moved from `wave` to `waves` (strikes, entries, energy): do not write the first shape over it
+const fighterSchemaFile = 'tools/schemas/anim-fighters.schema.json';
+const fighterSchemaMoved = fs.existsSync(fighterSchemaFile) && JSON.stringify(rj(fighterSchemaFile)).includes('"waves"');
+if (!fighterSchemaMoved) wj(fighterSchemaFile, {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   $id: 'meridian/anim-fighters',
   title: 'anim.fighters/1',

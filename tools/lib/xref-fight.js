@@ -1029,7 +1029,11 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (id.startsWith('_') || !isObj(fd)) continue;
       const at = `/fighters/${esc(id)}`;
       if (typeof fd.shape === 'string' && shapesF.length && !shapesF.includes(fd.shape)) err(AF, `${at}/shape`, 'fighters-shape', `shape "${fd.shape}" is not in ragdoll_motion.json shapes (${shapesF.join(', ')})`);
-      if (typeof fd.wave === 'string' && !get(`data/anim/waves/${fd.wave}.keysets.json`)) err(AF, `${at}/wave`, 'fighters-wave', `wave "${fd.wave}" has no data/anim/waves/${fd.wave}.keysets.json`);
+      if (isObj(fd.waves)) for (const [kind, w] of Object.entries(fd.waves)) {
+        if (kind.startsWith('_') || typeof w !== 'string') continue;
+        if (!get(`data/anim/waves/${w}.poses.json`)) err(AF, `${at}/waves/${kind}`, 'fighters-wave', `${kind} wave "${w}" has no data/anim/waves/${w}.poses.json`);
+        else if (kind === 'strikes' && !get(`data/anim/waves/${w}.keysets.json`)) err(AF, `${at}/waves/${kind}`, 'fighters-wave', `strikes wave "${w}" has no data/anim/waves/${w}.keysets.json`);
+      }
       if (isObj(fd.timing)) for (const k of ['light', 'heavy']) if (typeof fd.timing[k] === 'string' && profsF.length && !profsF.includes(fd.timing[k])) err(AF, `${at}/timing/${k}`, 'fighters-timing', `timing ${k} "${fd.timing[k]}" is not a profile of profiles.json (${profsF.join(', ')})`);
     }
   }

@@ -105,7 +105,7 @@
           },
           "_wave": {
             "type": "string",
-            "pattern": "^(wave|protag)[0-9]+$"
+            "pattern": "^(wave|protag|rival)[0-9]+$"
           },
           "_variant": {
             "type": "string",
