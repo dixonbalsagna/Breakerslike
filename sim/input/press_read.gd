@@ -19,9 +19,12 @@ extends RefCounted
 ## within 2 * beatHalf, otherwise "off". A style's top level comes from perfect timing: a steady mash, three perfect presses in
 ## a row, or a hold released on the flash. The sim reads the grade; the damage, the blur and the guard break are Game Design's.
 ##
-## Agency pass section 20 (2026-10-03): "steady" is on the beat, not only evenly spaced (gaps within steadyJitter AND every one of
-## the last steadyPresses presses within blurBeatHalf ticks of a blow's contact, so a blind metronome is not steady); the window
-## of presses lapses as a whole after expireTicks with no press (not press by press); and the recipe style (blur, combo, power)
+## Agency pass section 20 (2026-10-03): "steady" is on the beat, with no spacing test: the last steadyPresses presses are each
+## within blurBeatHalf ticks of a DIFFERENT blow's contact (the contact is `down - beat`), consecutive in the log, so any press
+## between them that is off a blow breaks it and two presses on one blow count once. It is immune to hit-stop (live contacts are a
+## cadence plus 4 to 5 ticks apart, and a TRADE BLOWS opener lands 28 and 44 ticks apart) and to the opener's rhythm; a blind
+## metronome is not steady because it is not on the blows. The window of presses lapses as a whole after expireTicks with no press
+## (not press by press), and the recipe style (blur, combo, power)
 ## goes by the share of heavies among the presses present, so a lone heavy is a power blow.
 
 const LIGHT: int = 0
@@ -44,11 +47,10 @@ const DEFAULTS: Dictionary = {
 	"mixShort": 5,        # the short mix window: the latest presses the recipe reads
 	"expireTicks": 90,    # the whole window lapses after this many ticks with no press (section 20)
 	"powerShare": 60,     # heavies over this percent of the presses present make the power style; up to it, combo; none, blur
-	"steadyPresses": 4,   # a steady mash is this many presses in a row, evenly spaced and on the beat
+	"steadyPresses": 4,   # a steady mash is this many presses in a row, evenly spaced and on the beat (section 20: four)
 	"blurBeatHalf": 2,    # each within this many ticks of a blow's contact (the combo's timed press is beatHalf, 4)
-	"blurBeatBonus": 2,   # added on touch or at 30 fps ("slow"); the assist factor doubles it
+	"blurBeatBonus": 0,   # added on touch or at 30 fps ("slow"); 0 by ruling (two more ticks would cover a whole 7-tick beat)
 	"assistFactor": 2,    # accessibility: the beat window doubles
-	"steadyJitter": 3,    # a mash is steady when its gaps differ by this many ticks or fewer
 	"perfectStreak": 3,   # this many perfect presses in a row make a timed string
 }
 
@@ -136,13 +138,13 @@ static func beat_offset(tick: int, blows: Array) -> int:
 
 ## Read a log at tick `now`. `opts`: touch (bool, the wider beat window), assist (bool, the doubled one), offset (int, the
 ## player's timing offset in ticks, -6 to 6: it shifts where the beat is for them), p (a params dictionary, for tests).
-## `slow` (bool) is a 30 fps client: the blur's beat gets blurBeatBonus ticks more, as on touch.
+## `slow` (bool) is a 30 fps client: the blur's beat gets blurBeatBonus ticks more, as on touch (0 now: no extra tolerance).
 ## Returns {style, hold_ticks, on_beat, presses, mix_short, mix_long, recipe, rate}:
 ##   style: "none" (nothing recent), "hold", "rhythm", "mash" or "taps";
 ##   timing: "perfect" (a timed string: a steady mash, a run of perfect presses, or the last release on the flash), "good" (some
 ##     timing: a perfect press or a good release) or "none";
-##   streak: perfect presses in a row ending at the latest; steady: the last steadyPresses presses are evenly spaced (gaps within
-##     steadyJitter, none over mashGap) AND each is within blurBeatHalf ticks of a blow's contact (any style: it makes timing perfect);
+##   streak: perfect presses in a row ending at the latest; steady: the last steadyPresses presses are each within blurBeatHalf
+##     ticks of a different blow's contact, consecutive, with no spacing test (any style: it makes timing perfect);
 ##   release: the grade of the latest released charge ("none" if there is none);
 ##   hold_ticks: how long the held button has been down (0 if none held);
 ##   on_beat: how many of the last `rhythmOf` presses were on the beat;
@@ -184,8 +186,9 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 	# Rhythm: the player is watching the blows.
 	var half: int = _half(p, opts)
 	var shift: int = int(opts.get("offset", 0))
-	# Steady (section 20): the last steadyPresses presses evenly spaced, no gap over mashGap, and every one on a blow's contact
-	# within the blur's tolerance. A blind metronome has the spacing but not the beat, so it is not steady.
+	# Steady (section 20, the EP's ruling): the last steadyPresses presses, consecutive in the log, each within the blur's tolerance
+	# of a DIFFERENT blow's contact (`down - beat`). No spacing test and no gap cap, so hit-stop and the opener's rhythm do not
+	# matter; an off-beat press among them breaks it; two presses on one blow count once.
 	var sneed: int = int(p["steadyPresses"])
 	var bhalf: int = int(p["blurBeatHalf"])
 	if opts.get("touch", false) or opts.get("slow", false):
@@ -193,22 +196,19 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 	if opts.get("assist", false):
 		bhalf *= int(p["assistFactor"])
 	if log.size() >= sneed:
-		var glo: int = 1 << 30
-		var ghi: int = 0
-		var even: bool = true
+		var contacts: Array = []
+		var on_blows: bool = true
 		for k in range(log.size() - sneed, log.size()):
 			var bb: int = int(log[k]["beat"])
 			if bb == NO_BEAT or absi(bb - shift) > bhalf:
-				even = false
+				on_blows = false
 				break
-			if k > log.size() - sneed:
-				var gp: int = int(log[k]["down"]) - int(log[k - 1]["down"])
-				if gp > int(p["mashGap"]):
-					even = false
-					break
-				glo = mini(glo, gp)
-				ghi = maxi(ghi, gp)
-		if even and ghi - glo <= int(p["steadyJitter"]):
+			var contact: int = int(log[k]["down"]) - bb
+			if contacts.has(contact):
+				on_blows = false   # a second press on the same blow
+				break
+			contacts.append(contact)
+		if on_blows:
 			out["steady"] = true
 	var of: int = mini(int(p["rhythmOf"]), log.size())
 	var on: int = 0

@@ -52,9 +52,8 @@
     "powerShare": 60,
     "steadyPresses": 4,
     "blurBeatHalf": 2,
-    "blurBeatBonus": 2,
+    "blurBeatBonus": 0,
     "assistFactor": 2,
-    "steadyJitter": 3,
     "perfectStreak": 3,
     "debounce": 2
   },

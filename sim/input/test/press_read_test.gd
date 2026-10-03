@@ -30,6 +30,7 @@ func _init() -> void:
 	_grades()
 	_timing()
 	_section20_steady()
+	_section20_hitstop()
 	_section20_recipe()
 	_release()
 	_determinism()
@@ -213,7 +214,7 @@ func _timing() -> void:
 	var ragged: Dictionary = SimPressRead.classify(_mk([100, 106, 116, 123]), 126)
 	ok(ragged["style"] == "mash" and not ragged["steady"] and ragged["timing"] == "none", "timing: a ragged mash is a mash, not a perfect one")
 	ok(SimPressRead.classify(_mk([100, 108, 117, 125], [0, 0, 0, 0]), 128)["steady"], "timing: gaps of 8, 9, 8 on the blows are steady (within 3)")
-	ok(not SimPressRead.classify(_mk([100, 108, 120, 128], [0, 0, 0, 0]), 131)["steady"], "timing: gaps of 8, 12, 8 are not, however on the beat")
+	ok(SimPressRead.classify(_mk([100, 108, 121, 129], [0, 0, 0, 0]), 132)["steady"], "timing: gaps of 8, 13, 8 on the blows are steady (no spacing test)")
 	# Taps in time: perfect after three in a row, good before.
 	var three: Dictionary = SimPressRead.classify(_mk([100, 115, 130], [0, 2, -3]), 133)
 	ok(three["style"] == "rhythm" and three["streak"] == 3 and three["timing"] == "perfect", "timing: three perfect taps in a row land clean (perfect)")
@@ -271,104 +272,279 @@ func _beat_log(press_ticks: Array, blows: Array) -> Array:
 	return log
 
 
-## Section 20: steady needs the blows. A blind metronome against a blur's cadence.
+## Section 20 (ruled: four on-beat presses within 2 ticks): steady needs the blows. A blind metronome against a blur's cadence.
 func _section20_steady() -> void:
 	var p: Dictionary = SimPressRead.params()
-	ok(p["steadyPresses"] == 4 and p["blurBeatHalf"] == 2 and p["blurBeatBonus"] == 2 and p["powerShare"] == 60, "s20 data: four presses, 2 ticks (+2), power over 60 percent")
+	var need: int = int(p["steadyPresses"])
+	ok(need == 4 and p["blurBeatHalf"] == 2 and p["blurBeatBonus"] == 0 and p["powerShare"] == 60, "s20 data: four presses, 2 ticks, no bonus, power over 60 percent")
 	# Presses on the contacts, for each cadence in the set, are steady and a perfect blur.
 	for cad in [7, 8, 9, 10]:
 		var blows: Array = []
-		for k in range(12):
+		for k in range(16):
 			blows.append(100 + cad * k)
-		var on: Array = [100 + cad * 2, 100 + cad * 3, 100 + cad * 4, 100 + cad * 5]
-		var c: Dictionary = SimPressRead.classify(_beat_log(on, blows), on[3] + 3)
-		ok(c["steady"] and c["timing"] == "perfect", "s20: presses on the contacts of a %d-tick cadence are steady and perfect" % cad)
+		var on: Array = []
+		for k in range(need):
+			on.append(100 + cad * (2 + k))
+		var c: Dictionary = SimPressRead.classify(_beat_log(on, blows), on[need - 1] + 3)
+		ok(c["steady"] and c["timing"] == "perfect", "s20: %d presses on the contacts of a %d-tick cadence are steady and perfect" % [need, cad])
+		ok(not SimPressRead.classify(_beat_log(on.slice(1), blows), on[need - 1] + 3)["steady"], "s20: one fewer is not enough (%d-tick cadence)" % cad)
 		# A person's jitter of 1 tick is still on them; 3 ticks is not.
-		var near: Array = [on[0] + 1, on[1] + 1, on[2] - 1, on[3] - 1]
-		ok(SimPressRead.classify(_beat_log(near, blows), near[3] + 3)["steady"], "s20: 1 tick of jitter on a %d-tick cadence is still steady" % cad)
-		var off: Array = [on[0], on[1] + 3, on[2], on[3]]
-		ok(not SimPressRead.classify(_beat_log(off, blows), off[3] + 3)["steady"], "s20: one press 3 ticks off a %d-tick cadence breaks it" % cad)
-	# A blind 8-tick metronome, over every phase, against each cadence.
-	var counts: Dictionary = {}
-	for cad in [7, 8, 9, 10]:
-		var blows2: Array = []
-		for k in range(14):
-			blows2.append(100 + cad * k)
-		var steady_phases: int = 0
-		for phase in range(cad):
-			var pt: Array = []
-			for k in range(4):
-				pt.append(100 + cad * 3 + phase + 8 * k)
-			if SimPressRead.classify(_beat_log(pt, blows2), pt[3] + 3)["steady"]:
-				steady_phases += 1
-		counts[cad] = steady_phases
-	ok(counts[10] == 0, "s20: a blind 8-tick metronome is never steady against a 10-tick cadence (drifts 2 ticks a press)")
-	print("s20 measured: a blind 8-tick metronome is steady in %d of 7 phases at cadence 7, %d of 8 at 8, %d of 9 at 9, %d of 10 at 10 (four presses, 2 ticks)" % [counts[7], counts[8], counts[9], counts[10]])
-	ok(counts[7] < 7 and counts[9] < 9, "s20: against a 7 or 9 cadence most phases are not steady")
-	ok(counts[7] <= 3 and counts[9] <= 3, "s20: and no more than 3 phases are (the drift is a tick a press)")
-	ok(counts[8] >= 5, "s20: at the cadence of 8 itself the metronome is on the beat for most phases, as Game Design's one string in four expects")
-	# Data knobs: five or six presses in a row shut the 7 and 9 windows (the QA band's lever).
-	for need in [5, 6]:
-		var q: Dictionary = SimPressRead.params()
-		q["steadyPresses"] = need
-		var worst: int = 0
-		for cad in [7, 9]:
-			var blows3: Array = []
-			for k in range(16):
-				blows3.append(100 + cad * k)
+		var near: Array = []
+		for k in range(need):
+			near.append(int(on[k]) + (1 if k < need / 2 else -1))
+		ok(SimPressRead.classify(_beat_log(near, blows), near[need - 1] + 3)["steady"], "s20: 1 tick of jitter on a %d-tick cadence is still steady" % cad)
+		var off: Array = on.duplicate()
+		off[need - 2] += 3
+		ok(not SimPressRead.classify(_beat_log(off, blows), off[need - 1] + 3)["steady"], "s20: one press 3 ticks off a %d-tick cadence breaks it" % cad)
+	# The two bands over whole strings, with the ruled numbers. Blind: an 8-tick metronome at any phase against each cadence,
+	# the four cadences equally likely, steady at ANY point of a string of 8, 12 and 20 presses.
+	var line: String = ""
+	for length in [8, 12, 20]:
+		var hit: Dictionary = {}
+		for cad in [7, 8, 9, 10]:
+			var blows2: Array = []
+			for k in range(40):
+				blows2.append(100 + cad * k)
+			var n_hit: int = 0
 			for phase in range(cad):
+				var pt: Array = []
+				for k in range(length):
+					pt.append(100 + phase + 8 * k)
+				if _steady_somewhere(pt, blows2):
+					n_hit += 1
+			hit[cad] = n_hit
+		var share: float = (0.25 * float(hit[7]) / 7.0 + 0.25 * float(hit[8]) / 8.0 + 0.25 * float(hit[9]) / 9.0 + 0.25 * float(hit[10]) / 10.0) * 100.0
+		line += " %d presses: %.1f%% (cadence 7: %d of 7 phases, 8: %d of 8, 9: %d of 9, 10: %d of 10);" % [length, share, hit[7], hit[8], hit[9], hit[10]]
+	print("s20 measured, blind 8-tick masher on SYNTHETIC contacts with no hit-stop (information only; the band is asserted under live spacing below):" + line)
+	# The script that presses on every contact: every cadence, strings of 8 presses or more.
+	var script_hits: int = 0
+	var script_total: int = 0
+	for length in [8, 12, 20]:
+		for cad in [7, 8, 9, 10]:
+			var blows3: Array = []
+			for k in range(40):
+				blows3.append(100 + cad * k)
+			var pt3: Array = []
+			for k in range(length):
+				pt3.append(100 + cad * k)
+			script_total += 1
+			if _steady_somewhere(pt3, blows3):
+				script_hits += 1
+	ok(script_hits * 100 >= script_total * 80, "s20: the on-contact script earns the perfect blur on at least 80 percent of strings of 8 presses or more, synthetic contacts (%d of %d)" % [script_hits, script_total])
+	# A human-ish script: each press within one tick of its contact, a seeded jitter, strings of 8 to 20 presses.
+	var rng := SimRng.new(2026)
+	var strings: Array = []
+	for length in [8, 12, 20]:
+		for cad in [7, 8, 9, 10]:
+			for rep in range(25):
+				var pt4: Array = []
+				for k in range(length):
+					pt4.append(100 + cad * k + int(floor(rng.next() * 3.0)) - 1)
+				strings.append([cad, pt4])
+	var h_hits: int = 0
+	for sc in strings:
+		var blows4: Array = []
+		for k in range(40):
+			blows4.append(100 + int(sc[0]) * k)
+		if _steady_somewhere(sc[1], blows4):
+			h_hits += 1
+	print("s20 measured, a player with uniform jitter of up to one tick on every contact (synthetic contacts): %d of %d strings (%.0f%%)" % [h_hits, strings.size(), 100.0 * float(h_hits) / float(strings.size())])
+	ok(h_hits * 100 >= strings.size() * 80, "s20: a player within one tick of every contact earns it on at least 80 percent of strings")
+	# Touch and 30 fps get no extra tolerance (ruled); the assist still doubles the window, and the offset moves the mark.
+	var blows5: Array = []
+	for k in range(14):
+		blows5.append(100 + 8 * k)
+	var late3: Array = []
+	for k in range(need):
+		late3.append(100 + 8 * (2 + k) + 3)
+	var l3: Array = _beat_log(late3, blows5)   # 3 ticks late each time, even
+	var at3: int = int(late3[need - 1]) + 3
+	ok(not SimPressRead.classify(l3, at3)["steady"], "s20: 3 ticks late each time is outside the blur's 2")
+	ok(not SimPressRead.classify(l3, at3, {"touch": true})["steady"], "s20: touch gets no extra tolerance for the blur's beat")
+	ok(not SimPressRead.classify(l3, at3, {"slow": true})["steady"], "s20: nor does a 30 fps client")
+	ok(SimPressRead.classify(l3, at3, {"assist": true})["steady"], "s20: the assist (accessibility) still doubles the window")
+	ok(SimPressRead.classify(l3, at3, {"offset": 3})["steady"], "s20: and the player's timing offset moves the mark")
+	# The EP's rule: no spacing test. Any gaps on different blows are steady; the opener's 28 and 44 ticks, then a cadence.
+	for cad in [7, 8, 9, 10]:
+		var opener: Array = [100, 128, 172, 172 + cad, 172 + 2 * cad]
+		ok(SimPressRead.classify(_beat_log(opener.slice(0, 4), opener), opener[3] + 3)["steady"], "s20: presses on the contacts with gaps 28, 44 and %d are steady" % cad)
+		ok(SimPressRead.classify(_beat_log(opener.slice(1, 5), opener), opener[4] + 3)["steady"], "s20: and gaps 44, %d and %d (the opener's tail) are steady" % [cad, cad])
+		var live: Array = [100, 100 + cad + 4, 100 + 2 * (cad + 4), 100 + 3 * (cad + 4)]
+		ok(SimPressRead.classify(_beat_log(live, live), live[3] + 3)["steady"], "s20: contacts a cadence of %d plus 4 ticks of hit-stop apart are steady" % cad)
+		var live5: Array = [100, 100 + cad + 5, 100 + 2 * (cad + 5), 100 + 3 * (cad + 5)]
+		ok(SimPressRead.classify(_beat_log(live5, live5), live5[3] + 3)["steady"], "s20: and a cadence of %d plus 5 ticks of hit-stop" % cad)
+	# Two presses on one blow count once.
+	var blows7: Array = [100, 128, 172, 180, 188]
+	var twice: Array = _beat_log([128, 130, 172, 180], blows7)
+	ok(not SimPressRead.classify(twice, 183)["steady"], "s20: two presses on one blow do not count twice (128 and 130 are one blow)")
+	var thrice: Array = _beat_log([100, 128, 172, 180, 188, 188 + 1], [100, 128, 172, 180, 188])
+	ok(not SimPressRead.classify(thrice, 192)["steady"], "s20: a double press on the last blow breaks the last four")
+	# A press 4 ticks late is not on the blow.
+	var late4: Array = _beat_log([100, 128, 172, 184], [100, 128, 172, 180])
+	ok(not SimPressRead.classify(late4, 187)["steady"], "s20: a press 4 ticks late is not steady")
+	var late2: Array = _beat_log([100, 128, 172, 182], [100, 128, 172, 180])
+	ok(SimPressRead.classify(late2, 185)["steady"], "s20: 2 ticks late is still on the blow")
+	# An off-beat press between them breaks it, and four clean presses after it make it again.
+	var blows8: Array = [100, 128, 172, 180, 188, 196, 204]
+	var broken: Array = _beat_log([100, 128, 150, 172, 180], blows8)
+	ok(not SimPressRead.classify(broken, 183)["steady"], "s20: a press off every blow among the last four breaks it")
+	var healed: Array = _beat_log([100, 128, 150, 172, 180, 188, 196], blows8)
+	ok(SimPressRead.classify(healed, 199)["steady"], "s20: four clean presses after it are steady again")
+	# Out of order or outside an exchange: no blows, no steady.
+	ok(not SimPressRead.classify(_beat_log([100, 128, 172, 180], []), 183)["steady"], "s20: with no blows to be on there is no steady")
+	# No absolute spacing: gaps of 12, 13 and 15 on the beat are steady (live contacts are a cadence plus the hit-stop apart).
+	for gap in [11, 12, 13, 14, 15]:
+		var even: Array = []
+		for k in range(need):
+			even.append(100 + gap * k)
+		ok(SimPressRead.classify(_beat_log(even, even), even[need - 1] + 3)["steady"], "s20: %d presses on the beat %d ticks apart are steady (no absolute gap cap)" % [need, gap])
+
+
+## Whether the log of these presses (the latest 8 at each step, as the director keeps them) is steady at any point.
+func _steady_somewhere(press_ticks: Array, blows: Array, opts: Dictionary = {}) -> bool:
+	for k in range(press_ticks.size()):
+		var sub: Array = press_ticks.slice(maxi(0, k - 7), k + 1)
+		if SimPressRead.classify(_beat_log(sub, blows), int(sub[sub.size() - 1]) + 3, opts)["steady"]:
+			return true
+	return false
+
+
+## Live contacts: a blur's blows are a cadence of 7 to 10 live ticks plus the chain strike's hit-stop (4 to 5 ticks) apart, because
+## S.tick runs through hit-stop, so presses on the contacts are 11 to 15 ticks apart (Encounter measured 11, 12, 12, 12 at cadence 7).
+## `hs` is the hit-stop per blow: 4, 5, or "mixed" (a seeded 4 or 5 each blow).
+func _live_contacts(cad: int, hs: String, count: int, seed_: int) -> Array:
+	var r := SimRng.new(seed_)
+	var out: Array = []
+	var at: int = 100
+	for k in range(count):
+		out.append(at)
+		var h: int = 4 if hs == "4" else (5 if hs == "5" else (4 + int(floor(r.next() * 2.0))))
+		at += cad + h
+	return out
+
+
+## The opener a TRADE BLOWS string starts with: blows 28 and 44 ticks apart, then the cadence plus hit-stop.
+func _opener_contacts(cad: int, hs: String, count: int, seed_: int) -> Array:
+	var r := SimRng.new(seed_)
+	var out: Array = [100, 128, 172]
+	var at: int = 172
+	while out.size() < count:
+		var h: int = 4 if hs == "4" else (5 if hs == "5" else (4 + int(floor(r.next() * 2.0))))
+		at += cad + h
+		out.append(at)
+	return out
+
+
+func _section20_hitstop() -> void:
+	var combos: Array = []
+	for cad in [7, 8, 9, 10]:
+		for hs in ["4", "5", "mixed"]:
+			combos.append([cad, hs])
+	# Encounter's measured case: contacts 11, 12, 12, 12 ticks apart.
+	var measured: Array = [100, 111, 123, 135, 147]
+	ok(SimPressRead.classify(_beat_log(measured.slice(0, 4), measured), 138)["steady"], "hit-stop: presses on contacts 11, 12, 12 apart (measured at cadence 7) are steady")
+	# The script that presses on every contact, every cadence and hit-stop, strings of 8 presses or more.
+	var script_hits: int = 0
+	var script_total: int = 0
+	for length in [5, 8, 12, 20]:
+		for c in combos:
+			var blows: Array = _live_contacts(int(c[0]), str(c[1]), 40, 11 + length)
+			var pt: Array = blows.slice(0, length)
+			script_total += 1
+			if _steady_somewhere(pt, blows):
+				script_hits += 1
+	print("hit-stop measured, on-contact script: %d of %d strings steady (%.0f%%)" % [script_hits, script_total, 100.0 * float(script_hits) / float(script_total)])
+	ok(script_hits * 100 >= script_total * 80, "hit-stop: the on-contact script earns the perfect blur on at least 80 percent of strings (five blows or more) under live spacing")
+	# The same with the opener's rhythm (blows 28 and 44 apart before the links), strings of five blows or more.
+	var op_hits: int = 0
+	var op_total: int = 0
+	for length in [5, 8, 12]:
+		for c in combos:
+			var blows_o: Array = _opener_contacts(int(c[0]), str(c[1]), 40, 70 + length)
+			op_total += 1
+			if _steady_somewhere(blows_o.slice(0, length), blows_o):
+				op_hits += 1
+	print("opener measured, on-contact script (28 and 44 ticks, then the cadence plus hit-stop): %d of %d strings steady (%.0f%%)" % [op_hits, op_total, 100.0 * float(op_hits) / float(op_total)])
+	ok(op_hits * 100 >= op_total * 80, "opener: the on-contact script earns the perfect blur on at least 80 percent of strings that start with the 28 and 44 tick opener (five blows or more)")
+	var op_blind: float = 0.0
+	for length in [5, 8, 12]:
+		var o_total: float = 0.0
+		var o_hits: float = 0.0
+		for c in combos:
+			var blows_b: Array = _opener_contacts(int(c[0]), str(c[1]), 60, 900 + length)
+			var o_n: int = 0
+			for phase in range(40):
+				var ptb: Array = []
+				for k in range(length):
+					ptb.append(100 + phase + 8 * k)
+				if _steady_somewhere(ptb, blows_b):
+					o_n += 1
+			o_hits += float(o_n) / 40.0
+			o_total += 1.0
+		op_blind = maxf(op_blind, 100.0 * o_hits / o_total)
+	print("opener measured, blind 8-tick masher, worst of strings of 5, 8 and 12 presses: %.1f%%" % op_blind)
+	ok(op_blind <= 20.0, "opener: a blind 8-tick masher earns the perfect blur on at most 20 percent of strings with the opener (%.1f)" % op_blind)
+	# A person within one tick of every contact (seeded jitter).
+	var rng := SimRng.new(77)
+	var h_hits: int = 0
+	var h_total: int = 0
+	for length in [5, 8, 12, 20]:
+		for c in combos:
+			for rep in range(8):
+				var blows2: Array = _live_contacts(int(c[0]), str(c[1]), 40, 500 + rep)
+				var pt2: Array = []
+				for k in range(length):
+					pt2.append(int(blows2[k]) + int(floor(rng.next() * 3.0)) - 1)
+				h_total += 1
+				if _steady_somewhere(pt2, blows2):
+					h_hits += 1
+	print("hit-stop measured, uniform jitter of up to one tick on every contact: %d of %d strings (%.0f%%)" % [h_hits, h_total, 100.0 * float(h_hits) / float(h_total)])
+	# The blind 8-tick masher under live spacing: every phase of every spacing, equally likely.
+	var line: String = ""
+	var worst_share: float = 0.0
+	for length in [5, 8, 12, 20]:
+		var total_phases: float = 0.0
+		var hits: float = 0.0
+		for c in combos:
+			var blows3: Array = _live_contacts(int(c[0]), str(c[1]), 60, 900 + length)
+			var period: int = int(c[0]) + 4
+			var n_hit: int = 0
+			for phase in range(period + 2):
 				var pt3: Array = []
-				for k in range(need):
-					pt3.append(100 + cad * 3 + phase + 8 * k)
-				if SimPressRead.classify(_beat_log(pt3, blows3), pt3[need - 1] + 3, {"p": q})["steady"]:
-					worst += 1
-		print("s20 measured: with steadyPresses %d a blind 8-tick metronome is steady in %d phases of cadences 7 and 9 together" % [need, worst])
-		if need == 6:
-			ok(worst == 0, "s20: six presses in a row shut the 7 and 9 cadences to a blind metronome")
-	# Touch, 30 fps and assist widen the blur's beat.
-	var blows4: Array = [100, 108, 116, 124, 132, 140]
-	var off3: Array = _beat_log([103, 111, 119, 127], blows4)   # 3 ticks late each time, even
-	ok(not SimPressRead.classify(off3, 130)["steady"], "s20: 3 ticks late each time is outside the blur's 2")
-	ok(SimPressRead.classify(off3, 130, {"touch": true})["steady"], "s20: on touch the blur's window is 4, so it is steady")
-	ok(SimPressRead.classify(off3, 130, {"slow": true})["steady"], "s20: at 30 fps likewise")
-	ok(SimPressRead.classify(off3, 130, {"assist": true})["steady"], "s20: the assist doubles it")
-	ok(SimPressRead.classify(off3, 130, {"offset": 3})["steady"], "s20: and the player's timing offset moves the mark")
-	# Evenly spaced is still needed: on the blows but ragged is not steady.
-	var blows5: Array = [100, 107, 117, 124, 134, 141]
-	ok(SimPressRead.classify(_beat_log([100, 107, 117, 124], blows5), 127)["steady"], "s20: gaps of 7, 10, 7 differ by exactly 3: steady")
-	var blows6: Array = [100, 107, 118, 125]
-	ok(not SimPressRead.classify(_beat_log([100, 107, 118, 125], blows6), 128)["steady"], "s20: a gap of 11 is no longer a mash cadence, however on the beat")
-	# A string of N presses: the metronome walks across the cadence's phases, so a short run can line up by drift. Count the
-	# strings (cadence and phase) in which a blind 8-tick metronome is steady at ANY point, for strings of 8, 12 and 20 presses.
-	for need in [4, 5, 6]:
-		var q: Dictionary = SimPressRead.params()
-		q["steadyPresses"] = need
-		for length in [8, 12, 20]:
-			var hit: Dictionary = {}
-			for cad in [7, 8, 9, 10]:
-				var blows7: Array = []
-				for k in range(40):
-					blows7.append(100 + cad * k)
-				var n_hit: int = 0
-				for phase in range(cad):
-					var pt7: Array = []
-					for k in range(length):
-						pt7.append(100 + phase + 8 * k)
-					var any: bool = false
-					for k in range(need - 1, length):
-						var sub: Array = pt7.slice(maxi(0, k - 7), k + 1)
-						if SimPressRead.classify(_beat_log(sub, blows7), int(sub[sub.size() - 1]) + 3, {"p": q})["steady"]:
-							any = true
-							break
-					if any:
-						n_hit += 1
-				hit[cad] = n_hit
-			var share: float = (0.25 * float(hit[7]) / 7.0 + 0.25 * float(hit[8]) / 8.0 + 0.25 * float(hit[9]) / 9.0 + 0.25 * float(hit[10]) / 10.0) * 100.0
-			print("s20 measured: steadyPresses %d, strings of %d presses: a blind 8-tick metronome is steady at some point in %d of 7 phases (cadence 7), %d of 8 (8), %d of 9 (9), %d of 10 (10): %.1f%% of strings, the four cadences equally likely" % [need, length, hit[7], hit[8], hit[9], hit[10], share])
-			if need == 6 and length == 20:
-				ok(hit[7] == 0 and hit[9] == 0 and hit[10] == 0, "s20: with six presses in a row a blind 8-tick metronome is never steady on a 7, 9 or 10 cadence, however long the string")
-			if need == 4 and length == 20:
-				ok(hit[10] == 0, "s20: with four presses a 10-tick cadence still shuts it out however long the string")
+				for k in range(length):
+					pt3.append(100 + phase + 8 * k)
+				if _steady_somewhere(pt3, blows3):
+					n_hit += 1
+			hits += float(n_hit) / float(period + 2)
+			total_phases += 1.0
+		var share: float = 100.0 * hits / total_phases
+		worst_share = maxf(worst_share, share)
+		line += " %d presses: %.1f%%;" % [length, share]
+	print("hit-stop measured, blind 8-tick masher:" + line)
+	ok(worst_share <= 20.0, "hit-stop: a blind 8-tick masher earns the perfect blur on at most 20 percent of strings under live spacing, at every string length (worst %.1f)" % worst_share)
+	# Which blind rates can ride a live spacing: a metronome whose gap equals the spacing keeps the beat by luck of phase.
+	var rate_line: String = ""
+	for gap in [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
+		var rh: int = 0
+		var rt: int = 0
+		for c in combos:
+			var blows4: Array = _live_contacts(int(c[0]), "4", 60, 31)
+			for phase in range(int(c[0]) + 6):
+				var pt4: Array = []
+				for k in range(12):
+					pt4.append(100 + phase + gap * k)
+				rt += 1
+				if _steady_somewhere(pt4, blows4):
+					rh += 1
+		rate_line += " %d:%.0f%%" % [gap, 100.0 * float(rh) / float(rt)]
+	print("hit-stop measured, blind metronome by gap (strings of 12, hit-stop 4, share of phases and cadences):" + rate_line)
+	# The assist still doubles the window under live spacing.
+	var blows5: Array = _live_contacts(7, "4", 20, 3)
+	var late: Array = []
+	for k in range(int(SimPressRead.params()["steadyPresses"])):
+		late.append(int(blows5[2 + k]) + 3)
+	var ll: Array = _beat_log(late, blows5)
+	ok(not SimPressRead.classify(ll, int(late[late.size() - 1]) + 3)["steady"] and SimPressRead.classify(ll, int(late[late.size() - 1]) + 3, {"assist": true})["steady"], "hit-stop: 3 ticks late each time is not steady, and the assist's doubled window makes it so")
 
 
 func _section20_recipe() -> void:
