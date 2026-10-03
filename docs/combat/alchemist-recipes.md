@@ -32,8 +32,8 @@ Game Design's rule: each timed press adds 1 to the fighter's flow, up to 5; a pr
 
 A string that ends on a light stays a brawl: one of the three level endings.
 
-### 1.3 Six blur patterns (data)
-A perfect blur is five lights. A pattern fixes the order of limbs and targets; the composer fills each step from the lights that fit, with no key strike twice. Each pattern can be filled from wave 1's lights (checked against the parked list).
+### 1.3 The blur patterns (data)
+Every blur string draws a pattern at its first blow (Game Design, section 6.3 below); the first six are here and two more are in section 6.3. A pattern fixes the order of limbs and targets; the composer fills each step from the lights that fit, with no key strike twice. Each pattern can be filled from wave 1's lights (checked against the parked list).
 
 | Pattern | Limb to target, in order | Reads as |
 | :--- | :--- | :--- |
@@ -202,7 +202,7 @@ Nothing is live because KAI and VORR still draw on the placeholder key sets, and
 
 ## 6. For slice 11: each piece's limb and target, and the cadence (parked, 2026-10-03)
 
-`data/combat/recipes.json` is live since `08a6002` (section 5's draft, as it stood). The next version is parked as `pending/recipes.slice11.json`, built on the live file at `ba91c14`. It differs in three places, and nothing in the tree is edited yet.
+`data/combat/recipes.json` is live since `08a6002` (section 5's draft, as it stood). The next version is parked as `pending/recipes.slice11.json`, built on the live file at `ba91c14`. It adds `pieces`, two patterns and `patternGates`, and rewrites the blur style's two forms and `patternRule` (sections 6.1 to 6.4). Nothing in the tree is edited yet.
 
 ### 6.1 `pieces`: the limb and the target of every pool strike
 The pools carry ids and statuses only, and the director cannot read Animation's manifests (they are render data, outside the sim's hash). So the blur patterns' steps had nothing to match against.
@@ -223,7 +223,7 @@ The pools carry ids and statuses only, and the director cannot read Animation's 
 - A posed piece's limb and target equal its manifest rows' (the manifest's limb without `_l` or `_r`).
 - `recipes-blur` reads `pieces` and no longer the manifests, and counts repeats: for each fighter, a step that a pattern uses twice needs two pieces of `blur.base` or `blur.toward` that are not waiting, since no key strike plays twice in a string.
 
-**How the patterns fill today** (checked by script, both fighters): every step of all six fills. Three steps have exactly as many pieces as the pattern needs: the rival's foot to the chest in `pendulum` (side kick, snap round), and the elbow to the jaw in `inside` for both (short elbow, rising elbow). There the director's rule of stepping past his last two picks has to give way to the pattern.
+**How the patterns fill** (checked by script, both fighters, all eight patterns): every step fills, and every blur light has a step in some pattern. Many steps have only as many pieces as they need: one piece for the hand to the gut, the foot to the gut, the legs or the shins, the knee, the shoulder and the chop to the arm; exactly two for the rival's foot to the chest in `pendulum` and for the elbow to the jaw in `inside`. Wherever that is so, the pattern wins over the director's rule of stepping past his last two picks.
 
 ### 6.2 What the cadence changes (Game Design, `agency-pass.md` section 20)
 A blur string now lands its blows 7, 8, 9 or 10 ticks apart, drawn when the string starts, in place of a fixed spacing.
@@ -233,6 +233,38 @@ A blur string now lands its blows 7, 8, 9 or 10 ticks apart, drawn when the stri
 - **The cadence set is not in the recipes.** It is the director's number, so it belongs in Encounter's `data/director/alchemy.json`.
 - **No strike row changes.** Every blur light winds up in 6 ticks, under the shortest cadence, except the twin spear and the sweep at 8. Those two lose one tick of wind-up at a cadence of 7 and play whole from 8 up. That is Animation's to shorten, as it already does at chain speed.
 
-**One question for Game Design.** Section 20 makes the perfect blur known at the fourth press on the beat. By then three or four of the string's blows are thrown, so "one pattern of five lights" cannot be the perfect blur's own five. Two ways to settle it:
-1. **Every blur string follows a pattern from its first blow, drawn with its cadence** (my recommendation). The limbs and the beat then show together in the first two blows, which is what the player is asked to read; the perfect grade changes how the blows land and the ender, not the order. Two lights fit no pattern today, the sweep (to the shins) and the Protagonist's knife-hand chop (to the arm), so I would add steps for them.
-2. **The pattern starts on the blow after the mash turns steady** and carries into the next string.
+**Ruled by Game Design** (`agency-pass.md` section 20, amended): every blur string draws a pattern together with its cadence at its first blow. The first two blows show both: which limbs, and how fast. The perfect blur is only known at the fourth on-beat press, so the pattern cannot belong to it alone.
+
+### 6.3 Two more patterns, and the gates
+Two blur lights fitted no pattern: the sweep, and the Protagonist's knife-hand chop. Each now has one.
+
+| Pattern | Limb to target, in order | Reads as | Open when |
+| :--- | :--- | :--- | :--- |
+| **Reap** | hand to head, hand to chest, foot to shins, hand to chest, hand to head | high, middle, then the feet taken, and back up as he staggers | both fighters are on the ground (the sweep needs it) |
+| **Breach** | hand to arm, hand to head, foot to chest, hand to head, hand to chest | the chop knocks the guard arm down and the blows come round through the gap | the Protagonist's strings only (the chop is his) |
+
+**`patternGates`** (new, optional) says when a pattern may be drawn, read at the string's first blow. A pattern with no row is always open.
+
+| Key | Meaning |
+| :--- | :--- |
+| `stick` | `toward`. With the stick toward, the draw is among the patterns gated to toward; without it they are closed. `inside` has it: the rule that was a sentence in `patternRule` is now data |
+| `ground` | `true`: both fighters are on the ground. `reap` has it |
+| `fighters` | a list of the pools' fighter keys: only their strings draw it. `breach` has `["protagonist"]` |
+
+**For Tools:** `patternGates` is an object; `_` keys are notes; every other key names a pattern of `blurPatterns`, and its value is closed with at least one of `stick` (the constant `toward`), `ground` (the constant true) and `fighters` (a non-empty list of keys of `pools`). `recipes-blur` checks a pattern only for the fighters it is for. `blurPatterns` keeps its shape, with eight patterns.
+
+**The closing blow.** `patternRule` now says where the pattern's own closing blow comes from: the ender pool, landing where the string's last light landed when a piece of that pool does, and any piece of it otherwise. With `pieces` the director can do that with no new key. Checked: for every pattern but `weave` (whose fourth light goes to the legs) both fighters have such a piece.
+
+### 6.4 The plain blur and the perfect blur, as the data carries them
+Both forms are in the blur's style row (`styles`, id `blur`). The numbers stay where they live, in the director's `data/director/launch.json`; the row names those keys.
+
+| | Plain blur (`base`, read `mashing`) | Perfect blur (`timed`, read `steady`) |
+| :--- | :--- | :--- |
+| **From** | any mash off the beat | the fourth press in a row that is evenly spaced and within 2 ticks of a blow landing |
+| **Strikes** | x0.8 of a light (`blur.strikeMul`) | x1.0 from that press on: they land clean |
+| **The ender** | the weak one: 0.6 of the tier's knock-back distance (`blur.enderDist`) and half a set-up (`setup.weight.blurPlain`) | the pattern's own closing blow: the full distance and a full set-up |
+| **Flow** | none | +1 for each on-beat press |
+| **The look** | the pattern, with loose contact | the same pattern locks in: full contact, a thin outline of his aura, a rising accent in the sound |
+| **Launch** | never | never |
+
+In the data: `base` gains the notes `_plays` and `_endsIn`, and its `ender` is `blur.ender` (it was null, from before the plain blur had an ender); `timed` has `plays` and `endsIn` rewritten, with the notes `_from` and `_look`. Both draw on the same pools, so the director's pool pick does not change.

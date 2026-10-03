@@ -1,7 +1,7 @@
 {
  "schema": "combat.recipes/1",
  "_target": "data/combat/recipes.json",
- "_changes": "PARKED for Encounter's slice 11, built on the live file at ba91c14. Two changes: a new `pieces` block (each pool strike's limb and target), and the blur's fixed spacing is gone from the wording: the string's cadence is the director's (agency-pass.md section 20). Drop _target and _changes when it lands",
+ "_changes": "PARKED for Encounter's slice 11, built on the live file at 7c97ba2. New: `pieces` (each pool strike's limb and target); two blur patterns, reap and breach, for the sweep and the knife-hand chop; `patternGates`. Changed: the blur style's two forms and patternRule, as Game Design ruled (agency-pass.md section 20). Drop _target and _changes when it lands",
  "_about": "PARKED: ready to become data/combat/recipes.json as it stands (drop _target), but not moved. The pieces each of Game Design's recipes calls (docs/design/agency-pass.md section 2), per fighter. Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. The rules and numbers quoted are Game Design's; the director's own numbers (the window, the flow's thresholds, the multipliers) belong in Encounter's data/director/alchemy.json. Checked against HEAD 45a95b9: every posed id is a strike of a wave manifest, and every blur step fills for both fighters.",
  "_status": {
   "live": "plays in live matches today. Nothing in these pools does yet: KAI and VORR still draw on the placeholder key sets, and go-live step 1 is a flag, off",
@@ -34,17 +34,21 @@
    ],
    "base": {
     "read": "mashing",
-    "pool": "blur.base",
-    "towardPool": "blur.toward",
-    "ender": null
-   },
-   "timed": {
-    "read": "steady",
-    "plays": "a perfect blur: one blur pattern of five lights at the string's cadence, every strike clean",
+    "_plays": "the plain blur, mashed off the beat: the string's pattern with loose contact; each strike at the mashed share of a light (data/director/launch.json blur.strikeMul); no flow, because the presses are off the beat",
     "pool": "blur.base",
     "towardPool": "blur.toward",
     "ender": "blur.ender",
-    "endsIn": "knock-back"
+    "_endsIn": "knock-back, the weak one: blur.enderDist of the tier's distance and setup.weight.blurPlain of a set-up (launch.json); never a launch"
+   },
+   "timed": {
+    "read": "steady",
+    "_from": "the fourth press in a row that is evenly spaced and within 2 ticks of one of the blur's blows landing (agency-pass.md section 20)",
+    "plays": "the perfect blur, from that press on: the same pattern locks in and every strike lands clean, at a light's full damage; each on-beat press adds 1 to flow",
+    "pool": "blur.base",
+    "towardPool": "blur.toward",
+    "ender": "blur.ender",
+    "endsIn": "knock-back, the full one: the pattern's own closing blow, the tier's full distance and a full set-up; never a launch",
+    "_look": "full contact on every strike, a thin outline of his aura, and a rising accent in the sound for each blow (VFX and Audio)"
    }
   },
   {
@@ -226,9 +230,67 @@
     "hand",
     "chest"
    ]
+  ],
+  "reap": [
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "foot",
+    "shins"
+   ],
+   [
+    "hand",
+    "chest"
+   ],
+   [
+    "hand",
+    "head"
+   ]
+  ],
+  "breach": [
+   [
+    "hand",
+    "arm_r"
+   ],
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "foot",
+    "chest"
+   ],
+   [
+    "hand",
+    "head"
+   ],
+   [
+    "hand",
+    "chest"
+   ]
   ]
  },
- "patternRule": "each step is filled from the fighter's lights with that limb and target (pieces), no key strike twice; inside is offered only when toward is held. A pattern carries no ticks: the gap between blows is the string's cadence, the director's number",
+ "patternGates": {
+  "_about": "When a pattern may be drawn, read at the string's first blow. A pattern with no row is always open. stick: the stick's direction at that press; with the stick toward, the draw is among the patterns gated to toward, and without it those are closed. ground: both fighters are on the ground. fighters: only these fighters' strings draw it",
+  "inside": {
+   "stick": "toward"
+  },
+  "reap": {
+   "ground": true
+  },
+  "breach": {
+   "fighters": [
+    "protagonist"
+   ]
+  }
+ },
+ "patternRule": "every blur string draws one open pattern, with its cadence, at its first blow (patternGates). Each light of the string takes the next step, filled from the fighter's blur lights with that limb and target (pieces), no key strike twice in a string; a string that runs past the fifth step starts the pattern again. The pattern's own closing blow is drawn from the ender pool and lands where the string's last light landed, when a piece of that pool does; otherwise any piece of it. A pattern carries no ticks: the gap between blows is the string's cadence, the director's number",
  "pieces": {
   "_about": "Each pool strike's striking limb and the socket it lands on, one row per strike id, shared by both fighters (each fighter's own key set plays it). The director fills a blur pattern's steps from these, and Tools checks them against Animation's manifests. limb: hand, foot, elbow, knee, shoulder, head or own. target: a socket of data/anim/sockets.json",
   "strike.jab": {
