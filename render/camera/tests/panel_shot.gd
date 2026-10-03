@@ -67,7 +67,13 @@ func _run() -> void:
 		var b := SimState.Beam.new()
 		b.A = S.fighters[slot]
 		S.beams.append(b)
-		main.split_rig.step(S, vp.x, vp.y, [])
+		# a signature asked for (slice 8: the panel waits for the fire beat, and the fire beat is the new beam here)
+		var atk := SimState.FxEvent.new()
+		atk.type = "attack"
+		atk.kind = "sig"
+		atk.actor = float(slot)
+		atk.target = float(1 - slot)
+		main.split_rig.step(S, vp.x, vp.y, [atk])
 		S.beams.clear()
 	else:
 		var ev := SimState.FxEvent.new()
@@ -79,13 +85,22 @@ func _run() -> void:
 		main.split_rig.step(S, vp.x, vp.y, [])
 	for p in main.all_panes():
 		p.snap_occlusion()
+	# Headless there is no renderer: the frames are driven by process_frame and no picture is saved, but the pipeline
+	# (the rig, the compositor, the inset's camera) runs and the panel record is checked.
+	var headless: bool = DisplayServer.get_name() == "headless"
 	for k in range(4):
 		main.render_view(1.0)
-		await RenderingServer.frame_post_draw
+		if headless:
+			await process_frame
+		else:
+			await RenderingServer.frame_post_draw
 	var fr: SplitFrame = main.split_frame
 	print("panel: %s" % str(fr.panel))
-	main.get_viewport().get_texture().get_image().save_png("%s/panel_%s_%d%s.png" % [out, kind, slot, "_still" if still else ""])
-	quit(0)
+	var ok: bool = not fr.panel.is_empty() and float(fr.panel["open"]) > 0.9 and str(fr.panel["kind"]) == kind
+	print("panel_shot %s" % ("ok" if ok else "FAILED"))
+	if not headless:
+		main.get_viewport().get_texture().get_image().save_png("%s/panel_%s_%d%s.png" % [out, kind, slot, "_still" if still else ""])
+	quit(0 if ok else 1)
 
 
 static func _plains(S: SimState) -> float:

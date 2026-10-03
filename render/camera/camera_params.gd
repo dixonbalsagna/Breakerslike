@@ -190,6 +190,7 @@ const PANEL_BODY: float = 60.0         # the stretch of the fighter that fills t
 const PANEL_FOCUS: float = 60.0        # the point of the fighter at the strip's centre, above his feet: the head and chest (the real renderer draws the plane a little low)
 const PANEL_FILL: float = 0.88
 const PANEL_PUSH: float = 0.06         # a slow push over the strip's life
+const SIG_WINDOW: float = 4.0           # a signature asked for makes its panel within this many seconds (the tell, the 20 ticks of travel)
 const PANEL_EARNED_GAP: float = 12.0   # earned hits share one panel in this many seconds; the peaks always play
 const PANEL_RIPOSTE_WINDOW: float = 2.0  # a launch this soon after the launcher's parry is a riposte
 # kind: {prio (a higher one replaces a lower one), dur (seconds), earned (shares the 12 s ration)}

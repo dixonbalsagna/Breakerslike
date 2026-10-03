@@ -111,7 +111,9 @@ var panels_dropped: int = 0              # panel requests refused: the ration, a
 var panel_log: Array = []                # [match time, kind, slot] of each panel started
 var _pn: Dictionary = {}                 # the running panel: kind, slot, prio, dur, t, band
 var _pn_earned_t: float = -1.0e9
-var _sig_t: Array = [-1.0e9, -1.0e9]    # when each fighter's last signature fire beat asked for a panel
+var _derived_beams_t: float = -1.0e9      # when a swat or split cue last came: the new beams of that tick are not signatures
+var _sig_attack_t: Array = [-1.0e9, -1.0e9]   # when each fighter last asked for a signature
+var _sig_done: Array = [true, true]            # ... and whether its panel has been made    # when each fighter's last signature fire beat asked for a panel
 var panel_floor: float = 0.0              # UI's lowest HUD edge at the top, px (UiHud.panel_floor_y()); the top band starts below it
 var _beams_seen: Dictionary = {}         # instance ids of the beams already counted (a new one is a signature's fire beat)
 var _parry_t: Array = [-1.0e9, -1.0e9]   # when each fighter last parried, for the riposte
@@ -196,7 +198,9 @@ func reset(S: SimState, p_vw: float, p_vh: float) -> void:
 	_in_stare_t = -1
 	_in_clock_t = -1.0
 	_beams_seen = {}
-	_sig_t = [-1.0e9, -1.0e9]
+	_sig_attack_t = [-1.0e9, -1.0e9]
+	_sig_done = [true, true]
+	_derived_beams_t = -1.0e9
 	_pn_earned_t = -1.0e9
 	_parry_t = [-1.0e9, -1.0e9]
 	_shk = PackedFloat64Array([0.0, 0.0])
@@ -380,12 +384,6 @@ func _update_trigger(S: SimState) -> void:
 	if _slam_slot >= 0 or _slam_step(S):
 		return
 	_view_lost = _outside_one_view(S) if sep < 0.5 else false
-	if _ov_kind != "":
-		# A cut-in draws the same camera in both panes and a divider through its centre; the layout waits for it to end.
-		_below_t = 0.0
-		_above_t = 0.0
-		_apply_solo_follow(S)
-		return
 	if not split_wanted:
 		_below_t = _below_t + DT if r_now < rs else 0.0
 		var out_of_frame: bool = _view_lost
@@ -649,8 +647,26 @@ func _read_events(S: SimState, events: Array) -> void:
 				_intro_stare(S, int(float(_ef(ev, "dur", 2.5)) * 60.0 + 0.5))
 			"clock_start":
 				_intro_clock(S, String(_ef(ev, "kind", "full")))
+			"attack":
+				# A signature is asked for: its panel waits for the fire beat, the outcome or the beam, whichever comes
+				# first, and is made once for it (a clash makes more beams later; a swat and a split make some: none of
+				# them is another signature).
+				if String(_ef(ev, "kind", "")) == "sig":
+					var sa: int = int(_ef(ev, "actor", -1))
+					if sa >= 0 and sa < 2:
+						_sig_attack_t[sa] = time
+						_sig_done[sa] = false
+			"cue":
+				# Slice 8's beam plays (docs/director/agency-slice-8.md): beam_fire is the fire beat of a signature (the beam
+				# then takes 20 ticks to arrive); a swat or a split adds beams to the state in the tick of its cue, and those
+				# are the defender's play, not signatures: no panel for them.
+				var cue_kind: String = String(_ef(ev, "kind", ""))
+				if cue_kind == "beam_fire":
+					_panel_request(S, "signature", int(_ef(ev, "actor", -1)))
+				elif cue_kind == "beam_swat" or cue_kind == "beam_split":
+					_derived_beams_t = time
 			"beam_outcome":
-				_panel_request(S, "signature", int(_ef(ev, "actor", -1)))   # the signature's fire beat (the dynamic profile, the live one)
+				_panel_request(S, "signature", int(_ef(ev, "actor", -1)))   # the signature's outcome, 20 ticks after the fire beat in the dynamic profile (deduped against beam_fire)
 			"ko":
 				_panel_request(S, "ko", int(_ef(ev, "winner", -1)))
 			"decisive":
@@ -1009,10 +1025,11 @@ func _panel_request(S: SimState, kind: String, slot: int) -> void:
 		return
 	var k: Dictionary = CamParams.PANEL_KINDS[kind]
 	if kind == "signature":
-		# The event and the new beam are the same fire beat: one request from either.
-		if time - float(_sig_t[slot]) < 0.5:
+		# One panel for each signature asked for, from whichever of the fire beat's cue, the outcome event and the new
+		# beam comes first, within SIG_WINDOW of the request.
+		if bool(_sig_done[slot]) or time - float(_sig_attack_t[slot]) > CamParams.SIG_WINDOW:
 			return
-		_sig_t[slot] = time
+		_sig_done[slot] = true
 	if bool(k["earned"]) and time - _pn_earned_t < CamParams.PANEL_EARNED_GAP:
 		panels_dropped += 1
 		return
@@ -1037,7 +1054,8 @@ func _update_panel(S: SimState) -> void:
 		var id: int = b.get_instance_id()
 		live[id] = true
 		if not _beams_seen.has(id):
-			_panel_request(S, "signature", S.fighters.find(b.A))
+			if time - _derived_beams_t > DT * 1.5:   # not a beam the swat or the split just made
+				_panel_request(S, "signature", S.fighters.find(b.A))
 	_beams_seen = live
 	if _pn.is_empty():
 		return
@@ -2029,5 +2047,15 @@ func _make_frame(S: SimState) -> SplitFrame:
 		if solo_kind == "transform" and _tf_phase == "break" and _tf_ver == "full":
 			rad = maxf(rad, CamParams.CUTAWAY_BREAK_R * vh)   # keep the silhouette against the sky clear of a house in front
 		f.cutaway[ci] = {"request": _ov_kind != "smash", "radius_px": rad, "only": ci if two_up else -1}
+	if _ov_kind != "":
+		# A cut-in is one view: it draws its own camera over both panes, so the frame says one view with no divider. The
+		# layout itself goes on deciding underneath (holding it let a fighter fly 6,000 units away during a cut-in and
+		# the layout come back merged and wrong: an 8-screen jump), and the cut at the cut-in's end shows the result.
+		f.sep = 0.0
+		f.e = 0.0
+		f.sliver = 0.0
+		f.line_alpha = 0.0
+		f.active = [true, false]
+		f.swing = -1.0
 	f.cut = false
 	return f

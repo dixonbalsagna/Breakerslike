@@ -178,7 +178,7 @@ A slanted close-up strip over the live view. **The main view is untouched: no cu
 | KO | 5 | 1.4 s | the winner (the main view is on the loser) | `ko` event |
 | Finisher | 4 | 1.1 s | the attacker | `finisher_start` event |
 | Crippling blow | 3 | 0.8 s | the broken fighter | `region_broken` event |
-| Signature | 2 | 0.9 s | the attacker | the `beam_outcome` event (the live, dynamic profile fires it: 4 in a 5-minute AI match, one for each `attack` of kind sig) **or** a new beam in `S.beams`, whichever comes first; the two are the same fire beat and make one panel. The beam is kept as the fallback for the other profile |
+| Signature | 2 | 0.9 s | the attacker | the first of the `beam_fire` cue, the `beam_outcome` event (20 ticks later since slice 8) and a new beam in `S.beams`, within 4 s of the `attack` event of kind `sig` that asked for it: one panel for each signature. A swat's or a split's beams (a `beam_swat` or `beam_split` cue in the tick) and a clash's later beams make none |
 | Clash won (earned) | 1 | 0.7 s | the winner | `decisive` with kind `clash` or `beam_clash` |
 | Riposte that launches (earned) | 1 | 0.7 s | the riposter | `parry` then `launch` by the same fighter inside 2 s (derived; a `riposte` flag from Combat would be exact) |
 | Ping-pong's ender (earned) | 1 | 0.7 s | the ender | **waits** for the rally events (`rally_end {ender}` is assumed in the rig and untested) |

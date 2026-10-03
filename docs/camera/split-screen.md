@@ -391,3 +391,19 @@ The sweep on the new sim failed three checks, all a fighter out of his pane for 
 **Knock-backs.** A ground knock-back is 3.5 to 8 body heights over 20 ticks (about 800 to 1,800 units a second), below the chase's 4,000 units a second gate, so it never starts a chase, a hold or a split; the `launch` event that follows its plan is read like any launch and gated by the fighter's real speed. No separate case was needed.
 
 **Counts on HEAD d732355 (13 matches):** 1,911 jolts before these changes, 1,742 after (camera jerks only; the zoom and divider counts were already 0). The chased-launch jerks (about 970) are the lag bound's whip; the pitch 49 matches still carry the lane-depth ones.
+
+
+### 21c. Slice 8, the beam plays (HEAD bf4ef3c, 2026-10-03)
+
+`docs/director/agency-slice-8.md`: a signature leaves at the fire beat (cue `beam_fire`) and reaches the defender 20 ticks later (`beam_outcome` then); a swat adds one beam (the swatter's), a split adds two (the attacker's), a walk and a wade add none; the clash's struggle makes more beams later.
+
+**Panels.** The panel rig had asked for a signature panel for each new beam in the state. A signature now makes one panel, from the first of the fire beat's cue, the outcome event and the new beam, within 4 s of the `attack` event of kind `sig` that asked for it (`SIG_WINDOW`). The swat's and the split's beams (a `beam_swat` or `beam_split` cue in the same tick) and a clash's later beams are not signatures. The sweep checks it in every real match (signature panels never exceed the signatures asked for: 6, 6 and 3 in the three single-AI full matches, 11 in the two-human 49 degree one, each equal to the signatures asked for) and in injected plays (a swat, a split and a walk each make one panel; a clash's later beam makes none).
+
+**Framing.** The 20-tick travel needs nothing new: the shared view already fits both fighters and the beam runs between them, and in a split each pane keeps its own fighter while the beam crosses the divider. The swat's beam (to the sky, a building within 30 body heights, or the ground beyond him) and the split's two lesser beams (12 body heights, 14 degrees either side) are deliberately left to fly off: the camera does not zoom out or turn for them, since they are the defender's play and a wide frame would cost the fight its size. The walk (3,000 units a second for 24 to 54 ticks) is two fighters closing, which the one view and the slam already handle; a real walk and a wade occur once in the full matches and add no jolt.
+
+**A bug found on the way.** The layout used to wait while a cut-in ran (so the divider was not drawn through it); on this sim a fighter flew 6,000 units up during a cut-in and the layout came back merged and wrong, an 8-screen jump at 49 degrees. The layout now decides underneath while the frame says one view with no divider.
+
+**Still jolting (Orb's complaint), 13 matches, HEAD bf4ef3c:** 1,546 camera jerks (zoom and divider: none).
+- *A rush across thousands of units (a blitz of 1,000 units a tick, a screen a tick):* the slam's door closes on a pair that is still 2,700 units apart with the rusher's pane streaming at a screen a tick; 0.8 to 1.6 of a screen width in the tick the door starts. Inherent in the rush's speed; the sim's.
+- *A chase of a fast launch* (about 540, mostly 0.05 to 0.2): the lag bound's whip. One 1.0 at 49 degrees is the lane-depth ease (the sim moves a fighter 150 units of depth a tick).
+- *Camera 'other' (about 850):* small hand-overs, mostly 0.05 to 0.15.

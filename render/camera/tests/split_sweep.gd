@@ -76,6 +76,7 @@ var _scan_ok: Array = [false, false]   # the pane was measured last tick too (th
 var _scan_sig: Dictionary = {}
 var _scan_fx: Array = [Vector2.ZERO, Vector2.ZERO]
 var _contact: Dictionary = {}
+var _beamcues: Dictionary = {}
 var _bn: Array = []             # bounces being watched: how far the fighter moves in the world and on the screen after one
 var _bn_done: Array = []
 var _intro_ref: Array = []
@@ -189,6 +190,8 @@ func _run() -> void:
 		await _scenario("intro %s" % iv, func(): return _intro_run(iv), {})
 	await _scenario("panel signature", func(): return _panel_basic(), {})
 	await _scenario("panel ration and priority", func(): return _panel_ration(), {})
+	await _scenario("panel clash beams", func(): return _panel_clash_beams(), {})
+	await _scenario("panel beam plays", func(): return _panel_beam_plays(), {})
 	await _scenario("panel event and beam are one", func(): return _panel_dedupe(), {})
 	await _scenario("panel riposte", func(): return _panel_riposte(), {})
 	for fl in [[0.156, 0], [0.19, 0], [0.209, 1], [0.269, 1]]:
@@ -1096,7 +1099,7 @@ func _fire(slot: int) -> void:
 	var b := SimState.Beam.new()
 	b.A = _S.fighters[slot]
 	_S.beams.append(b)
-	_tick_rig()
+	_tick_rig([_shot_events("attack", {"actor": float(slot), "target": float(1 - slot), "kind": "sig"})])
 	_S.beams.clear()
 
 
@@ -1190,18 +1193,70 @@ func _panel_ration() -> Dictionary:
 	return {}
 
 
+## Slice 8's beam plays: the fire beat (cue beam_fire plus the beam) makes the attacker's panel; 20 ticks later the outcome
+## arrives and the swat's or the split's new beams are the defender's play: still one panel for the signature, none for
+## them. A walk and a wade add no beams.
+func _panel_beam_plays() -> Dictionary:
+	for play in ["swat", "split", "walk"]:
+		_panel_ground()
+		var before: int = _rig.panels
+		var drop0: int = _rig.panels_dropped
+		var b := SimState.Beam.new()
+		b.A = _S.fighters[0]
+		_S.beams.append(b)
+		_tick_rig([_shot_events("attack", {"actor": 0.0, "target": 1.0, "kind": "sig"}), _shot_events("cue", {"actor": 0.0, "kind": "beam_fire"})])
+		_check(_rig.panels == before + 1 and _panel_now()["kind"] == "signature" and int(_panel_now()["slot"]) == 0, "%s: the fire beat made no signature panel (%s)" % [_label, play])
+		for _i in range(20):
+			_tick_rig()
+		# the beam reaches him: the outcome, the cue for the play, and the beams it adds
+		var evs: Array = [_shot_events("beam_outcome", {"actor": 0.0, "target": 1.0, "kind": "DEFLECT"}), _shot_events("cue", {"actor": 1.0, "kind": "beam_" + play})]
+		if play == "swat":
+			var nb := SimState.Beam.new()
+			nb.A = _S.fighters[1]
+			_S.beams.append(nb)
+		elif play == "split":
+			for k in range(2):
+				var sb := SimState.Beam.new()
+				sb.A = _S.fighters[0]
+				_S.beams.append(sb)
+		_tick_rig(evs)
+		for _i in range(40):
+			_tick_rig()
+		_check(_rig.panels == before + 1, "%s: the %s made %d panels (want the one for the signature)" % [_label, play, _rig.panels - before])
+		_S.beams.clear()
+		stats["panel beam play " + play] = "%d panel, %d refused" % [_rig.panels - before, _rig.panels_dropped - drop0]
+	return {}
+
+
+## A clash makes more beams after the outcome (the struggle's): none of them is another signature panel.
+func _panel_clash_beams() -> Dictionary:
+	_panel_ground()
+	var before: int = _rig.panels
+	_fire(0)
+	_tick_rig([_shot_events("beam_outcome", {"actor": 0.0, "target": 1.0, "kind": "CLASH"})])
+	for _i in range(90):
+		_tick_rig()
+	var nb := SimState.Beam.new()
+	nb.A = _S.fighters[0]
+	_S.beams.append(nb)
+	_tick_rig()
+	_S.beams.clear()
+	_check(_rig.panels == before + 1, "%s: a beam later in a clash made another signature panel (%d)" % [_label, _rig.panels - before])
+	return {}
+
+
 ## A signature's `beam_outcome` event and its beam in the same tick make one panel.
 func _panel_dedupe() -> Dictionary:
 	_panel_ground()
 	var b := SimState.Beam.new()
 	b.A = _S.fighters[0]
 	_S.beams.append(b)
-	_tick_rig([_shot_events("beam_outcome", {"actor": 0.0, "target": 1.0, "kind": "HIT"})])
+	_tick_rig([_shot_events("attack", {"actor": 0.0, "target": 1.0, "kind": "sig"}), _shot_events("beam_outcome", {"actor": 0.0, "target": 1.0, "kind": "HIT"})])
 	_S.beams.clear()
 	_check(_rig.panels == 1 and _rig.panels_dropped == 0, "%s: %d panels, %d refused" % [_label, _rig.panels, _rig.panels_dropped])
 	_panel_ground()
 	var before: int = _rig.panels
-	_tick_rig([_shot_events("beam_outcome", {"actor": 1.0, "target": 0.0, "kind": "HIT"})])
+	_tick_rig([_shot_events("attack", {"actor": 1.0, "target": 0.0, "kind": "sig"}), _shot_events("beam_outcome", {"actor": 1.0, "target": 0.0, "kind": "HIT"})])
 	_check(_rig.panels == before + 1 and int(_panel_now()["slot"]) == 1, "%s: the event alone made no panel" % _label)
 	return {}
 
@@ -2026,6 +2081,7 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 	_jolts = []
 	_scan_prev = null
 	_contact = {}
+	_beamcues = {}
 	_bn = []
 	_bn_done = []
 	while t < limit and not (_S.game.ko != null and _S.game.koT > 3.0):
@@ -2055,6 +2111,12 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 			var et: String = String(e.type)
 			if et in ["bounce", "left_ground", "land", "tumble_end", "journey_end"]:
 				_contact[et] = int(_contact.get(et, 0)) + 1
+			if _jolt_trace_seed == seed and (et == "beam_outcome" or (et == "cue" and String(e.kind).begins_with("beam_")) or et == "attack"):
+				print("  BEAMEV %s t=%.3f %s %s actor %d kind %s" % [_label, float(t) / 60.0, et, String(e.kind) if et != "attack" else String(e.kind), int(e.actor), String(e.kind)])
+			if et == "attack" and String(e.kind) == "sig":
+				_beamcues["attack_sig"] = int(_beamcues.get("attack_sig", 0)) + 1
+			if et == "cue" and String(e.kind).begins_with("beam_"):
+				_beamcues[String(e.kind)] = int(_beamcues.get(String(e.kind), 0)) + 1
 			if et == "bounce" and int(e.actor) >= 0 and int(e.actor) < 2:
 				var bf = _S.fighters[int(e.actor)]
 				_bn.append({"a": int(e.actor), "n": 0, "wy0": 1.0e9, "wy1": -1.0e9, "sy0": 1.0e9, "sy1": -1.0e9, "mode": cur.mode, "solo": _rig.solo_kind, "z0": cur.cam_z[0]})
@@ -2135,6 +2197,16 @@ func _real_match(seed: int, human: int = -1, pitch: float = 0.0, ticks: int = -1
 		for b in _bn_done:
 			sc += float(b["sy1"]) - float(b["sy0"])
 		_check(sc / float(_bn_done.size()) >= 30.0, "%s: bounces move %.0f px on the screen on average (want at least 30)" % [_label, sc / float(_bn_done.size())])
+	var sig_panels: int = 0
+	for e in _rig.panel_log:
+		if e[1] == "signature":
+			sig_panels += 1
+	if _jolt_trace_seed == seed:
+		print("  SIGPANELS %s %s" % [_label, str(_rig.panel_log.filter(func(q): return q[1] == "signature").map(func(q): return "%.2f/%d" % [float(q[0]), int(q[2])]))])
+	stats["beam plays " + _label] = "%s; %d signature panels" % [str(_beamcues), sig_panels]
+	# One signature panel at most for each signature asked for (a clash's later beams, the swat's and the split's are not
+	# signatures), and the sig attacks are all given one when the panel is free.
+	_check(sig_panels <= int(_beamcues.get("attack_sig", sig_panels)), "%s: %d signature panels for %d signatures asked for" % [_label, sig_panels, int(_beamcues.get("attack_sig", 0))])
 	stats["contact " + _label] = "%s; %d bounce pushes" % [str(_contact), _rig.bounce_pushes]
 	if ticks > 0 and human < 0 and rig_human < 0:
 		_check(int(_contact.get("bounce", 0)) > 0 and _rig.bounce_pushes > 0, "%s: no bounce in a full-length match (%s)" % [_label, str(_contact)])
