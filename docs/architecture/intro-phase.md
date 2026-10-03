@@ -4,7 +4,7 @@ Owner: Simulation and Engine. Status: plan, docs only (2026-10-02). It answers C
 
 ## 1. What it is
 
-A run of **pre-clock ticks** at the start of a match, built like a pause (`SimPause`): `SimCore.step` returns false, `S.T` stays 0, no input is consumed and nothing else in the sim runs. Inside it the sim plays a fixed timeline: each fighter falls from the sky and lands in a crater, they stare, the clock starts.
+A run of **pre-clock ticks** at the start of a match, built like a pause (`SimPause`): `SimCore.step` returns false, `S.T` stays 0 (`S.tick` still counts each of these ticks: `q10-pace-acts-pauses.md`, "The two clocks"), no input is consumed and nothing else in the sim runs. Inside it the sim plays a fixed timeline: each fighter falls from the sky and lands in a crater, they stare, the clock starts.
 
 - **It is a match setting.** `newMatch`'s setup takes `"intro": true`. Without it a match starts as today, so the goldens, the batch and QA's harness do not change. The setup is in the replay header, so a replay plays the intro it was recorded with.
 - **It is scripted, not simulated.** A fall is a closed-form path from `fall_from_y` to the ground over the fall's ticks; no flight physics, no draw. The fighter is in a new state, `intro`, in which `stepFighter` does nothing.
