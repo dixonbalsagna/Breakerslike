@@ -13,4 +13,6 @@ Nothing is pending as a script. Shots, the second round, was applied on cf0466f 
 
 The 100-match figures for each are in `shots.md` section 18.
 
+**Next core commit, from Game Design's section 17** (code; the data values are already in): the mine's fuse by cause (8 ticks for a body, 0 for a shot), `chainR` held at 3 bh at every tier instead of growing with `tierR`, the wild flight at 0.8 of the shot's own speed (in place of `deflect.speed`), and `arcPer` split into near 0.15 and far 0.35. About 15 lines, Tools' schema for the new keys, neutral while `scatter` is off and nothing lays a mine.
+
 What is asked of the core and not yet built is listed in `core-backlog.md`.
