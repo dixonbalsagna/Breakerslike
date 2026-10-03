@@ -721,7 +721,7 @@ Encounter's alchemy plan (`docs/director/alchemy-plan.md`, A4) reads "flow earns
 | :--- | :--- |
 | **Evenly spaced** | The gaps between presses differ by 3 ticks or less, as now |
 | **On the beat** | Each press is within **2 ticks** of one of the blur's blows landing on screen |
-| **Kept up** | **Six presses in a row** meet both (four before the amendment below) |
+| **Kept up** | **Four presses in a row** meet both |
 
 **And the beat has to be worth reading.** If every blur landed its blows 8 ticks apart, an 8-tick metronome would still be on the beat most of the time by luck. So **each blur string takes its cadence from a small set: 7, 8, 9 or 10 ticks between blows,** picked by a seeded draw when the string starts. The first two blows show it. A player who watches matches it. A blind metronome has the right period about one string in four, and then needs the right phase as well.
 
@@ -738,22 +738,50 @@ Mashing off the beat is still the plain blur, with its weak ender (§13). That i
 
 **What the perfect blur adds over the plain one:**
 
-| | Plain blur (mashed off the beat) | Perfect blur (from the sixth on-beat press) |
+| | Plain blur (mashed off the beat) | Perfect blur (from the fourth on-beat press) |
 | :--- | :--- | :--- |
 | **Damage** | ×0.8 of a light for each strike | ×1.0 for each strike from that press on: they land clean |
-| **The ender** | The weak one: 0.6 of the knock-back distance and half a set-up | The full one: the pattern's own closing blow, the full distance and a full set-up. It plays when the pattern's second pass ends, or when he stops pressing |
+| **The ender** | The weak one: 0.6 of the knock-back distance and half a set-up | The full one: the pattern's own closing blow, the full distance and a full set-up. It is the string's fifth blow |
 | **Flow** | None, because the presses are off the beat | +1 for each on-beat press, as always |
 | **The look** | The pattern, with loose contact | The same pattern locks in: full contact on every strike, a thin outline of his aura, and a rising accent in the sound for each blow |
 
 It never launches, in either form.
 
-**Amendment: six presses, not four** (Controls' measurement, `docs/controls/agency-input.md`, A1). With four presses inside 2 ticks, QA's blind 8-tick masher still earned the perfect blur in 54 to 66% of strings. Against a cadence of 7 or 9 he drifts one tick a press, and four presses fit inside the 5-tick window as he walks across it.
+**Amendment, since withdrawn: six presses, not four** (Controls' measurement, `docs/controls/agency-input.md`, A1). With four presses inside 2 ticks, QA's blind 8-tick masher still earned the perfect blur in 54 to 66% of strings. Against a cadence of 7 or 9 he drifts one tick a press, and four presses fit inside the 5-tick window as he walks across it.
 - **`steadyPresses` is 6 and `blurBeatHalf` stays 2.** A drift of one tick a press can keep only five presses inside the window, so six shuts out every metronome that isn't on the string's exact cadence. Controls measured 15.6% for the blind masher at any string length, which is inside the 20% band: one string in four has his cadence, and five phases in eight are close enough.
 - **The cadence set stays 7, 8, 9 and 10.** Changing it would only guard against one metronome's period, and six presses guards against all of them.
 - **Tightening to 1 tick is rejected.** It is more than a person can hold.
 - **The perfect blur now starts at the sixth on-beat press.** A pattern is five lights and it loops, so the perfect blur is the pattern's second pass. A steady player is rewarded for staying in it, which suits the blur as the long style.
 - **The on-contact script** still clears its band: at least 80% of strings of 8 presses or more. Shorter strings can't reach six, so QA measures the band on those.
 - **No extra tolerance on touch here.** Two more ticks would cover a whole 7-tick beat. If touch needs help, it gets the slower cadences only.
+
+**Second amendment: back to four presses** (Encounter's slice 11, measured in live play). The six-press ruling above is withdrawn. It can't happen in the director as built: a string is five blows, with four link presses at most, and the fifth blow is the ender.
+- **`steadyPresses` is 4 and `blurBeatHalf` is 2,** as first ruled. The lock arrives at the fourth blow.
+- **The band is met where it counts.** In live play the blind 8-tick masher locks 13 of 78 strings, which is 17%, inside the 20% band. The contact script locks 72 of 73, and a press 4 ticks late never locks. Controls' 54 to 66% was a synthetic test. In a real match the blows land a cadence plus 4 to 5 ticks of hit-stop apart, so the metronome's drift is different.
+- **QA measures this band in live matches,** not on a synthetic press stream.
+- **Blur strings don't loop.** A second pass would need the director to run longer strings, which lengthens matches and helps the masher, for no gain now that four presses hold the band.
+- **So the perfect blur is the last blow and the ender:** from the fourth on-beat press, the fourth strike lands clean at ×1.0 and the fifth is the full ender, with the full knock-back and a full set-up. The table above reads "fourth" again.
+- **If a later change breaks the band** (hit-stop is the thing to watch), the lever is the cadence set, since the press count can't go above four.
+
+**Two confirmations for the flow.**
+1. **A press with no blow to time against leaves the flow as it is.** The press that starts an exchange can't be on or off the beat, so it neither adds to the flow nor resets it. Flow carries from one string to the next, which is how flow 5 and the showcase ender are reached: a string gives at most four timed link presses.
+2. **A heavy after one landed strike is the string's ender.** "A string of two or more landed strikes" counts the heavy itself. So with at least one strike landed before it, the heavy is the ender: it launches at flow 3 or more, and otherwise knocks back. A heavy with nothing landed before it is its own exchange, and it keeps the stick earner (§18).
+
+**The numbers.**
+
+| File | Key | Value |
+| :--- | :--- | :--- |
+| `data/input/timing.json` | `steadyPresses` | 4 |
+| | `blurBeatHalf` | 2 ticks |
+| | The combo's timed press | Within 4 ticks of a blow landing |
+| | The power release | Within 6 ticks of the flash |
+| `data/director/alchemy.json` | Flow gained by a timed press | 1, up to 5 |
+| | Flow after an off-beat press, or 90 ticks with no press | 0 |
+| | Flow after an opening press | Unchanged |
+| | Flow for a string's heavy ender to launch | 3 |
+| | Flow for the showcase ender | 5 |
+| | Landed strikes needed before a heavy for it to be an ender | 1 |
+| | The blur's cadence set | 7, 8, 9 and 10 ticks |
 
 **What changes for Controls and Combat.**
 - *Controls* (`sim/input/press_read`): "steady" can no longer be decided from the presses alone. It needs the blow contact ticks, as the timed grade already does. A new tolerance, 2 ticks, for the blur's beat, beside the 4 ticks for a combo's timed press.
