@@ -22,6 +22,7 @@ const SHAPE_DISC := 2.0
 const SHAPE_HEX := 4.0
 const Z_SHOT := 4.0          # in front of the fighter plane, so a shot is not hidden behind a body it passes
 const Z_FX := 6.0
+const PLAY_LIFT := 30.0     # the beam plays sit in front of the ground dust (its puffs are put up to about z 26)
 const Z_HAND := 5.0
 
 var _buf := PackedFloat32Array()
@@ -268,7 +269,7 @@ func _across(n: int, c: Vector2, dir: Vector2, size: float, along: float, z: flo
 func _beamplay(n: int, S: SimState, hub: VfxHub, host, cam_x: float, half_w: float, a: float, bh: float, minpx: float, alpha: float) -> int:
 	var bp: VfxBeamPlay = hub.beamplay
 	var al: float = alpha * VfxBeamPlay.p("beamplay", "alpha")
-	var z0: float = Z_FX + 1.0
+	var z0: float = Z_FX + 1.0 + PLAY_LIFT
 	# A beam crossing: its head leads it, so it is seen to travel.
 	for b in S.beams:
 		if n >= CAP - 30:
@@ -326,6 +327,8 @@ func _beamplay(n: int, S: SimState, hub: VfxHub, host, cam_x: float, half_w: flo
 					var tk: float = clampf(eo - 0.14 * float(k), 0.0, 1.0)
 					var ang: float = lerpf(e.a0, e.a1, tk)
 					var sd := Vector2(cos(ang), sin(ang))
+					if k == 0:
+						n = _wedge(n, c + sd * 30.0, sd, e.size + 14.0, 50.0, ez - 0.5, Color(0.04, 0.02, 0.1, al * (1.0 - u) * 0.6))
 					var sc: Color = e.col if k == 0 else e.col.lerp(e.col2, 0.35)
 					sc.a = al * (1.0 - u * 0.7) * (1.0 - 0.22 * float(k))
 					n = _wedge(n, c + sd * 36.0, sd, e.size * (1.0 - 0.1 * float(k)), 34.0 * (1.0 - 0.15 * float(k)), ez + 0.05 * float(k), sc)
@@ -336,11 +339,14 @@ func _beamplay(n: int, S: SimState, hub: VfxHub, host, cam_x: float, half_w: flo
 				# The beam parts round him: two wedges slide apart along the forks' lines, with a tall ring across him.
 				var ang0: float = atan2(e.dy, e.dx)
 				for sg in [-1.0, 1.0]:
-					var pa: float = ang0 + sg * 14.0 * PI / 180.0
+					var pa: float = ang0 + sg * 20.0 * PI / 180.0
 					var pd := Vector2(cos(pa), sin(pa))
+					n = _wedge(n, c + pv * (sg * 50.0 * eo) - pd * 6.0, pd, lerpf(60.0, e.size * 1.6 + 12.0, eo), 64.0, ez - 0.5, Color(0.04, 0.02, 0.1, fa * 0.65))
 					var pc: Color = e.col
 					pc.a = fa
-					n = _wedge(n, c + pv * (sg * 26.0 * eo), pd, lerpf(40.0, e.size, eo), 30.0, ez, pc)
+					n = _wedge(n, c + pv * (sg * 50.0 * eo), pd, lerpf(54.0, e.size * 1.6, eo), 70.0, ez, pc)
+					var pw: Color = Color(1.0, 1.0, 1.0, fa * 0.9)
+					n = _wedge(n, c + pv * (sg * 50.0 * eo), pd, lerpf(40.0, e.size * 1.2, eo), 26.0, ez + 0.2, pw)
 				var pr: Color = e.col2
 				pr.a = fa * 0.7
 				n = _across(n, c, dv2, lerpf(90.0, 170.0, eo), 0.3, ez - 0.3, pr, minpx)

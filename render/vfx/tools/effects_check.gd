@@ -2621,8 +2621,15 @@ func _beamplay() -> void:
 			sweep = e
 	var out_b = S.beams[S.beams.size() - 1]
 	_check(sweep != null and out_b.A == f1 and absf(fposmod(sweep.a1 - atan2(out_b.uy, out_b.ux) + PI, TAU) - PI) < 0.01, "beam_swat: a slash that sweeps round to the swatted beam's own line, the beam he sends off from where he stands (angle %.2f)" % (sweep.a1 if sweep != null else 0.0))
+	_check(h_swat.beamplay.calm_at(sweep.x) and h_swat.beamplay.calm_at(sweep.x + 600.0) and not h_swat.beamplay.calm_at(sweep.x + 900.0), "a swat thins the beam's own ground dust round it (700 units) so the play is seen")
 	view.update(h_swat, host, 1.0, plains + 750.0, 0.7, 1500.0)
 	counts["swat"] = view.count
+	# a swat lets go the ground dust near it, and keeps the far dust
+	var h_dust: VfxHub = fresh_beam.call()
+	var dx0: float = f1.x
+	h_dust.debris.dust_puff("plains", dx0 + 100.0, 30.0, 6.0, 0.0, 0.0, 20.0, 40.0, 1.5)
+	h_dust.debris.dust_puff("plains", dx0 + 1500.0, 30.0, 6.0, 0.0, 0.0, 20.0, 40.0, 1.5)
+	_check(h_dust.debris.thin_puffs(dx0, 450.0) == 1, "thin_puffs lets go the puff near and keeps the far one")
 	# the split
 	var h_split: VfxHub = fresh_beam.call()
 	main_b = S.beams[0]

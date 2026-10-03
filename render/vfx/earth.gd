@@ -291,7 +291,7 @@ func step_skid(S: SimState) -> void:
 
 ## A `dust` event (a skid sample, a heavy landing, a beam over the ground, a building's feet): n puffs in the biome's own dust
 ## colours (or the colour the event names), scalloped cel puffs that spread and drift up, instead of flat squares.
-func on_dust(e) -> void:
+func on_dust(e, keep_mul: float = 1.0) -> void:
 	var n: int = mini(int(e.n), 6)
 	var x: float = float(e.x)
 	var y: float = float(e.y)
@@ -307,7 +307,7 @@ func on_dust(e) -> void:
 		var life: float = debris._rd.range_(0.9, 1.9) * _lk()
 		var sz: float = debris._rd.range_(14.0, 34.0)
 		var keep: float = debris._rd.next()
-		if keep < _q():
+		if keep < _q() * keep_mul:
 			debris.dust_puff(biome, px, py, z + debris._rd.range_(2.0, 24.0), vx, vy, sz * 1.1, sz * 2.4, life, i % 3, tint)
 			dust_made += 1
 

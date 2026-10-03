@@ -53,6 +53,9 @@ var walks: Array = [Walk.new(), Walk.new()]
 var heads: Array = [null, null]     # per attacker slot: [x, y, ux, uy, p] of his main beam's head (also after the beam has gone, for a cut)
 var made: Dictionary = {}           # counters by kind, for the tests
 var clock: int = 0
+var thinned: int = 0                # dust puffs let go early by a play (a counter for the tests)
+var _debris: VfxDebris = null
+var calm: Array = []                # [x, clock it ends] around a play: the beam's own ground dust is thinned there so the play is seen
 var _trail_clock := [0, 0]
 
 static var _data: Dictionary = {}
@@ -84,6 +87,7 @@ func reset() -> void:
 	heads = [null, null]
 	made = {}
 	clock = 0
+	calm = []
 	_trail_clock = [0, 0]
 	warm()
 
@@ -120,6 +124,10 @@ func _add(kind: String, x: float, y: float, z: float, dx: float, dy: float, size
 	e.col2 = col2 if col2 != Color.WHITE else col
 	e.slot = slot
 	fx.append(e)
+	if kind == "sweep" or kind == "part" or kind == "cut" or kind == "answer":
+		calm.append([e.x, clock + 50])
+		if _debris != null:
+			thinned += _debris.thin_puffs(e.x, 450.0)
 	made[kind] = int(made.get(kind, 0)) + 1
 	while fx.size() > 40:
 		fx.pop_front()
@@ -139,6 +147,12 @@ func step(S: SimState, frozen: bool, debris: VfxDebris = null) -> void:
 	if frozen:
 		return
 	clock += 1
+	var ci: int = 0
+	while ci < calm.size():
+		if clock >= int(calm[ci][1]):
+			calm.remove_at(ci)
+		else:
+			ci += 1
 	var seen := [false, false]
 	for b in S.beams:
 		var slot: int = S.fighters.find(b.A)
@@ -176,6 +190,7 @@ func step(S: SimState, frozen: bool, debris: VfxDebris = null) -> void:
 
 ## One tick's events: the cues of the plays.
 func on_events(S: SimState, events: Array, debris: VfxDebris) -> void:
+	_debris = debris
 	for e in events:
 		if e.type != "cue":
 			continue
@@ -245,6 +260,14 @@ func on_events(S: SimState, events: Array, debris: VfxDebris) -> void:
 				var an := _add("answer", f.x, chest, f.z, 1.0, 0.0, 150.0, p("beamplay", "answer_life"), lane, other, slot)
 				an.x1 = SimWrap.wrap(hx)
 				an.y1 = hy
+
+
+## Is x near a play (700 units, 50 ticks)? The ground dust the beam makes is thinned there.
+func calm_at(x: float) -> bool:
+	for c in calm:
+		if absf(SimWrap.sdx(float(c[0]), x)) < 700.0:
+			return true
+	return false
 
 
 ## The attacker's main beam (his first in the state), or null.

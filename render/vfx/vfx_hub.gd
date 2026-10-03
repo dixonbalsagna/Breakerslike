@@ -303,7 +303,7 @@ func _consume(S: SimState, events: Array) -> void:
 						earth.on_debris(e)
 				"dust":
 					if earth_enabled and not fall_xs.has(snappedf(float(e.x), 0.01)):
-						earth.on_dust(e)
+						earth.on_dust(e, 0.2 if (beamplay_enabled and beamplay.calm_at(float(e.x))) else 1.0)
 				"fire":
 					if earth_enabled:
 						earth.on_fire(e)

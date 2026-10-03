@@ -493,6 +493,16 @@ func _ring(x: float, y: float, z: float, r0: float, growth: float, life: float, 
 	_add(b)
 
 
+## Dust puffs within r of x are let go quickly (they fade over the next fifth of a second): a play's own look must not be buried by the ground dust the beam put up before it.
+func thin_puffs(x: float, r: float, fade: float = 0.2) -> int:
+	var k: int = 0
+	for b: Bit in bits:
+		if b.kind == PUFF and absf(SimWrap.sdx(x, b.x)) < r and b.life - b.age > fade:
+			b.life = b.age + fade
+			k += 1
+	return k
+
+
 ## Add to the pool. When it is full a shard or chip drops the oldest puff first; a puff at the puff cap drops the oldest puff.
 func _add(b: Bit) -> void:
 	_spawned_tick += 1
