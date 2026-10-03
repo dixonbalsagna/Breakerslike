@@ -349,6 +349,20 @@ function evaluate(A, { scale = 'testbed', cap = 900 } = {}) {   // cap is the ma
         }
         perMatch.push(n);
       }
+      // The same scan over all four arms, with the seed of the longest: the default arm alone has passed by luck while a launch cleared the lock-broken fighter's flag without a `found` (GB-008)
+      const allEps = [];
+      for (const [arm, recs] of Object.entries(A)) for (const r of recs) {
+        const start = {};
+        for (const e of (r.events || [])) {
+          if (e.type === 'searching' && e.kind !== 'sweep' && start[e.target] === undefined) start[e.target] = e.t;
+          if (e.type === 'found' && start[e.actor] !== undefined) { allEps.push({ len: e.t - start[e.actor], arm, seed: r.seed, t0: start[e.actor] }); delete start[e.actor]; }
+        }
+      }
+      if (allEps.length) {
+        allEps.sort((a, b) => b.len - a.len);
+        const top = allEps[0], over = allEps.filter(x => x.len > 4.05).length;
+        R.add({ id: '8.lock.max.all', ref: '§1c', what: 'No lock break longer than 4 s, all arms (hard test)', status: over ? 'FAIL' : 'PASS', value: `longest ${top.len.toFixed(2)} s (${top.arm} seed ${top.seed} from ${top.t0.toFixed(1)} s); ${over} over 4 s of ${allEps.length}`, band: 'at most 4 s', note: 'GB-008: sim/director/launch.gd:316 and sim/core/fighter.gd:319 clear `hidden` with no regainLock, so no `found` is emitted and the episode stays open' });
+      }
       R.point('8.lock.perMatch', '§1c', 'Lock breaks per match (1 to 4)', { v: mean(perMatch), lo: 1, hi: 4, unit: 'num' });
       if (eps.length) {
         R.point('8.lock.median', '§1c', 'Median lock-break length (2 to 3 s)', { v: median(eps), lo: 2, hi: 3, unit: 's' });

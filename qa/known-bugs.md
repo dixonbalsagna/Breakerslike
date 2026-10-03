@@ -178,6 +178,21 @@ Reported through the EP. QA has not reproduced or measured these; each has an ow
 
 QA has no band for any of the three yet. For GB-005 the harness already counts bounces per bounced journey and journeys longer than 4,000 units (`5c.bounces`, `5c.long`); a per-journey momentum or speed-gain row would need a field from World's journey events. For GB-003 a camera-motion metric would need Camera's rig output; ask the EP when a band is wanted.
 
+### GB-008: A launch (or a charge) clears a lock-broken fighter's flag without telling anyone
+
+**Found by QA, 2026-10-03** while chasing a hard-test failure (`8.lock.max`: longest lock break 21.88 s over 747 breaks, c1714b5 default arm seed 46).
+**Cause.** Lock breaks are `hidden` in the ESCAPE stance (`sim/core/hiding.gd`, `_lockBreak`); `regainLock` emits `found`, sets `lockBackT` (the 6 s no-rebreak guard) and clears the flag, within 4 s at most. Two other places clear the flag directly: `sim/director/launch.gd:316` (`tgt.hidden = false` when the lock-broken fighter is launched) and `sim/core/fighter.gd:319` (`f.hidden = false` when a hidden fighter starts charging). Neither calls `regainLock`, so no `found` event is emitted, `lockBackT` stays unset (the 6 s guard is skipped) and the harness' episode stays open until that fighter's next `found`. Probe on the c1714b5 export, seed 46 default arm: both fighters broke lock on the same tick (525.35 s, tick 34043); fighter 1 was launched at 526.88 s (tick 34138), 1.53 s into the break; the next `found` for fighter 1 came at 547.23 s. The real lock break lasted 1.53 s. Same chain for mirror-villain seed 181 (128 s) and seed 319 (49 s). On a56187a: swap seeds 350 (45.8 s) and 97 (16.1 s), mirror-villain seed 109 (209.8 s).
+**Effect.** Event stream only: no `found` after a launch, and the 6 s rebreak spacing is not applied after a launch-ended break (the gap row passes anyway, 6.90 s). The default-arm row `8.lock.max` passes or fails by chance (a56187a baseline 4.02 s; two scratch variants showed 41.82 s and 20.77 s). QA now also reads all four arms (`8.lock.max.all`: 4 of 2,544 breaks over 4 s on a56187a).
+**Fix, for Simulation or the Director's owner (two lines):** in both places call `SimHiding.regainLock(S, f)` when `f.hidden` is true, instead of clearing the flag. `8.lock.max.all` then passes with no harness change.
+**Status: open, with Simulation.**
+
+### GB-009: A brink fighter cannot be finished by a player who only fires bolts at range
+
+**Found by QA, 2026-10-03** in the energy plan on a56187a (E3, E4, E5 of `qa/timing-edge.js`). A timed blaster (`tapper:energy=1`, a bolt about every 24 ticks) against a timed melee player: 40 of 40 matches reach the 900 s cap (E4, E5), and a probe of four matches with and without the stick-up on heavies does the same. In the traced match the melee player reached the brink at 222.7 s (`brink_enter`, `last_stand_ready`, `last_stand_end` expired at 242.7 s) and then flew off; the blaster hit it about 2,100 times a match (72,000 damage) and no finisher ever started, because bolts do not open one.
+**Not the same as** the "bolt-only cannot finish" finding of the energy baseline: E1 (a bolt-only masher against a melee masher) finishes 40 of 40, because the melee masher closes in and ends up in a finisher; E2 (against the medium AI) wins 57.5%, above its 20 to 40% band.
+**Question for Game Design / Combat:** should a brink fighter be finishable by blasts alone (a last blast at the brink, a charged shot, a signature)? If not, the E4/E5 script needs to close in for the finisher, and QA will add a `chase` option to the scripted players; the band for E5 (40 to 60%) cannot be measured until one of the two happens.
+**Status: open, design call.**
+
 ---
 
 ## Not checked yet
