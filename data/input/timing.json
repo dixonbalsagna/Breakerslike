@@ -31,6 +31,11 @@
     "toggleCooldown": 12,
     "style": "hold"
   },
+  "aim": {
+    "deadZone": 0.35,
+    "latchTicks": 12,
+    "snapMax": 1
+  },
   "read": {
     "logSize": 20,
     "holdTicks": 12,

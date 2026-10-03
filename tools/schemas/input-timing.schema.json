@@ -189,6 +189,33 @@
         "^_": true
       }
     },
+    "aim": {
+      "type": "object",
+      "description": "The stick as an aim (docs/controls/agency-input.md 1b, sim/input/aim.gd): the 8-sector snap and the latch of the launch direction. Optional: the code defaults are these values.",
+      "properties": {
+        "deadZone": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "description": "The stick must pass this fraction of full deflection to aim (0.35; the move dead zone is 0.2)."
+        },
+        "latchTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The latest aim within this many ticks of the launch decision still counts (12)."
+        },
+        "snapMax": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "The director snaps to a target within this many 45-degree sectors (1)."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
     "read": {
       "type": "object",
       "description": "The press reader (docs/controls/agency-input.md 1a, sim/input/press_read.gd): how holds, mashes and taps in time with the blows are told apart, and the contact debounce. Optional: the code defaults are these values.",
