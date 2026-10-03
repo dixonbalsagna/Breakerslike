@@ -52,11 +52,11 @@ export const sequences = {
   taunt_nod: { dur: 45, legal: ['hands_open_or_claw'], phases: [
     { id: 'lift', ticks: 12, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: -8 }, hand_r: [16, 46, 16], hand_l: [14, 46, -16], ...STAND, ...OPEN },
       orig: 'the chin lifted and the open hands loose at his sides, a calm look at the rival' },
-    { id: 'nod', ticks: 14, sketch: { family: 'upright', lean: 4, hips: [0, -6, 0], spine: { lean: 4 }, head: { pitch: 14 }, hand_r: [16, 46, 16], hand_l: [14, 46, -16], ...STAND, ...OPEN },
-      orig: 'a slow nod, the chin dipping and the shoulders easing: "come on, then"; a small bow of acknowledgement' },
+    { id: 'nod', ticks: 14, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 10 }, head: { pitch: 14 }, hand_r: [16, 46, 16], hand_l: [14, 46, -16], ...STAND, ...OPEN },
+      orig: 'a slow nod: the chin dipping and the chest dipping with it, about ten degrees of spine and the hips staying square, so it reads in the wide shot; never a bow from the waist: "come on, then"' },
     { id: 'settle', ticks: 19, from: 'stance.aggressive', over: { lean: 6, ...OPEN }, orig: 'settling into the stance, eyes up' },
   ] },
-  taunt_bounce: { dur: 45, legal: ['hands_open_or_claw'], phases: [
+  taunt_bounce: { dur: 45, gate: 'ground', legal: ['hands_open_or_claw'], phases: [
     { id: 'down', ticks: 10, sketch: { family: 'upright', lean: 6, hips: [0, -10, 0], spine: { lean: 4 }, head: { pitch: 0 }, hand_r: [22, 54, 14], hand_l: [20, 54, -10], ...STAND, ...OPEN },
       orig: 'sinking on the knees with the open hands up in front, light on his feet' },
     { id: 'up', ticks: 10, sketch: { family: 'upright', lean: 2, hips: [0, 2, 0], spine: { lean: 0 }, head: { pitch: -4 }, hand_r: [22, 56, 14], hand_l: [20, 56, -10], foot_r: [-8, 8, 8], foot_l: [10, 8, -7], ...OPEN },
@@ -66,17 +66,27 @@ export const sequences = {
     { id: 'settle', ticks: 15, from: 'stance.aggressive', over: { lean: 6, ...OPEN }, orig: 'into the stance' },
   ] },
   taunt_fist_palm: { dur: 45, phases: [
-    { id: 'raise', ticks: 10, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: 4 }, hand_r: [22, 52, 16], pole_hand_r: [2, 44, 22], hand_l: [22, 50, -8], pole_hand_l: [2, 42, -14], ...STAND, hands: { r: 'fist', l: 'open' } },
+    { id: 'raise', ticks: 10, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: 0 }, hand_r: [22, 52, 16], pole_hand_r: [2, 44, 22], hand_l: [22, 50, -8], pole_hand_l: [2, 42, -14], ...STAND, hands: { r: 'fist', l: 'open' } },
       orig: 'the fist and the open palm brought up in front of the chest a hand apart' },
-    { id: 'tap', ticks: 8, sketch: { family: 'upright', lean: 4, hips: [0, -4, 0], spine: { lean: 2 }, head: { pitch: 8 }, hand_r: [18, 52, 6], pole_hand_r: [2, 44, 16], hand_l: [18, 50, -2], pole_hand_l: [2, 42, -12], ...STAND, hands: { r: 'fist', l: 'open' } },
-      orig: 'the fist tapped into the open palm and the head dipped: a martial courtesy, held no longer than a breath' },
-    { id: 'settle', ticks: 27, from: 'stance.aggressive', over: { lean: 6, ...OPEN }, orig: 'both hands released to the stance, a smile in the shoulders' },
+    { id: 'tap', ticks: 10, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: 0 }, hand_r: [18, 52, 6], pole_hand_r: [2, 44, 16], hand_l: [18, 50, -2], pole_hand_l: [2, 42, -12], ...STAND, hands: { r: 'fist', l: 'open' } },
+      orig: 'one tap of the fist on the open palm at chest height, a breath long, the eyes on the rival: a courtesy, never ground into the palm, never repeated' },
+    { id: 'settle', ticks: 25, from: 'stance.aggressive', over: { lean: 6, ...OPEN }, orig: 'both hands released to the stance, a smile in the shoulders' },
   ] },
-  taunt_close: { dur: 60, phases: [
+  taunt_close: { dur: 60, gate: 'ground', phases: [
     { id: 'bounce', ticks: 16, sketch: { family: 'upright', lean: 6, hips: [0, -10, 0], spine: { lean: 4 }, head: { pitch: 0 }, hand_r: [22, 54, 14], hand_l: [20, 54, -10], ...STAND, ...OPEN },
       orig: 'a light bounce on the knees with the open hands up in front' },
-    { id: 'tap', ticks: 14, sketch: { family: 'upright', lean: 4, hips: [0, -4, 0], spine: { lean: 2 }, head: { pitch: 8 }, hand_r: [18, 52, 6], pole_hand_r: [2, 44, 16], hand_l: [18, 50, -2], pole_hand_l: [2, 42, -12], ...STAND, hands: { r: 'fist', l: 'open' } },
-      orig: 'the fist tapped into the open palm with a dip of the head' },
+    { id: 'tap', ticks: 14, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: 0 }, hand_r: [18, 52, 6], pole_hand_r: [2, 44, 16], hand_l: [18, 50, -2], pole_hand_l: [2, 42, -12], ...STAND, hands: { r: 'fist', l: 'open' } },
+      orig: 'one tap of the fist on the open palm at chest height, the eyes on the rival' },
+    { id: 'nod', ticks: 14, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: -6 }, hand_r: [16, 46, 16], hand_l: [14, 46, -16], ...STAND, ...OPEN },
+      orig: 'then the chin lifted: ready when you are' },
+    { id: 'settle', ticks: 16, from: 'stance.aggressive', over: { lean: 6, ...OPEN }, orig: 'into the stance' },
+  ] },
+  // the close taunt in the air (Combat: its bounce needs the ground, so he starts it another way inside the same 60 ticks): a hover bob in place of the bounce, then the same tap, nod and settle
+  taunt_close_air: { dur: 60, gate: 'air', phases: [
+    { id: 'bob', ticks: 16, sketch: { family: 'airborne_neutral', lean: 4, hips: [0, 6, 0], spine: { lean: 2 }, head: { pitch: 0 }, hand_r: [22, 54, 14], hand_l: [20, 54, -10], foot_r: [2, 22, 7], foot_l: [-2, 20, -7], ...OPEN },
+      orig: 'a gentle bob in the air with the knees drawn up a little and the open hands up in front, light as he was on the ground' },
+    { id: 'tap', ticks: 14, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: 0 }, hand_r: [18, 52, 6], pole_hand_r: [2, 44, 16], hand_l: [18, 50, -2], pole_hand_l: [2, 42, -12], ...STAND, hands: { r: 'fist', l: 'open' } },
+      orig: 'one tap of the fist on the open palm at chest height, the eyes on the rival' },
     { id: 'nod', ticks: 14, sketch: { family: 'upright', lean: 2, hips: [0, -4, 0], spine: { lean: 0 }, head: { pitch: -6 }, hand_r: [16, 46, 16], hand_l: [14, 46, -16], ...STAND, ...OPEN },
       orig: 'then the chin lifted: ready when you are' },
     { id: 'settle', ticks: 16, from: 'stance.aggressive', over: { lean: 6, ...OPEN }, orig: 'into the stance' },

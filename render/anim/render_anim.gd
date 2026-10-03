@@ -25,6 +25,7 @@ static var joint_audit: bool = false   # the joint-limit lint: every fighter not
 static var ragdoll_enabled: bool = true
 static var blow_join: bool = false        # --blowjoin: the blow's own snap is smoothed as a join (how it played before 2026-10-01 unit T), for an A/B
 static var last_stand_poses: bool = true   # the last stand's body cue (docs 9.20); --no-last-stand-poses switches it off
+static var pair_live: bool = true           # the launch pair play their own waves live (strikes, entries, blast presses, taunts: docs/animation/pair-live.md); --no-pair-live switches it off (the before)
 static var flight_lead: bool = true         # a fast launched body flies head first (docs 9.23); --no-flight-lead switches it off (the before)
 static var agency_poses: bool = true       # the agency slice's events (knockback, embed, the far taunt, the charges) play their poses (docs 9.22); --no-agency-poses switches them off
 static var intro_poses: bool = true        # the opening's fall, landing and staredown (docs 9.19); --no-intro-poses switches them off
@@ -75,6 +76,8 @@ static func _read_args() -> void:
 			last_stand_poses = false
 		elif a == "--no-agency-poses":
 			agency_poses = false
+		elif a == "--no-pair-live":
+			pair_live = false
 		elif a == "--no-flight-lead":
 			flight_lead = false
 		elif a == "--no-intro-poses":
@@ -145,6 +148,7 @@ static func fighter(S: SimState, f) -> AnimFighter:
 	if af == null:
 		AnimData.load_all()
 		af = AnimFighter.new(S.fighters.find(f))
+		af.pair_key = AnimData.ensure_fighter(String(f.id))   # his own waves, baked when his first body is built (the match-start cost)
 		_fighters[id] = af
 	return af
 
@@ -217,6 +221,16 @@ static func consume(S: SimState, events: Array) -> void:
 				if kv >= 0 and kv < S.fighters.size():
 					var t_kb: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
 					fighter(S, S.fighters[kv]).on_agency("knockback", t_kb, {"kind": String(e.kind), "dur": float(_ev(e, "dur", 0.5))})
+			"shot_fire":
+				var sa: int = int(_ev(e, "actor", -1))
+				if sa >= 0 and sa < S.fighters.size():
+					var t_sf: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					fighter(S, S.fighters[sa]).on_shot(String(e.kind), t_sf, S, S.fighters[sa], int(e.tick), int(_ev(e, "link", -1)))
+			"shot_deflect":
+				var sd: int = int(_ev(e, "actor", -1))
+				if sd >= 0 and sd < S.fighters.size():
+					var t_sd: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					fighter(S, S.fighters[sd]).on_deflect(t_sd, S, S.fighters[sd])
 			"embed":
 				var ke: int = int(_ev(e, "actor", -1))
 				if ke >= 0 and ke < S.fighters.size():
@@ -228,7 +242,10 @@ static func consume(S: SimState, events: Array) -> void:
 					var t_ag: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
 					for ia in range(S.fighters.size()):
 						if who < 0 or ia == who:
-							fighter(S, S.fighters[ia]).on_agency(String(e.kind), t_ag, {})
+							fighter(S, S.fighters[ia]).on_agency(String(e.kind), t_ag, _taunt_ctx(S, S.fighters[ia]) if String(e.kind) == "taunt_start" else {})
+				if AnimData.pair.get("cues", {}).has(String(e.kind)) and who >= 0 and who < S.fighters.size():
+					var t_bc: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+					fighter(S, S.fighters[who]).on_blast_cue(String(e.kind), t_bc, S, S.fighters[who])
 				var t_cue: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)   # the event's own time, not the end of the frame's
 				for i in range(S.fighters.size()):
 					if who < 0 or i == who:
@@ -252,6 +269,15 @@ static func consume(S: SimState, events: Array) -> void:
 					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind), dm, float(e.amount) / 60.0, S.tick)
 					if String(e.kind) == "guard" and a >= 0 and a < S.fighters.size():
 						fighter(S, S.fighters[a]).on_blocked(S.T)
+
+
+## What a far taunt's pick needs to know of the moment: whether he is in the air (the bounce is ground only) and whether any blow has landed yet this match (the nod opens a stand-off).
+static func _taunt_ctx(S: SimState, f) -> Dictionary:
+	var traded: bool = false
+	for fo in S.fighters:
+		if fighter(S, fo)._hit_n > 0:
+			traded = true
+	return {"air": f.y - WorldTerrain.groundY(S, f.x) > 20.0, "traded": traded}
 
 
 ## A field of an event that may not exist yet (World's ground-contact events arrive with their fields; until then the event is not sent).

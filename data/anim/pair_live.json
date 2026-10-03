@@ -1,0 +1,184 @@
+{
+ "schema": "anim.pairlive/1",
+ "aliases": {
+  "rival": "antihero",
+  "anti-hero": "antihero",
+  "anti_hero": "antihero"
+ },
+ "_about": "How the launch pair's parked waves play in a live match (docs/animation/pair-live.md). aliases: other names for a fighter of fighters.json (the neutral id rival is the antihero). A roster id is mapped to a fighter of data/anim/fighters.json (its key, or the id it `replaces`: KAI is the protagonist, VORR the antihero), whose waves are baked when his first body is built. shared: waves baked for both. gated: a strike that joins its fighter's pick list only while its gate is open (both_ground: both fighters near the ground; striker_air: the striker well above it); the other strikes of his strike waves (the manifest's light and heavy ones, never the tail) are the pick lists, walked as the go-live step 1 lists are. kinds: a shot kind (data/fight/shots.json) to the energy role it plays. cues: the sim's render cues (SimFx.cue) to what they start. spray_gap: ticks between a fighter's bolts under which the next one is a spray beat (the spread window of agency-pass.md 15.4). roles: per fighter, what each role plays: seq (a sequence of a parked wave, started where the cue or the shot says), hold (a pose held and eased: ticks, in and out seconds, w the weight), charged (charge: the pose held from the charge cue, full: the pose it takes at the flash, release: the hold on the shot), taunts (the far taunts: one is picked by a hash of the tick), taunt_first (the gesture a stand-off opens with, before any blow has landed), taunt_close, taunt_close_air (the close taunt when he is in the air), drop_the_act, crown_release, shove (events the sim does not send yet: they play when it does). Render only, outside the sim's data hash.",
+ "shared": [
+  "energy1"
+ ],
+ "gated": [
+  {
+   "strike": "sweep",
+   "weight": "light",
+   "gate": "both_ground"
+  },
+  {
+   "strike": "drop_kick",
+   "weight": "heavy",
+   "gate": "striker_air"
+  }
+ ],
+ "spray_gap": 10,
+ "kinds": {
+  "bolt": "bolt",
+  "shard": "bolt",
+  "ricochet": "bolt",
+  "arc": "volley",
+  "lob": "lob",
+  "charged": "charged",
+  "split": "charged",
+  "mine": "mine",
+  "rain": "rain",
+  "curve": "curve"
+ },
+ "cues": {
+  "blast_windup": "windup",
+  "blast_charge": "charge",
+  "blast_full": "full",
+  "blast_cancel": "cancel",
+  "buried_blast": "crater",
+  "volley_fire": "volley",
+  "taunt_close": "taunt_close",
+  "drop_the_act": "drop_the_act",
+  "regalia_release": "crown_release",
+  "energy_shove": "shove"
+ },
+ "roles": {
+  "protagonist": {
+   "bolt": {
+    "seq": "pg.bolt",
+    "wind_ticks": 4
+   },
+   "volley": {
+    "seq": "pg.volley_arc"
+   },
+   "lob": {
+    "seq": "pg.lob"
+   },
+   "charged": {
+    "charge": "pn.hold.brace_load",
+    "full": "pn.hold.brace_hold",
+    "release": {
+     "pose": "pn.hold.palm_thrust",
+     "ticks": 14,
+     "in": 0.04,
+     "out": 0.15,
+     "w": 0.9
+    }
+   },
+   "curve": {
+    "seq": "pn.curve"
+   },
+   "crater": {
+    "pose": "pg.hold.blast_down",
+    "ticks": 22,
+    "in": 0.06,
+    "out": 0.2,
+    "w": 0.9
+   },
+   "spray": {
+    "seq": "pg.spray"
+   },
+   "mine": {
+    "seq": "en.mine"
+   },
+   "swat": {
+    "seq": "en.swat"
+   },
+   "shove": {
+    "pose": "pn.hold.palm_thrust",
+    "ticks": 14,
+    "in": 0.04,
+    "out": 0.15,
+    "w": 0.9
+   },
+   "taunts": [
+    "pg.taunt_nod",
+    "pg.taunt_bounce",
+    "pg.taunt_fist_palm"
+   ],
+   "taunt_close": {
+    "seq": "pg.taunt_close"
+   },
+   "taunt_first": "pg.taunt_nod",
+   "taunt_close_air": {
+    "seq": "pg.taunt_close_air"
+   }
+  },
+  "antihero": {
+   "bolt": {
+    "seq": "rw.bolt",
+    "wind_ticks": 4
+   },
+   "volley": {
+    "seq": "rw.volley_fan"
+   },
+   "lob": {
+    "seq": "rw.lob"
+   },
+   "charged": {
+    "charge": "rw.charged_brace.charge",
+    "full": "rw.charged_brace.charge",
+    "release": {
+     "pose": "rw.charged_brace.release",
+     "ticks": 14,
+     "in": 0.04,
+     "out": 0.15,
+     "w": 0.9
+    }
+   },
+   "crater": {
+    "pose": "rw.hold.blast_down",
+    "ticks": 22,
+    "in": 0.06,
+    "out": 0.2,
+    "w": 0.9
+   },
+   "rain": {
+    "pose": "rv.hold.rain_throw",
+    "ticks": 24,
+    "in": 0.06,
+    "out": 0.2,
+    "w": 0.9
+   },
+   "spray": {
+    "seq": "en.spray"
+   },
+   "mine": {
+    "seq": "en.mine"
+   },
+   "swat": {
+    "seq": "en.swat"
+   },
+   "shove": {
+    "pose": "rw.hold.energy_shove",
+    "ticks": 14,
+    "in": 0.04,
+    "out": 0.15,
+    "w": 0.9
+   },
+   "crown_release": {
+    "pose": "rw.hold.crown_release",
+    "ticks": 40,
+    "in": 0.1,
+    "out": 0.25,
+    "w": 0.9
+   },
+   "taunts": [
+    "rw.taunt_head_tilt",
+    "rw.taunt_back_turned",
+    "rw.taunt_dust_plate",
+    "rw.taunt_stillness"
+   ],
+   "taunt_close": {
+    "seq": "rw.taunt_close"
+   },
+   "drop_the_act": {
+    "seq": "rw.drop_the_act"
+   }
+  }
+ }
+}

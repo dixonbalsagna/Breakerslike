@@ -25,16 +25,20 @@ const OWN = {
   hook_kick: { like: 'snap_round', limb: 'foot', target: 'chest', weight: 'light', look: 'The heel hooked back round from beyond the target.' },
   spinning_back_kick: { like: 'spinning_heel', limb: 'foot', target: 'gut', weight: 'heavy', look: 'One turn and a straight kick with the heel.' },
 };
-export function rows(wave1) {
+export function rows(wave1, launchPair) {
+  const own = Object.fromEntries((launchPair?.protagonist?.strikes || []).map(r => [r.id.replace('strike.', ''), r]));
   const by = Object.fromEntries(wave1.map(r => [r.id.replace('strike.', ''), r]));
   const out = REDO.map(n => ({ ...by[n], look: 'His version (open hands, rounder): ' + by[n].look }));
   for (const [n, o] of Object.entries(OWN)) {
     const b = by[o.like];
+    if (own[n]) { out.push({ ...b, ...own[n], range: { ...b.range, ...own[n].range, lunge: b.range.lunge, clear: b.range.clear } }); continue; }   // Combat's own row (offset, reach, band, ticks); lunge and clear stay the slot's until the lab measures them
     out.push({ ...b, id: 'strike.' + n, limb: o.limb, target: o.target, weight: o.weight, look: o.look, _estimate: 'range and ticks borrowed from strike.' + o.like });
   }
   return out;
 }
-export const reuse = 'auto';   // every other wave 1 slot, with the profile applied
+export const reuse = 'auto';
+// the rival's body ram was re-posed (rival2: shoulder first, 38 u in Combat's row); his reuse takes that pose in his profile, not the old back-turned one of wave 1
+export const reuseFrom = { body_ram: { wave: 'rival2', prefix: 'rb' } };   // every other wave 1 slot, with the profile applied
 
 export const strikes = {
   // ---- the twelve whose silhouette changes

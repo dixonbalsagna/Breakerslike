@@ -429,12 +429,12 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 98,
+   "reach": 74,
    "band": "long",
    "ticks": {
-    "load": 6,
-    "follow": 4,
-    "recover": 5
+    "load": 10,
+    "follow": 6,
+    "recover": 10
    },
    "ground": "ok",
    "uses": {
@@ -466,7 +466,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 98,
+   "reach": 72,
    "band": "long",
    "ticks": {
     "load": 6,
@@ -501,7 +501,7 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 58,
-   "reach": 98,
+   "reach": 72,
    "band": "long",
    "ticks": {
     "load": 10,
@@ -518,7 +518,7 @@
     "no_leap",
     "no_held_raise"
    ],
-   "look": "The heel of an open hand lifted under the jaw, the body rising behind it; no leap, the arm lowers at once.",
+   "look": "The heel of an open hand lifted under the jaw, the body rising behind it.",
    "orig": "the heel of the open hand lifted under the jaw, the body rising behind it on straight legs with the feet staying down, the arm lowering at once",
    "poses": [
     "pr.rising_palm.chamber",
@@ -538,12 +538,12 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 56,
-   "reach": 86,
+   "reach": 74,
    "band": "long",
    "ticks": {
-    "load": 14,
-    "follow": 6,
-    "recover": 12
+    "load": 6,
+    "follow": 4,
+    "recover": 5
    },
    "ground": "ok",
    "uses": {
@@ -553,7 +553,7 @@
    "legal": [
     "hands_open_or_claw"
    ],
-   "look": "A short downward chop with a flat hand, the elbow bent through the chop.",
+   "look": "A short downward chop with a flat hand to the shoulder, the elbow bent through it.",
    "orig": "a short downward chop with a flat hand to the shoulder, the elbow staying bent through it, the other hand open at his chest",
    "poses": [
     "pr.knife_chop.chamber",
@@ -573,12 +573,12 @@
    "limb": "hand_r",
    "limb2": null,
    "offset": 56,
-   "reach": 86,
+   "reach": 72,
    "band": "long",
    "ticks": {
-    "load": 14,
-    "follow": 6,
-    "recover": 12
+    "load": 6,
+    "follow": 4,
+    "recover": 5
    },
    "ground": "ok",
    "uses": {
@@ -589,7 +589,7 @@
     "no_clasp",
     "no_held_raise"
    ],
-   "look": "The bottom of one fist brought down: a return blow that sends down.",
+   "look": "The bottom of one fist brought down in a short blow: the return blow that sends down.",
    "orig": "one fist brought down on its heel in a short return blow, the other hand open at his chest; nothing held up after it",
    "poses": [
     "pr.hammer_fist.chamber",
@@ -609,7 +609,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 78,
+   "reach": 60,
    "band": "mid",
    "ticks": {
     "load": 12,
@@ -622,7 +622,7 @@
    },
    "from": null,
    "legal": [],
-   "look": "A straight leg swept round from the inside out.",
+   "look": "A straight leg swept round from the inside out at chest height, the hands up and open.",
    "orig": "a straight leg swept round from the inside out in a crescent at chest height, the hands up and open",
    "poses": [
     "pr.crescent_kick.chamber",
@@ -642,7 +642,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 50,
-   "reach": 72,
+   "reach": 60,
    "band": "mid",
    "ticks": {
     "load": 6,
@@ -655,7 +655,7 @@
    },
    "from": null,
    "legal": [],
-   "look": "The heel hooked back round from beyond the target.",
+   "look": "The leg carried past the target and the heel hooked back round into the chest.",
    "orig": "the leg carried past the target and the heel hooked back round into the chest, the knee folding, the hands up and open",
    "poses": [
     "pr.hook_kick.chamber",
@@ -674,8 +674,8 @@
    "target": "gut",
    "limb": "foot_r",
    "limb2": null,
-   "offset": 50,
-   "reach": 70,
+   "offset": 54,
+   "reach": 64,
    "band": "mid",
    "ticks": {
     "load": 14,
@@ -690,7 +690,7 @@
    "legal": [
     "single_turn"
    ],
-   "look": "One turn and a straight kick with the heel.",
+   "look": "One turn with his back shown and a straight kick with the heel into the belly.",
    "orig": "one turn with his back shown and a straight kick with the heel into the belly, the arms open for the turn",
    "poses": [
     "pr.spinning_back_kick.chamber",
@@ -1160,7 +1160,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 48,
-   "reach": 66,
+   "reach": 68,
    "band": "mid",
    "ticks": {
     "load": 14,
@@ -1295,7 +1295,7 @@
    "target": "gut",
    "limb": "knee_r",
    "limb2": null,
-   "offset": 32,
+   "offset": 28,
    "reach": 54,
    "band": "close",
    "ticks": {
@@ -1429,8 +1429,8 @@
    "target": "chest",
    "limb": "shoulder_r",
    "limb2": null,
-   "offset": 34,
-   "reach": 68,
+   "offset": 38,
+   "reach": 66,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -1440,9 +1440,11 @@
    "ground": "plant",
    "uses": {},
    "from": null,
-   "legal": [],
-   "look": "He turns as he arrives and throws his plated back and the back of the shoulder into the chest, head turned away over the far shoulder, both feet leaving the ground.",
-   "orig": "he turns as he arrives and throws the plated back and the back of the shoulder into the chest, the head turned away over the far shoulder, both feet leaving the ground",
+   "legal": [
+    "no_cross_hold"
+   ],
+   "look": "Redesigned: a short step and the plated shoulder driven into the chest, the chin tucked behind it, the forearm guards close.",
+   "orig": "a short step and the plated shoulder driven into the chest, the chin tucked behind it, the forearm guards close against the ribs: shoulder first",
    "poses": [
     "pr.body_ram.chamber",
     "pr.body_ram.contact",

@@ -1,0 +1,105 @@
+--- a/render/anim/anim_fighter.gd
++++ b/render/anim/anim_fighter.gd
+@@ -63,6 +63,8 @@
+ var _lead_py: float = 0.0
+ var _lead_tk: int = -1
+ var pair_key: String = ""              # the launch-pair fighter this body plays as (data/anim/fighters.json: protagonist, antihero), "" for none (docs/animation/pair-live.md)
++var _taunt_last: String = ""           # the last far taunt gesture he played (never the same one twice running)
++var _taunt_n: int = 0                  # how many far taunts he has played this match
+ var _taunt_id: String = ""             # the far taunt gesture playing (his own, or the shared shrug)
+ var _en_pose: String = ""              # the energy layer's held pose (a charge, a release, a shot into a crater ...), eased in and out like the agency hold
+ var _en_prev: String = ""              # ... the pose it took over from, crossfaded over 0.08 s
+@@ -334,10 +336,25 @@
+ 			var tn: Dictionary = A.get("taunt", {})
+ 			var tid: String = String(tn.get("seq", ""))
+ 			var gest: Array = AnimData.pair.get("roles", {}).get(pair_key, {}).get("taunts", []) if (RenderAnim.pair_live and pair_key != "") else []
+-			if not gest.is_empty():   # his own far taunts (docs/animation/pair-live.md): one of them, by a hash of the tick
+-				var gid: String = String(gest[_hash(int(T * 60.0), slot, 29) % gest.size()])
+-				if AnimData.entries.has(gid):
++			if not gest.is_empty():   # his own far taunts (docs/animation/pair-live.md): the first of a stand-off is his first gesture; after that one he may use, by a hash of the tick, never the same twice running
++				var air: bool = bool(e.get("air", false))
++				var first: String = String(AnimData.pair.get("roles", {}).get(pair_key, {}).get("taunt_first", ""))
++				var gid: String = ""
++				if first != "" and _taunt_n == 0 and not bool(e.get("traded", true)) and AnimData.entries.has(first):
++					gid = first
++				else:
++					var elig: Array = []
++					for g in gest:
++						var gate: String = String(AnimData.entries.get(String(g), {}).get("_gate", ""))
++						if (gate == "ground" and air) or (gate == "air" and not air) or (String(g) == _taunt_last and gest.size() > 1):
++							continue
++						elig.append(String(g))
++					if not elig.is_empty():
++						gid = String(elig[_hash(int(T * 60.0), slot, 29) % elig.size()])
++				if gid != "" and AnimData.entries.has(gid):
+ 					tid = gid
++					_taunt_last = gid
++					_taunt_n += 1
+ 			if AnimData.entries.has(tid):
+ 				_taunt_id = tid
+ 				_seq = {"id": tid, "t0": T, "dur": float(AnimData.entries[tid].dur) / 60.0, "wt": float(tn.get("weight", 0.7)) * wt}
+@@ -557,9 +574,12 @@
+ 			if not busy and _en_role("volley").has("seq"):
+ 				_en_play_seq(String(_en_role("volley").seq), T)
+ 		"taunt_close":
+-			if _en_role("taunt_close").has("seq"):
+-				_en_play_seq(String(_en_role("taunt_close").seq), T)
+-				_taunt_id = String(_en_role("taunt_close").seq)
++			var rt: Dictionary = _en_role("taunt_close")
++			if f.y - WorldTerrain.groundY(S, f.x) > 20.0 and _en_role("taunt_close_air").has("seq"):   # in the air its first phase needs the ground: his own start for it, in the same 60 ticks
++				rt = _en_role("taunt_close_air")
++			if rt.has("seq"):
++				_en_play_seq(String(rt.seq), T)
++				_taunt_id = String(rt.seq)
+ 		"drop_the_act":
+ 			if _en_role("drop_the_act").has("seq"):
+ 				_en_play_seq(String(_en_role("drop_the_act").seq), T)
+--- a/render/anim/render_anim.gd
++++ b/render/anim/render_anim.gd
+@@ -242,7 +242,7 @@
+ 					var t_ag: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+ 					for ia in range(S.fighters.size()):
+ 						if who < 0 or ia == who:
+-							fighter(S, S.fighters[ia]).on_agency(String(e.kind), t_ag, {})
++							fighter(S, S.fighters[ia]).on_agency(String(e.kind), t_ag, _taunt_ctx(S, S.fighters[ia]) if String(e.kind) == "taunt_start" else {})
+ 				if AnimData.pair.get("cues", {}).has(String(e.kind)) and who >= 0 and who < S.fighters.size():
+ 					var t_bc: float = S.T - float(S.tick - int(e.tick)) * (1.0 / 60.0)
+ 					fighter(S, S.fighters[who]).on_blast_cue(String(e.kind), t_bc, S, S.fighters[who])
+@@ -271,6 +271,15 @@
+ 						fighter(S, S.fighters[a]).on_blocked(S.T)
+ 
+ 
++## What a far taunt's pick needs to know of the moment: whether he is in the air (the bounce is ground only) and whether any blow has landed yet this match (the nod opens a stand-off).
++static func _taunt_ctx(S: SimState, f) -> Dictionary:
++	var traded: bool = false
++	for fo in S.fighters:
++		if fighter(S, fo)._hit_n > 0:
++			traded = true
++	return {"air": f.y - WorldTerrain.groundY(S, f.x) > 20.0, "traded": traded}
++
++
+ ## A field of an event that may not exist yet (World's ground-contact events arrive with their fields; until then the event is not sent).
+ static func _ev(e, key: String, default):
+ 	var v = e.get(key)
+--- a/data/anim/pair_live.json
++++ b/data/anim/pair_live.json
+@@ -5,7 +5,7 @@
+   "anti-hero": "antihero",
+   "anti_hero": "antihero"
+  },
+- "_about": "How the launch pair's parked waves play in a live match (docs/animation/pair-live.md). aliases: other names for a fighter of fighters.json (the neutral id rival is the antihero). A roster id is mapped to a fighter of data/anim/fighters.json (its key, or the id it `replaces`: KAI is the protagonist, VORR the antihero), whose waves are baked when his first body is built. shared: waves baked for both. gated: a strike that joins its fighter's pick list only while its gate is open (both_ground: both fighters near the ground; striker_air: the striker well above it); the other strikes of his strike waves (the manifest's light and heavy ones, never the tail) are the pick lists, walked as the go-live step 1 lists are. kinds: a shot kind (data/fight/shots.json) to the energy role it plays. cues: the sim's render cues (SimFx.cue) to what they start. spray_gap: ticks between a fighter's bolts under which the next one is a spray beat (the spread window of agency-pass.md 15.4). roles: per fighter, what each role plays: seq (a sequence of a parked wave, started where the cue or the shot says), hold (a pose held and eased: ticks, in and out seconds, w the weight), charged (charge: the pose held from the charge cue, full: the pose it takes at the flash, release: the hold on the shot), taunts (the far taunts: one is picked by a hash of the tick), taunt_close, drop_the_act, crown_release, shove (events the sim does not send yet: they play when it does). Render only, outside the sim's data hash.",
++ "_about": "How the launch pair's parked waves play in a live match (docs/animation/pair-live.md). aliases: other names for a fighter of fighters.json (the neutral id rival is the antihero). A roster id is mapped to a fighter of data/anim/fighters.json (its key, or the id it `replaces`: KAI is the protagonist, VORR the antihero), whose waves are baked when his first body is built. shared: waves baked for both. gated: a strike that joins its fighter's pick list only while its gate is open (both_ground: both fighters near the ground; striker_air: the striker well above it); the other strikes of his strike waves (the manifest's light and heavy ones, never the tail) are the pick lists, walked as the go-live step 1 lists are. kinds: a shot kind (data/fight/shots.json) to the energy role it plays. cues: the sim's render cues (SimFx.cue) to what they start. spray_gap: ticks between a fighter's bolts under which the next one is a spray beat (the spread window of agency-pass.md 15.4). roles: per fighter, what each role plays: seq (a sequence of a parked wave, started where the cue or the shot says), hold (a pose held and eased: ticks, in and out seconds, w the weight), charged (charge: the pose held from the charge cue, full: the pose it takes at the flash, release: the hold on the shot), taunts (the far taunts: one is picked by a hash of the tick), taunt_first (the gesture a stand-off opens with, before any blow has landed), taunt_close, taunt_close_air (the close taunt when he is in the air), drop_the_act, crown_release, shove (events the sim does not send yet: they play when it does). Render only, outside the sim's data hash.",
+  "shared": [
+   "energy1"
+  ],
+@@ -102,6 +102,10 @@
+    ],
+    "taunt_close": {
+     "seq": "pg.taunt_close"
++   },
++   "taunt_first": "pg.taunt_nod",
++   "taunt_close_air": {
++    "seq": "pg.taunt_close_air"
+    }
+   },
+   "antihero": {

@@ -786,7 +786,7 @@
    "limb": "foot_r",
    "limb2": null,
    "offset": 48,
-   "reach": 66,
+   "reach": 68,
    "band": "mid",
    "ticks": {
     "load": 14,
@@ -985,7 +985,7 @@
    "target": "gut",
    "limb": "knee_r",
    "limb2": null,
-   "offset": 32,
+   "offset": 28,
    "reach": 54,
    "band": "close",
    "ticks": {
@@ -1115,8 +1115,8 @@
    "target": "chest",
    "limb": "shoulder_r",
    "limb2": null,
-   "offset": 34,
-   "reach": 68,
+   "offset": 38,
+   "reach": 66,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -1127,7 +1127,7 @@
    "uses": {},
    "from": null,
    "legal": [],
-   "look": "He turns as he arrives and throws his plated back and the back of the shoulder into the chest, head turned away over the far shoulder, both feet leaving the ground.",
+   "look": "A short step and the plated shoulder driven into the chest, the chin tucked behind it, the forearm guards close (Animation's re-pose).",
    "orig": "he turns as he arrives and throws the plated back and the back of the shoulder into the chest, the head turned away over the far shoulder, both feet leaving the ground",
    "poses": [
     "w1.body_ram.chamber",

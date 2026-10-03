@@ -243,6 +243,10 @@
       "schema": "anim-fighters.schema.json"
     },
     {
+      "match": "data/anim/pair_live.json",
+      "schema": "anim-pairlive.schema.json"
+    },
+    {
       "match": "data/anim/target_poles.json",
       "schema": "anim-target-poles.schema.json"
     },

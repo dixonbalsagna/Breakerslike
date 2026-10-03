@@ -43019,6 +43019,847 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "anim-pairlive-live-valid",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/spray_gap": 10
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-key-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "del": [
+            "/roles"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-pairlive-cues-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "del": [
+            "/cues"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "anim-pairlive-schema-version",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/schema": "anim.pairlive/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "anim-pairlive-unknown-key",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "anim-pairlive-underscore-key-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-alias-type",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/aliases/rival": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/aliases/rival"
+      }
+    },
+    {
+      "id": "anim-pairlive-alias-to-unknown-fighter",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/aliases/rival": "nobody"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-fighter",
+        "pointer": "/aliases/rival"
+      }
+    },
+    {
+      "id": "anim-pairlive-alias-new-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/aliases/foe": "antihero"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-shared-wave-shape",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/shared": [
+              "Energy 1"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/shared/0"
+      }
+    },
+    {
+      "id": "anim-pairlive-shared-duplicate",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/shared": [
+              "energy1",
+              "energy1"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/shared/1"
+      }
+    },
+    {
+      "id": "anim-pairlive-shared-wave-without-poses",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/shared": [
+              "energy9"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-wave",
+        "pointer": "/shared/0"
+      }
+    },
+    {
+      "id": "anim-pairlive-shared-empty-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/shared": []
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-gated-key-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "del": [
+            "/gated/0/gate"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/gated/0"
+      }
+    },
+    {
+      "id": "anim-pairlive-gated-gate-enum",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/gated/0/gate": "always"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/gated/0/gate"
+      }
+    },
+    {
+      "id": "anim-pairlive-gated-weight-enum",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/gated/0/weight": "medium"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/gated/0/weight"
+      }
+    },
+    {
+      "id": "anim-pairlive-gated-unknown-key",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/gated/0/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/gated/0/extra"
+      }
+    },
+    {
+      "id": "anim-pairlive-gated-strike-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/gated/0/strike": "nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-gated",
+        "pointer": "/gated/0/strike"
+      }
+    },
+    {
+      "id": "anim-pairlive-spray-gap-zero",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/spray_gap": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/spray_gap"
+      }
+    },
+    {
+      "id": "anim-pairlive-spray-gap-integer",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/spray_gap": 10.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/spray_gap"
+      }
+    },
+    {
+      "id": "anim-pairlive-kind-role-enum",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/kinds/bolt": "beam"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/kinds/bolt"
+      }
+    },
+    {
+      "id": "anim-pairlive-kind-without-role-warns",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "del": [
+            "/kinds/mine"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-kind",
+        "pointer": "/kinds"
+      }
+    },
+    {
+      "id": "anim-pairlive-kind-extra-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/kinds/comet": "bolt"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-cue-start-enum",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/cues/blast_windup": "explode"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/cues/blast_windup"
+      }
+    },
+    {
+      "id": "anim-pairlive-cue-new-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/cues/blast_new": "charge"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-roles-empty",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/roles"
+      }
+    },
+    {
+      "id": "anim-pairlive-role-fighter-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/nobody": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-fighter",
+        "pointer": "/roles/nobody"
+      }
+    },
+    {
+      "id": "anim-pairlive-role-unknown-key",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/sneeze": {
+              "seq": "pg.bolt"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/roles/protagonist/sneeze"
+      }
+    },
+    {
+      "id": "anim-pairlive-role-underscore-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-seq-key-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/bolt": {
+              "wind_ticks": 4
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/roles/protagonist/bolt"
+      }
+    },
+    {
+      "id": "anim-pairlive-seq-shape",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/bolt/seq": "Bolt"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/roles/protagonist/bolt/seq"
+      }
+    },
+    {
+      "id": "anim-pairlive-seq-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/bolt/seq": "pg.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/bolt/seq"
+      }
+    },
+    {
+      "id": "anim-pairlive-seq-wind-negative",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/bolt/wind_ticks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/roles/protagonist/bolt/wind_ticks"
+      }
+    },
+    {
+      "id": "anim-pairlive-seq-unknown-key",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/bolt/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/roles/protagonist/bolt/extra"
+      }
+    },
+    {
+      "id": "anim-pairlive-hold-key-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "del": [
+            "/roles/protagonist/crater/ticks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/roles/protagonist/crater"
+      }
+    },
+    {
+      "id": "anim-pairlive-hold-pose-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/crater/pose": "pg.hold.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/crater/pose"
+      }
+    },
+    {
+      "id": "anim-pairlive-hold-ticks-zero",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/crater/ticks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/roles/protagonist/crater/ticks"
+      }
+    },
+    {
+      "id": "anim-pairlive-hold-in-negative",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/crater/in": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/roles/protagonist/crater/in"
+      }
+    },
+    {
+      "id": "anim-pairlive-hold-weight-range",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/crater/w": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/roles/protagonist/crater/w"
+      }
+    },
+    {
+      "id": "anim-pairlive-hold-optional-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/crater": {
+              "pose": "pg.hold.blast_down",
+              "ticks": 22
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-charged-key-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "del": [
+            "/roles/protagonist/charged/release"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/roles/protagonist/charged"
+      }
+    },
+    {
+      "id": "anim-pairlive-charged-charge-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/charged/charge": "pn.hold.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/charged/charge"
+      }
+    },
+    {
+      "id": "anim-pairlive-charged-full-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/charged/full": "pn.hold.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/charged/full"
+      }
+    },
+    {
+      "id": "anim-pairlive-charged-release-pose-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/charged/release/pose": "pn.hold.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/charged/release/pose"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunts-empty",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunts": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/roles/protagonist/taunts"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunts-duplicate",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunts": [
+              "pg.taunt_nod",
+              "pg.taunt_nod"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/roles/protagonist/taunts/1"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunts-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunts": [
+              "pg.taunt_nod",
+              "pg.taunt_nowhere"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/taunts/1"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunt-first-ok",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunt_first": "pg.taunt_bounce"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-pairlive-taunt-first-type",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunt_first": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/roles/protagonist/taunt_first"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunt-first-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunt_first": "pg.taunt_nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/taunt_first"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunt-first-not-a-taunt-warns",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunt_first": "pg.taunt_close"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/taunt_first"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunt-close-air-seq-unknown",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunt_close_air/seq": "pg.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:pairlive-ref",
+        "pointer": "/roles/protagonist/taunt_close_air/seq"
+      }
+    },
+    {
+      "id": "anim-pairlive-taunt-close-air-key-required",
+      "schema": "anim-pairlive.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/pair_live.json",
+          "set": {
+            "/roles/protagonist/taunt_close_air": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/roles/protagonist/taunt_close_air"
+      }
     }
   ],
   "text": [

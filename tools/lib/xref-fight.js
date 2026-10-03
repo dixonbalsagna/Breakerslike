@@ -1068,6 +1068,44 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     }
   }
 
+  // ---- anim pair live: the fighters and waves exist; every sequence and pose a role names exists; gated strikes and shot kinds are real ----
+  const plv = get('data/anim/pair_live.json');
+  if (isObj(plv)) {
+    const PL = 'data/anim/pair_live.json';
+    const fgs = get('data/anim/fighters.json');
+    const fids = isObj(fgs) && isObj(fgs.fighters) ? Object.keys(fgs.fighters).filter((k) => !k.startsWith('_')) : [];
+    if (fids.length) {
+      if (isObj(plv.roles)) for (const k of Object.keys(plv.roles)) if (!k.startsWith('_') && !fids.includes(k)) err(PL, `/roles/${esc(k)}`, 'pairlive-fighter', `roles for "${k}", who is not a fighter of fighters.json (${fids.join(', ')})`);
+      if (isObj(plv.aliases)) for (const [k, v] of Object.entries(plv.aliases)) if (!k.startsWith('_') && typeof v === 'string' && !fids.includes(v)) err(PL, `/aliases/${esc(k)}`, 'pairlive-fighter', `alias "${k}" names "${v}", who is not a fighter of fighters.json (${fids.join(', ')})`);
+    }
+    if (Array.isArray(plv.shared)) plv.shared.forEach((w, i) => { if (typeof w === 'string' && !get(`data/anim/waves/${w}.poses.json`)) err(PL, `/shared/${i}`, 'pairlive-wave', `shared wave "${w}" has no data/anim/waves/${w}.poses.json`); });
+    const poseSet = new Set(); const seqSet = new Set(); const strikeNames = new Set();
+    const mainPl = get('data/anim/poses.json');
+    if (isObj(mainPl) && isObj(mainPl.poses)) for (const k of Object.keys(mainPl.poses)) poseSet.add(k);
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.poses\.json$/)) { const d = get(rel); if (isObj(d) && isObj(d.poses)) for (const k of Object.keys(d.poses)) poseSet.add(k); }
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.sequences\.json$/)) { const d = get(rel); if (isObj(d) && isObj(d.sequences)) for (const k of Object.keys(d.sequences)) seqSet.add(k); }
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.manifest\.json$/)) { const d = get(rel); if (isObj(d) && Array.isArray(d.strikes)) for (const s of d.strikes) if (isObj(s) && typeof s.name === 'string') strikeNames.add(s.name); }
+    const needSeq = (v, at) => { if (seqSet.size && typeof v === 'string' && !seqSet.has(v)) err(PL, at, 'pairlive-ref', `sequence "${v}" is not in a wave's sequences file`); };
+    const needPose = (v, at) => { if (poseSet.size && typeof v === 'string' && !poseSet.has(v)) err(PL, at, 'pairlive-ref', `pose "${v}" is not in poses.json nor a wave's poses file`); };
+    const needEither = (v, at) => { if ((poseSet.size || seqSet.size) && typeof v === 'string' && !poseSet.has(v) && !seqSet.has(v)) err(PL, at, 'pairlive-ref', `"${v}" is neither a pose nor a sequence of the wave files`); };
+    for (const [fid, r] of Object.entries(isObj(plv.roles) ? plv.roles : {})) {
+      if (fid.startsWith('_') || !isObj(r)) continue;
+      for (const [role, v] of Object.entries(r)) {
+        if (role.startsWith('_')) continue;
+        const at = `/roles/${esc(fid)}/${esc(role)}`;
+        if (role === 'taunts') { if (Array.isArray(v)) v.forEach((x, i) => needEither(x, `${at}/${i}`)); }
+        else if (role === 'taunt_first') { needEither(v, at); if (Array.isArray(r.taunts) && typeof v === 'string' && !r.taunts.includes(v)) err(PL, at, 'pairlive-ref', `taunt_first "${v}" is not one of ${fid}'s taunts`, 'warning'); }
+        else if (!isObj(v)) continue;
+        else if (role === 'charged') { needEither(v.charge, `${at}/charge`); needEither(v.full, `${at}/full`); if (isObj(v.release)) needPose(v.release.pose, `${at}/release/pose`); }
+        else if (typeof v.seq === 'string') needSeq(v.seq, `${at}/seq`);
+        else if (typeof v.pose === 'string') needPose(v.pose, `${at}/pose`);
+      }
+    }
+    if (Array.isArray(plv.gated) && strikeNames.size) plv.gated.forEach((g, i) => { if (isObj(g) && typeof g.strike === 'string' && !strikeNames.has(g.strike)) err(PL, `/gated/${i}/strike`, 'pairlive-gated', `gated strike "${g.strike}" is no strike of any wave manifest`); });
+    const shotsPl = get('data/fight/shots.json');
+    if (isObj(shotsPl) && isObj(shotsPl.kinds) && isObj(plv.kinds)) for (const k of Object.keys(shotsPl.kinds)) if (!k.startsWith('_') && !(k in plv.kinds)) err(PL, '/kinds', 'pairlive-kind', `shot kind "${k}" of data/fight/shots.json has no energy role in kinds`, 'warning');
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

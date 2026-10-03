@@ -1,0 +1,603 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-pairlive",
+  "title": "anim.pairlive/1",
+  "description": "data/anim/pair_live.json: how the launch pair's parked waves play in a live match (docs/animation/pair-live.md). aliases: other names for a fighter of fighters.json. shared: waves baked for both. gated: strikes that join a pick list while their gate is open. spray_gap: ticks between a fighter's bolts under which the next is a spray beat. kinds: shot kind to energy role. cues: the sim's render cues to what they start. roles: per fighter of fighters.json what each role plays (a sequence, a held pose, a charged pair, the far taunts). Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every roles and aliases fighter is in fighters.json; every shared wave has a poses file; every sequence and pose a role names exists; every gated strike is a strike of a wave manifest; every shot kind has a role) are checked by tools/lib/xref-fight.js (pairlive-*). Animation's draft: docs/animation/handoff/anim-pairlive.schema.json.",
+  "type": "object",
+  "required": [
+    "schema",
+    "shared",
+    "gated",
+    "spray_gap",
+    "kinds",
+    "cues",
+    "roles"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.pairlive/1"
+    },
+    "aliases": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_-]*)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "patternProperties": {
+        "^_": true
+      },
+      "description": "Another name for a fighter of fighters.json."
+    },
+    "shared": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+[0-9]+$"
+      },
+      "description": "Waves baked for both fighters."
+    },
+    "gated": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "strike",
+          "weight",
+          "gate"
+        ],
+        "properties": {
+          "strike": {
+            "description": "The strike's name in its wave manifest.",
+            "type": "string",
+            "minLength": 1
+          },
+          "weight": {
+            "enum": [
+              "light",
+              "heavy"
+            ]
+          },
+          "gate": {
+            "enum": [
+              "both_ground",
+              "striker_air"
+            ],
+            "description": "both_ground: both fighters near the ground; striker_air: the striker well above it."
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "description": "Strikes that join their fighter's pick list only while their gate is open."
+    },
+    "spray_gap": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Ticks between a fighter's bolts under which the next is a spray beat."
+    },
+    "kinds": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "enum": [
+          "bolt",
+          "volley",
+          "lob",
+          "charged",
+          "mine",
+          "rain",
+          "curve"
+        ]
+      },
+      "patternProperties": {
+        "^_": true
+      },
+      "description": "A shot kind to the energy role it plays."
+    },
+    "cues": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "enum": [
+          "windup",
+          "charge",
+          "full",
+          "cancel",
+          "crater",
+          "volley",
+          "taunt_close",
+          "drop_the_act",
+          "crown_release",
+          "shove"
+        ]
+      },
+      "patternProperties": {
+        "^_": true
+      },
+      "description": "The sim's render cues to what they start."
+    },
+    "roles": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "description": "Per fighter, what each role plays.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "bolt": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "volley": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "lob": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "curve": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "spray": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "mine": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "swat": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "taunt_close": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "taunt_close_air": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "drop_the_act": {
+            "type": "object",
+            "required": [
+              "seq"
+            ],
+            "properties": {
+              "seq": {
+                "description": "A sequence of a parked wave, started where the cue or the shot says.",
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+              },
+              "wind_ticks": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Ticks of wind-up before the shot leaves."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "crater": {
+            "type": "object",
+            "required": [
+              "pose",
+              "ticks"
+            ],
+            "properties": {
+              "pose": {
+                "description": "The pose held and eased.",
+                "type": "string",
+                "minLength": 1
+              },
+              "ticks": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "in": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease in."
+              },
+              "out": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease out."
+              },
+              "w": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The weight of the hold over the body."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "rain": {
+            "type": "object",
+            "required": [
+              "pose",
+              "ticks"
+            ],
+            "properties": {
+              "pose": {
+                "description": "The pose held and eased.",
+                "type": "string",
+                "minLength": 1
+              },
+              "ticks": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "in": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease in."
+              },
+              "out": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease out."
+              },
+              "w": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The weight of the hold over the body."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "shove": {
+            "type": "object",
+            "required": [
+              "pose",
+              "ticks"
+            ],
+            "properties": {
+              "pose": {
+                "description": "The pose held and eased.",
+                "type": "string",
+                "minLength": 1
+              },
+              "ticks": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "in": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease in."
+              },
+              "out": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease out."
+              },
+              "w": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The weight of the hold over the body."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "crown_release": {
+            "type": "object",
+            "required": [
+              "pose",
+              "ticks"
+            ],
+            "properties": {
+              "pose": {
+                "description": "The pose held and eased.",
+                "type": "string",
+                "minLength": 1
+              },
+              "ticks": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "in": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease in."
+              },
+              "out": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds to ease out."
+              },
+              "w": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The weight of the hold over the body."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "charged": {
+            "type": "object",
+            "required": [
+              "charge",
+              "full",
+              "release"
+            ],
+            "properties": {
+              "charge": {
+                "description": "The pose or sequence held from the charge cue.",
+                "type": "string",
+                "minLength": 1
+              },
+              "full": {
+                "description": "The pose or sequence it takes at the flash.",
+                "type": "string",
+                "minLength": 1
+              },
+              "release": {
+                "type": "object",
+                "required": [
+                  "pose",
+                  "ticks"
+                ],
+                "properties": {
+                  "pose": {
+                    "description": "The pose held and eased.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "ticks": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "in": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Seconds to ease in."
+                  },
+                  "out": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Seconds to ease out."
+                  },
+                  "w": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "The weight of the hold over the body."
+                  }
+                },
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^_": true
+                }
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "taunts": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "The far taunts: one is picked by a hash of the tick."
+          },
+          "taunt_first": {
+            "description": "The far taunt played first, one of the taunts.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

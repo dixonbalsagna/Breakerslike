@@ -9,13 +9,13 @@
    "target": "gut",
    "limb": "hand_r",
    "limb2": null,
-   "offset": 58,
-   "reach": 98,
-   "band": "long",
+   "offset": 54,
+   "reach": 68,
+   "band": "mid",
    "ticks": {
-    "load": 12,
+    "load": 10,
     "follow": 6,
-    "recover": 12
+    "recover": 10
    },
    "ground": "ok",
    "uses": {
@@ -25,7 +25,7 @@
    "legal": [
     "hands_open_or_claw"
    ],
-   "look": "A round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through.",
+   "look": "A heavy hook dug in along the ribs: the elbow at a right angle, the hip turned through, the other forearm plate across his own chest.",
    "orig": "a round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through, the other open hand up at his cheek",
    "poses": [
     "ph.body_hook.chamber",

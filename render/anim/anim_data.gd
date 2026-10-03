@@ -26,6 +26,12 @@ static var form_poses: Dictionary = {}  # beat -> pose id
 static var load_waves: bool = false      # --waves: also bake the parked pose waves of data/anim/waves/ (tools only; no live match plays them)
 static var raw: Dictionary = {}         # id -> the sketch each pose was baked from (poses.json, and the waves when loaded)
 static var last_stand: Dictionary = {}   # data/anim/laststand.json: the ready sequence of each shape, the held resolve and the slump
+static var fighters_cfg: Dictionary = {}   # data/anim/fighters.json: each fighter's shape, profile and waves (docs 9.25)
+static var pair: Dictionary = {}           # data/anim/pair_live.json: how the launch pair's waves play live (docs/animation/pair-live.md)
+static var pair_lists: Dictionary = {}     # fighter key -> {light, heavy, gated: [{id, weight, gate}], entries: {name: id}}: his own pick lists and entries, built when his waves are baked
+static var pair_bake_usec: int = 0         # microseconds spent baking fighters' waves in this run (the match-start cost)
+static var pair_bake_poses: int = 0
+static var _waves_done: Dictionary = {}
 static var flight: Dictionary = {}       # data/anim/flight.json: the flight lead, a launched body turned head first along its velocity (docs 9.23)
 static var agency: Dictionary = {}       # data/anim/agency.json: how the agency slice's events (knockback, embed, taunt, charges) map to poses
 static var intro: Dictionary = {}        # data/anim/intro.json: the opening's timings and each shape's staredown beat
@@ -131,6 +137,8 @@ static func load_all() -> void:
 	personality = _read("personality.json")
 	winner = _read("winner.json")
 	quality_levels = _read("quality.json").get("levels", {})
+	fighters_cfg = _read("fighters.json").get("fighters", {})
+	pair = _read("pair_live.json")
 
 
 ## One parked wave's files (poses, key sets, sequences, cues, entries).
@@ -145,6 +153,7 @@ static func _fixed(id: String, sk: Dictionary) -> Dictionary:
 
 
 static func _load_wave(wn: String) -> void:
+	_waves_done[wn] = true
 	var wp: Dictionary = _read("waves/" + wn + ".poses.json").get("poses", {})
 	for id in wp:
 		var wsk: Dictionary = _fixed(id, wp[id])
@@ -188,6 +197,91 @@ static func load_every_wave() -> void:
 	names.sort()
 	for wn in names:
 		_load_wave(wn)
+
+
+## The fighter of data/anim/fighters.json a roster id plays as: his key, or the id he replaces (KAI is the protagonist, VORR the antihero until the ids change). "" for none.
+static func fighter_key(roster_id: String) -> String:
+	var rid: String = roster_id.to_lower()
+	for k in fighters_cfg:
+		if String(k).to_lower() == rid or String(fighters_cfg[k].get("replaces", "")).to_lower() == rid:
+			return String(k)
+	var al: Dictionary = pair.get("aliases", {})   # (the neutral working ids of Combat's data: rival is the antihero)
+	if al.has(rid) and fighters_cfg.has(String(al[rid])):
+		return String(al[rid])
+	return ""
+
+
+## Bakes the waves of the fighter a roster id plays as (once): his strike, entry and energy waves, his `more`, and the waves both share. Builds his pick lists
+## (every strike of his strike waves by weight, never the tail; the gated ones join while their gate is open) and his entries by name. Returns his key, or "" when the
+## live pair is off or he is not one of the pair.
+static func ensure_fighter(roster_id: String) -> String:
+	load_all()
+	if not RenderAnim.pair_live:
+		return ""
+	var key: String = fighter_key(roster_id)
+	if key == "" or pair.is_empty():
+		return ""
+	if pair_lists.has(key):
+		return key
+	var t0: int = Time.get_ticks_usec()
+	var npose: int = poses.size()
+	var names: Array = []
+	var wv: Dictionary = fighters_cfg[key].get("waves", {})
+	for k in wv:
+		if wv[k] is Array:
+			names.append_array(wv[k])
+		else:
+			names.append(String(wv[k]))
+	names.append_array(pair.get("shared", []))
+	for wn in names:
+		if not _waves_done.has(String(wn)) and FileAccess.file_exists(DIR + "waves/" + String(wn) + ".poses.json"):
+			_load_wave(String(wn))
+	var gated: Dictionary = {}
+	for g in pair.get("gated", []):
+		gated[String(g.strike)] = g
+	var lst := {"light": [], "heavy": [], "gated": [], "entries": {}, "by_name": {}}
+	for wn in names:
+		var mp: String = DIR + "waves/" + String(wn) + ".manifest.json"
+		if FileAccess.file_exists(mp):
+			for st in _read("waves/" + String(wn) + ".manifest.json").get("strikes", []):
+				var nm: String = String(st.name)
+				if nm.begins_with("tail") or not keysets.has(String(st.id)):
+					continue
+				lst.by_name[nm] = String(st.id)
+				if gated.has(nm):
+					lst.gated.append({"id": String(st.id), "weight": String(gated[nm].weight), "gate": String(gated[nm].gate)})
+				elif String(st.weight) == "heavy":
+					lst.heavy.append(String(st.id))
+				else:
+					lst.light.append(String(st.id))
+		var ep: String = DIR + "waves/" + String(wn) + ".entries.json"
+		if FileAccess.file_exists(ep):
+			for eid in _read("waves/" + String(wn) + ".entries.json").get("entries", {}):
+				if not String(eid).contains("~"):
+					lst.entries[String(eid).substr(String(eid).find(".") + 1)] = String(eid)
+	pair_lists[key] = lst
+	pair_bake_usec += Time.get_ticks_usec() - t0
+	pair_bake_poses += poses.size() - npose
+	return key
+
+
+## The key set of the strike a beat names (strike.jab, the planner's own pick once the alchemist's beats carry it) as the fighter's own; "" when he has none of that name.
+static func resolve_strike(key: String, piece: String) -> String:
+	if piece == "" or key == "" or not pair_lists.has(key):
+		return ""
+	return String(pair_lists[key].by_name.get(piece.substr(piece.find(".") + 1) if piece.begins_with("strike.") else piece, ""))
+
+
+## An entry id a beat names (entry.dash, or an id already in the data) as the fighter's own entry sequence; "" when he has none of that name.
+static func resolve_entry(key: String, id: String) -> String:
+	if id == "":
+		return ""
+	if entries.has(id):
+		return id
+	if key == "" or not pair_lists.has(key):
+		return ""
+	var nm: String = id.substr(id.find(".") + 1) if id.begins_with("entry.") else id
+	return String(pair_lists[key].entries.get(nm, ""))
 
 
 static func pose_exists(id: String) -> bool:

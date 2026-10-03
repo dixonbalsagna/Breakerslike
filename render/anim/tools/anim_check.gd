@@ -330,6 +330,111 @@ func _test_flight_lead() -> void:
 	print("flight lead test: head leads %.2f along the velocity (the sim's own angle %.2f), let go after the launch, a knockback fold stood up to %.0f degrees" % [lead_on, lead_off, tilt_ok])
 	f.state = "free"
 
+## The launch pair live (docs/animation/pair-live.md): a roster id plays as its fighter of data/anim/fighters.json (KAI the protagonist, VORR the antihero, the neutral id rival too);
+## his waves are baked and his pick lists and entries built; in a real match his blows are his own key sets (pr and ph for the protagonist, w1 and rb for the rival); the energy
+## cues and shots start the sequence or hold of his role; a far taunt is one of his own gestures and is cut like the shared one.
+func _test_pair_live() -> void:
+	_expect(RenderAnim.pair_live and not AnimData.pair.is_empty(), "pair live test: data/anim/pair_live.json did not load or the live pair is off")
+	_expect(AnimData.fighter_key("KAI") == "protagonist" and AnimData.fighter_key("VORR") == "antihero" and AnimData.fighter_key("rival") == "antihero" and AnimData.fighter_key("Protagonist") == "protagonist" and AnimData.fighter_key("NOBODY") == "", "pair live test: a roster id did not map to its fighter")
+	var kp: String = AnimData.ensure_fighter("KAI")
+	var kr: String = AnimData.ensure_fighter("VORR")
+	var lp: Dictionary = AnimData.pair_lists.get(kp, {})
+	var lr: Dictionary = AnimData.pair_lists.get(kr, {})
+	_expect(kp == "protagonist" and kr == "antihero" and lp.light.size() >= 15 and lp.heavy.size() >= 15 and lr.light.size() >= 12 and lr.heavy.size() >= 15, "pair live test: his pick lists were not built (%d and %d lights, %d and %d heavies)" % [lp.light.size(), lr.light.size(), lp.heavy.size(), lr.heavy.size()])
+	var tail_free := true
+	for id in lp.light + lp.heavy + lr.light + lr.heavy:
+		tail_free = tail_free and not String(id).contains("tail") and AnimData.keysets.has(String(id))
+	_expect(tail_free, "pair live test: a pick list names a tail strike or a key set that is not baked")
+	_expect(AnimData.resolve_entry(kp, "entry.hop_back") == "pe.hop_back" and AnimData.resolve_entry(kr, "entry.hop_back") == "w2.hop_back" and AnimData.resolve_entry(kp, "entry.air_roll") == "pe.air_roll" and AnimData.resolve_entry(kr, "entry.air_roll") == "", "pair live test: an entry id did not resolve to the fighter's own")
+	_expect(AnimData.resolve_strike(kp, "strike.palm_push") == "pr.palm_push" and AnimData.resolve_strike(kp, "strike.body_hook") == "ph.body_hook" and AnimData.resolve_strike(kr, "strike.body_hook") == "rb.body_hook" and AnimData.resolve_strike(kr, "strike.jab") == "w1.jab" and AnimData.resolve_strike(kr, "strike.palm_push") == "" and AnimData.resolve_strike(kr, "strike.tail_jab") == "", "pair live test: a strike id did not resolve to the fighter's own key set")
+	# a real match: every blow he throws is one of his own key sets
+	main.start_match(4, {"p1": true, "p2": true})
+	var S: SimState = main.host.S
+	var seen: Array = [{}, {}]
+	for k in range(1500):
+		main.frame(1.0 / 60.0)
+		for i in range(2):
+			RenderAnim.solve(S, S.fighters[i])
+	var own := [true, true]
+	var n_picks := 0
+	for i in range(2):
+		var af0: AnimFighter = RenderAnim.fighter(S, S.fighters[i])
+		n_picks += int(af0.debug.get("pair_picks", 0))
+		for ksid in af0.debug.get("keysets", {}):
+			var pre: String = String(ksid).get_slice(".", 0)
+			if i == 0 and not (pre == "pr" or pre == "ph"):
+				own[0] = false
+			if i == 1 and not (pre == "w1" or pre == "rb"):
+				own[1] = false
+	_expect(own[0] and own[1] and n_picks > 20, "pair live test: in a 1500-tick match his blows were not all his own key sets (protagonist own %s, rival own %s, %d picks)" % [own[0], own[1], n_picks])
+	# the energy press and the pair's own events, on stub bodies outside an exchange
+	var rows: Array = [["protagonist", "pg.bolt", "pg.spray", "pn.hold.brace_load", "pn.hold.brace_hold", "pn.hold.palm_thrust"], ["antihero", "rw.bolt", "en.spray", "rw.charged_brace.charge", "rw.charged_brace.charge", "rw.charged_brace.release"]]
+	var ok_energy := true
+	var why := ""
+	for r in rows:
+		var ae := AnimFighter.new(0)
+		ae.pair_key = r[0]
+		var fe = S.fighters[0]
+		ae.on_blast_cue("blast_windup", 1.0, S, fe)
+		if String(ae._seq.get("id", "")) != r[1]:
+			ok_energy = false
+			why += " %s windup %s;" % [r[0], ae._seq.get("id", "")]
+		ae.on_shot("bolt", 1.1, S, fe, 100, 1)
+		if absf(float(ae._seq.get("t0", 0.0)) - (1.1 - 4.0 / 60.0)) > 0.001:
+			ok_energy = false
+			why += " %s bolt not aligned;" % r[0]
+		ae.on_shot("bolt", 1.2, S, fe, 104, 1)
+		if String(ae._seq.get("id", "")) != r[2]:
+			ok_energy = false
+			why += " %s spray %s;" % [r[0], ae._seq.get("id", "")]
+		ae.on_blast_cue("blast_charge", 3.0, S, fe)
+		if ae._en_pose != r[3] or ae._en_t1 >= 0.0:
+			ok_energy = false
+			why += " %s charge %s;" % [r[0], ae._en_pose]
+		ae.on_blast_cue("blast_full", 3.5, S, fe)
+		if ae._en_pose != r[4]:
+			ok_energy = false
+			why += " %s full %s;" % [r[0], ae._en_pose]
+		ae.q = AnimData.pose("stance.aggressive").q.duplicate()
+		var q0: Quaternion = ae.q[AnimRig.index["upper_arm_r"]]
+		ae._energy_layer(S, fe, 3.6)
+		if ae.q[AnimRig.index["upper_arm_r"]].angle_to(q0) < 0.05:
+			ok_energy = false
+			why += " %s the charge pose did not show;" % r[0]
+		ae.on_shot("charged", 3.7, S, fe, 200, 2)
+		if ae._en_pose != r[5] or ae._en_t1 < 0.0:
+			ok_energy = false
+			why += " %s release %s;" % [r[0], ae._en_pose]
+		ae.on_blast_cue("blast_charge", 5.0, S, fe)
+		ae.on_blast_cue("blast_cancel", 5.2, S, fe)
+		if ae._en_t1 < 0.0:
+			ok_energy = false
+			why += " %s cancel did not end the charge;" % r[0]
+		ae.on_deflect(6.0, S, fe)
+		if String(ae._seq.get("id", "")) != "en.swat":
+			ok_energy = false
+			why += " %s swat;" % r[0]
+		ae.on_agency("taunt_start", 7.0, {})
+		var tid: String = String(ae._seq.get("id", ""))
+		if not AnimData.pair.roles[r[0]].taunts.has(tid):
+			ok_energy = false
+			why += " %s taunt %s;" % [r[0], tid]
+		ae.on_agency("taunt_end_cut", 7.2, {})
+		if not ae._seq.is_empty():
+			ok_energy = false
+			why += " %s taunt not cut;" % r[0]
+	_expect(ok_energy, "pair live test: the energy events did not start his own poses:" + why)
+	# off: no fighter plays his own waves (the live loader is skipped)
+	var was: bool = RenderAnim.pair_live
+	RenderAnim.pair_live = false
+	var af_off := AnimFighter.new(0)
+	af_off.pair_key = "protagonist"
+	af_off.on_blast_cue("blast_windup", 1.0, S, S.fighters[0])
+	RenderAnim.pair_live = was
+	_expect(af_off._seq.is_empty(), "pair live test: with the live pair off a blast cue still started a sequence")
+	print("pair live test: KAI plays as %s (%d lights, %d heavies, %d entries), VORR as %s (%d, %d, %d); %d own picks in 1500 ticks; the energy presses, taunts and swat start his own poses; the pair's waves baked in %.0f ms (%d poses)" % [kp, lp.light.size(), lp.heavy.size(), lp.entries.size(), kr, lr.light.size(), lr.heavy.size(), lr.entries.size(), n_picks, float(AnimData.pair_bake_usec) / 1000.0, AnimData.pair_bake_poses])
+
+
 ## The joint limits (docs/animation/joint-limits.md): no knee or elbow can be bent past its end or the wrong way, from any source.
 ## 1. every authored pose (near and far side, each shape's scale) of every wave is inside the limits; 2. every sequence frame, after the solve's last pass;
 ## 3. the rule itself: a thigh twisted 170 degrees (the flipped knee of a kick) is out of range, and the pass folds the knee the right way;
@@ -1260,6 +1365,7 @@ func _run() -> void:
 	_test_win_ko()
 	_test_agency()
 	_test_flight_lead()
+	_test_pair_live()
 	_test_joints()
 	RenderAnim.enabled = true
 	RenderAnim.style_override = ""

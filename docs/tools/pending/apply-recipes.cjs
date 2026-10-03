@@ -16,6 +16,7 @@ const pieceId = { type: 'string', pattern: '^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$' }
 const LIMBS = ['hand', 'foot', 'elbow', 'knee', 'shoulder', 'head', 'own'];
 const POOLS = ['pool', 'towardPool', 'linkPool', 'accentPool', 'lastPool', 'ender'];
 const STATUS = ['live', 'posed', 'waiting'];
+const SENDS = ['across', 'up', 'down', 'turned', 'behind'];
 
 const poolRefs = Object.fromEntries(POOLS.map((k) => [k, poolName]));
 
@@ -57,6 +58,13 @@ wj('tools/schemas/combat-recipes.schema.json', {
         heavy: { type: 'array', uniqueItems: true, items: pieceId, description: 'Ending ids after a heavy last press.' },
       },
     }, closed),
+    showcase: {
+      type: 'object',
+      propertyNames: { pattern: '^(_.*|[a-z][a-z0-9_]*)$' },
+      description: 'Optional. Fighter to the showcase enders the flow\'s top ending can play: a row is open when its strike is the string\'s ender, the launch goes its way (sends) and, where given, clearAboveBh of open air is above the pair.',
+      additionalProperties: { type: 'array', items: obj({ id: pieceId, strike: pieceId, sends: { enum: SENDS, description: 'Where the launch must go for the row to open.' }, clearAboveBh: { type: 'number', exclusiveMinimum: 0, description: 'Open air above the pair, in body heights.' }, status: { enum: STATUS } }, { required: ['id', 'strike', 'sends', 'status'] }) },
+      patternProperties: { '^_': true },
+    },
     pools: {
       type: 'object',
       minProperties: 1,
@@ -145,6 +153,21 @@ wj('tools/schemas/combat-recipes.schema.json', {
       '        });',
       '      }',
       '    }',
+      '    // the showcase rows: the fighter has pools, the strike is one of its pieces, no id twice',
+      '    const sc = isObj(rec.showcase) ? rec.showcase : {};',
+      '    const scIds = new Set();',
+      '    for (const [fid, rows] of Object.entries(sc)) {',
+      "      if (fid.startsWith('_') || !Array.isArray(rows)) continue;",
+      "      if (!fighters.includes(fid)) { err(RC, `/showcase/${esc(fid)}`, 'recipes-showcase', `showcase rows for \"${fid}\", who has no pools`); continue; }",
+      "      const mine = new Map(); for (const list of Object.values(pools[fid])) if (Array.isArray(list)) for (const e of list) if (isObj(e) && typeof e.id === 'string') mine.set(e.id, e);",
+      '      rows.forEach((r, i) => {',
+      '        if (!isObj(r)) return;',
+      '        const at = `/showcase/${esc(fid)}/${i}`;',
+      "        if (typeof r.id === 'string') { if (scIds.has(r.id)) err(RC, `${at}/id`, 'recipes-showcase', `showcase id \"${r.id}\" is used twice`); else scIds.add(r.id); }",
+      "        if (typeof r.strike === 'string' && !mine.has(r.strike)) err(RC, `${at}/strike`, 'recipes-showcase', `strike \"${r.strike}\" is in none of ${fid}'s pools`);",
+      "        else if (typeof r.strike === 'string' && r.status !== 'waiting' && mine.get(r.strike).status === 'waiting') err(RC, `${at}/status`, 'recipes-showcase', `the row is ${r.status} but its strike \"${r.strike}\" is waiting in ${fid}'s pools`, 'warning');",
+      '      });',
+      '    }',
       '    // a blur step [limb, target] can be filled by a posed piece of the fighter\'s blur pools',
       "    const sockE = get('data/anim/sockets.json');",
       "    const regsE = isObj(sockE) && isObj(sockE.regions) ? Object.keys(sockE.regions).filter((k) => !k.startsWith('_')) : [];",
@@ -196,7 +219,23 @@ wj('tools/schemas/combat-recipes.schema.json', {
     x('version-unknown-key', { set: { '/styles/0/base/mix': 'x' } }, { rule: 'additionalProperties', pointer: '/styles/0/base/mix' }),
     x('pool-name-shape', { set: { '/styles/0/base/pool': 'Blur Base' } }, { rule: 'anyOf', pointer: '/styles/0/base/pool' }),
     x('ender-null-ok', { set: { '/styles/0/base/ender': null } }, null),
-    x('pool-not-for-fighter', { set: { '/styles/1/base/linkPool': 'combo.nowhere' } }, { rule: 'xref:recipes-pool', pointer: '/pools/antihero' }),
+    x('pool-not-for-fighter', { set: { '/styles/1/base/linkPool': 'combo.nowhere' } }, { rule: 'xref:recipes-pool', pointer: '/pools/rival' }),
+    x('showcase-optional-ok', { del: ['/showcase'] }, null),
+    x('showcase-fighter-type', { set: { '/showcase/rival': 'hammer' } }, { rule: 'type', pointer: '/showcase/rival' }),
+    x('showcase-empty-list-ok', { set: { '/showcase/rival': [] } }, null),
+    x('showcase-row-key-required', { del: ['/showcase/rival/0/sends'] }, { rule: 'required', pointer: '/showcase/rival/0' }),
+    x('showcase-row-unknown-key', { set: { '/showcase/rival/0/weight': 2 } }, { rule: 'additionalProperties', pointer: '/showcase/rival/0/weight' }),
+    x('showcase-sends-enum', { set: { '/showcase/rival/0/sends': 'sideways' } }, { rule: 'enum', pointer: '/showcase/rival/0/sends' }),
+    x('showcase-status-enum', { set: { '/showcase/rival/0/status': 'ready' } }, { rule: 'enum', pointer: '/showcase/rival/0/status' }),
+    x('showcase-id-shape', { set: { '/showcase/rival/0/id': 'Overhead Hammer' } }, { rule: 'pattern', pointer: '/showcase/rival/0/id' }),
+    x('showcase-clear-zero', { set: { '/showcase/rival/1/clearAboveBh': 0 } }, { rule: 'exclusiveMinimum', pointer: '/showcase/rival/1/clearAboveBh' }),
+    x('showcase-clear-optional-ok', { del: ['/showcase/rival/1/clearAboveBh'] }, null),
+    x('showcase-note-ok', { set: { '/showcase/_note': 'comment' } }, null),
+    x('showcase-id-twice', { set: { '/showcase/rival/1/id': 'showcase.overhead_hammer' } }, { rule: 'xref:recipes-showcase', pointer: '/showcase/rival/1/id' }),
+    x('showcase-fighter-without-pools', { set: { '/showcase/nobody': [] } }, { rule: 'xref:recipes-showcase', pointer: '/showcase/nobody' }),
+    x('showcase-strike-not-a-piece', { set: { '/showcase/rival/0/strike': 'strike.nowhere' } }, { rule: 'xref:recipes-showcase', pointer: '/showcase/rival/0/strike' }),
+    x('showcase-posed-row-on-waiting-strike-warns', { set: { '/showcase/rival/0/strike': 'strike.tail_jab', '/showcase/rival/0/status': 'posed' } }, { rule: 'xref:recipes-showcase', pointer: '/showcase/rival/0/status' }),
+    x('showcase-waiting-row-on-waiting-strike-ok', { set: { '/showcase/rival/0/strike': 'strike.tail_jab' } }, null),
     x('flow-value-type', { set: { '/flow/under3': 3 } }, { rule: 'type', pointer: '/flow/under3' }),
     x('flow-empty', { set: { '/flow': {} } }, { rule: 'minProperties', pointer: '/flow' }),
     x('direction-value-type', { set: { '/direction/toward': 3 } }, { rule: 'type', pointer: '/direction/toward' }),
@@ -235,7 +274,7 @@ wj('tools/schemas/combat-recipes.schema.json', {
   let t = fs.readFileSync(f, 'utf8');
   if (!t.includes('recipes-heavies')) {
     const line = t.split('\n').find((l) => l.includes('`fighters-shape`')) || t.split('\n').find((l) => l.includes('`flight-order`'));
-    t = t.replace(line, () => line + '\n| `recipes-heavies`, `recipes-pool`, `recipes-piece`, `recipes-blur` | data/combat/recipes.json: the styles\' heaviesInFive cover 0 to 5 with no gap or overlap; every pool a style names exists for every fighter; a posed pool id is a strike of a wave manifest (a waiting id that is posed is a warning) and no id is in a pool twice; a blur step [limb, target] names a socket of sockets.json and can be filled by a piece of each fighter\'s blur.base or blur.toward |');
+    t = t.replace(line, () => line + '\n| `recipes-heavies`, `recipes-pool`, `recipes-piece`, `recipes-blur`, `recipes-showcase` | data/combat/recipes.json: the styles\' heaviesInFive cover 0 to 5 with no gap or overlap; every pool a style names exists for every fighter; a posed pool id is a strike of a wave manifest (a waiting id that is posed is a warning) and no id is in a pool twice; a blur step [limb, target] names a socket of sockets.json and can be filled by a piece of each fighter\'s blur.base or blur.toward; a showcase row belongs to a fighter with pools, names one of that fighter\'s pieces as its strike (a posed or live row on a waiting strike is a warning) and no showcase id is used twice |');
     fs.writeFileSync(f, t);
   }
 }

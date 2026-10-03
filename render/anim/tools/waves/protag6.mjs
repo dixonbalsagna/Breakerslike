@@ -2,8 +2,10 @@
 // hook only, and each fighter takes and gives the blows his own way (Legal rule 2). His is a round hook with the open hand dug in along the ribs, the hip turned through. Parked (--waves).
 // Range and ticks are borrowed from the haymaker's row until Combat's land.
 const OPEN = { hands: { r: 'open', l: 'open' } };
-export function rows(wave1) {
+export function rows(wave1, launchPair) {
   const b = wave1.find(r => r.id === 'strike.haymaker');
+  const own = (launchPair?.rival?.strikes || []).find(r => r.id === 'strike.body_hook');
+  if (own) return [{ ...b, ...own, look: 'A round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through, the other open hand up at his cheek.', range: { ...b.range, ...own.range, lunge: b.range.lunge, clear: b.range.clear } }];   // Combat's row as it stands (confirmed for him, docs/combat/launch-pair-movesets.md section 9)
   return [{ ...b, id: 'strike.body_hook', target: 'gut', weight: 'heavy', look: 'A round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through.', _estimate: 'range and ticks borrowed from strike.haymaker' }];
 }
 export const strikes = {

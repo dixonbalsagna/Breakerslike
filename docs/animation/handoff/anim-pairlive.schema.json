@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-pairlive",
+  "title": "anim.pairlive/1",
+  "description": "data/anim/pair_live.json: how the launch pair's parked waves play in a live match (render/anim/anim_data.gd ensure_fighter, anim_fighter.gd on_shot, on_blast_cue, _pair_pick; docs/animation/pair-live.md). aliases: other names for a fighter of fighters.json. shared: waves baked for both. gated: strikes that join a pick list while their gate is open. kinds: shot kind to energy role. cues: the sim's render cues to what they start. roles: per fighter of fighters.json what each role plays. Render only, outside the sim's data hash. Policy: closed except keys starting with an underscore. Cross-references (every role names a baked pose or sequence of that fighter's waves) are checked by render/anim/tools/coverage.gd and anim_check.",
+  "type": "object",
+  "required": [
+    "schema",
+    "shared",
+    "gated",
+    "spray_gap",
+    "kinds",
+    "cues",
+    "roles"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.pairlive/1"
+    },
+    "aliases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "shared": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+[0-9]+$"
+      },
+      "uniqueItems": true
+    },
+    "gated": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "strike",
+          "weight",
+          "gate"
+        ],
+        "properties": {
+          "strike": {
+            "type": "string"
+          },
+          "weight": {
+            "enum": [
+              "light",
+              "heavy"
+            ]
+          },
+          "gate": {
+            "enum": [
+              "both_ground",
+              "striker_air"
+            ]
+          }
+        },
+        "patternProperties": {
+          "^_": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "spray_gap": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kinds": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "bolt",
+          "volley",
+          "lob",
+          "charged",
+          "mine",
+          "rain",
+          "curve"
+        ]
+      }
+    },
+    "cues": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "windup",
+          "charge",
+          "full",
+          "cancel",
+          "crater",
+          "volley",
+          "taunt_close",
+          "drop_the_act",
+          "crown_release",
+          "shove"
+        ]
+      }
+    },
+    "roles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "bolt": {
+            "$ref": "#/$defs/seq"
+          },
+          "volley": {
+            "$ref": "#/$defs/seq"
+          },
+          "lob": {
+            "$ref": "#/$defs/seq"
+          },
+          "curve": {
+            "$ref": "#/$defs/seq"
+          },
+          "spray": {
+            "$ref": "#/$defs/seq"
+          },
+          "mine": {
+            "$ref": "#/$defs/seq"
+          },
+          "swat": {
+            "$ref": "#/$defs/seq"
+          },
+          "taunt_close": {
+            "$ref": "#/$defs/seq"
+          },
+          "drop_the_act": {
+            "$ref": "#/$defs/seq"
+          },
+          "crater": {
+            "$ref": "#/$defs/hold"
+          },
+          "rain": {
+            "$ref": "#/$defs/hold"
+          },
+          "shove": {
+            "$ref": "#/$defs/hold"
+          },
+          "crown_release": {
+            "$ref": "#/$defs/hold"
+          },
+          "charged": {
+            "$ref": "#/$defs/charged"
+          },
+          "taunts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "taunt_first": {
+            "type": "string"
+          },
+          "taunt_close_air": {
+            "$ref": "#/$defs/seq"
+          }
+        },
+        "patternProperties": {
+          "^_": {}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "patternProperties": {
+    "^_": {}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "seq": {
+      "type": "object",
+      "required": [
+        "seq"
+      ],
+      "properties": {
+        "seq": {
+          "type": "string",
+          "pattern": "^[a-z]+[0-9]*\\.[a-z0-9_.]+$"
+        },
+        "wind_ticks": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "patternProperties": {
+        "^_": {}
+      },
+      "additionalProperties": false
+    },
+    "hold": {
+      "type": "object",
+      "required": [
+        "pose",
+        "ticks"
+      ],
+      "properties": {
+        "pose": {
+          "type": "string"
+        },
+        "ticks": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "in": {
+          "type": "number",
+          "minimum": 0
+        },
+        "out": {
+          "type": "number",
+          "minimum": 0
+        },
+        "w": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "patternProperties": {
+        "^_": {}
+      },
+      "additionalProperties": false
+    },
+    "charged": {
+      "type": "object",
+      "required": [
+        "charge",
+        "full",
+        "release"
+      ],
+      "properties": {
+        "charge": {
+          "type": "string"
+        },
+        "full": {
+          "type": "string"
+        },
+        "release": {
+          "$ref": "#/$defs/hold"
+        }
+      },
+      "patternProperties": {
+        "^_": {}
+      },
+      "additionalProperties": false
+    }
+  }
+}

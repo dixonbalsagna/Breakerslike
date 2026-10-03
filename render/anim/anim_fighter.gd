@@ -62,6 +62,19 @@ var _lead_vm := Vector2.ZERO           # his velocity as measured over the last 
 var _lead_px: float = 0.0
 var _lead_py: float = 0.0
 var _lead_tk: int = -1
+var pair_key: String = ""              # the launch-pair fighter this body plays as (data/anim/fighters.json: protagonist, antihero), "" for none (docs/animation/pair-live.md)
+var _taunt_last: String = ""           # the last far taunt gesture he played (never the same one twice running)
+var _taunt_n: int = 0                  # how many far taunts he has played this match
+var _taunt_id: String = ""             # the far taunt gesture playing (his own, or the shared shrug)
+var _en_pose: String = ""              # the energy layer's held pose (a charge, a release, a shot into a crater ...), eased in and out like the agency hold
+var _en_prev: String = ""              # ... the pose it took over from, crossfaded over 0.08 s
+var _en_sw: float = -10.0
+var _en_t0: float = -1.0
+var _en_t1: float = -1.0               # (-1: open, a charge held until the shot, a cancel or the cap)
+var _en_in: float = 0.1
+var _en_out: float = 0.15
+var _en_w: float = 0.9
+var _en_last_bolt: int = -100000       # the tick of his last bolt: a bolt inside the spray gap of it is a spray beat
 var _ag_hold: String = ""              # the agency slice's held pose (a knockback, a charge: docs 9.22) from _ag_t0 ...
 var _ag_kind: String = ""              # ... of this kind (a key of data/anim/agency.json)
 var _ag_t0: float = -1.0
@@ -294,7 +307,7 @@ func on_agency(kind: String, T: float, e: Dictionary) -> void:
 		return
 	var wt: float = 0.6 if RenderAnim.reduced_motion else 1.0
 	# the cues that end a taunt (his dodge cut it, it was answered, it took off into a charge) or a charge (the dodge-cancel, a meeting in the middle) at once
-	if A.get("taunt", {}).get("cut_kinds", []).has(kind) and String(_seq.get("id", "")) == String(A.get("taunt", {}).get("seq", "")):
+	if A.get("taunt", {}).get("cut_kinds", []).has(kind) and _is_taunt(String(_seq.get("id", ""))):
 		_seq = {}
 	if A.get("charge", {}).get("end_kinds", []).has(kind) and _ag_kind.begins_with("charge_") and _ag_t1 < 0.0:
 		_ag_t1 = T
@@ -321,8 +334,30 @@ func on_agency(kind: String, T: float, e: Dictionary) -> void:
 				debug["agency"] = int(debug.get("agency", 0)) + 1
 		"taunt_start":
 			var tn: Dictionary = A.get("taunt", {})
-			if AnimData.entries.has(String(tn.get("seq", ""))):
-				_seq = {"id": String(tn.seq), "t0": T, "dur": float(AnimData.entries[String(tn.seq)].dur) / 60.0, "wt": float(tn.get("weight", 0.7)) * wt}
+			var tid: String = String(tn.get("seq", ""))
+			var gest: Array = AnimData.pair.get("roles", {}).get(pair_key, {}).get("taunts", []) if (RenderAnim.pair_live and pair_key != "") else []
+			if not gest.is_empty():   # his own far taunts (docs/animation/pair-live.md): the first of a stand-off is his first gesture; after that one he may use, by a hash of the tick, never the same twice running
+				var air: bool = bool(e.get("air", false))
+				var first: String = String(AnimData.pair.get("roles", {}).get(pair_key, {}).get("taunt_first", ""))
+				var gid: String = ""
+				if first != "" and _taunt_n == 0 and not bool(e.get("traded", true)) and AnimData.entries.has(first):
+					gid = first
+				else:
+					var elig: Array = []
+					for g in gest:
+						var gate: String = String(AnimData.entries.get(String(g), {}).get("_gate", ""))
+						if (gate == "ground" and air) or (gate == "air" and not air) or (String(g) == _taunt_last and gest.size() > 1):
+							continue
+						elig.append(String(g))
+					if not elig.is_empty():
+						gid = String(elig[_hash(int(T * 60.0), slot, 29) % elig.size()])
+				if gid != "" and AnimData.entries.has(gid):
+					tid = gid
+					_taunt_last = gid
+					_taunt_n += 1
+			if AnimData.entries.has(tid):
+				_taunt_id = tid
+				_seq = {"id": tid, "t0": T, "dur": float(AnimData.entries[tid].dur) / 60.0, "wt": float(tn.get("weight", 0.7)) * wt}
 				debug["agency"] = int(debug.get("agency", 0)) + 1
 		"charge_light", "charge_heavy", "charge_feint":
 			var which: String = kind.substr(7)
@@ -418,6 +453,205 @@ func _lead_measure(S: SimState, f) -> Vector2:
 		_lead_px = f.x
 		_lead_py = f.y
 	return _lead_vm
+
+
+## A far taunt's sequence: the shared shrug, or one of his own gestures.
+func _is_taunt(id: String) -> bool:
+	return id != "" and (id == String(AnimData.agency.get("taunt", {}).get("seq", "")) or id == _taunt_id)
+
+
+## His own pick (docs/animation/pair-live.md): the key set of a blow from his light or heavy list (every strike of his strike waves, never the tail), walked as go-live
+## step 1's lists are: the walk starts at a hash of the exchange and the fighter and takes every third entry (every fifth when the list is a multiple of three), so
+## nothing repeats inside ten blows; a two-limb key set is skipped when a limb of its kind is broken; the gated key sets join only while their gate is open. "" when he
+## is not one of the pair, the live pair is off, or no key set of his fits.
+func _pair_pick(S: SimState, f, ex, ordinal: int, heavy: bool, piece: String = "") -> String:
+	if pair_key == "" or not RenderAnim.pair_live or not AnimData.pair_lists.has(pair_key):
+		return ""
+	var lst: Dictionary = AnimData.pair_lists[pair_key]
+	# the planner's own pick, when the beat carries it (args.piece, "strike.jab": the alchemist's beats will)
+	var named: String = AnimData.resolve_strike(pair_key, String(piece))
+	if named != "":
+		debug["pair_picks"] = int(debug.get("pair_picks", 0)) + 1
+		return named
+	var which: String = "heavy" if heavy else "light"
+	var cand: Array = (lst[which] as Array).duplicate()
+	var opp = ex.D if ex.A == f else ex.A
+	for g in lst.gated:
+		if String(g.weight) != which:
+			continue
+		var open: bool = false
+		match String(g.gate):
+			"both_ground":
+				open = f.y - WorldTerrain.groundY(S, f.x) < 8.0 and opp != null and opp.y - WorldTerrain.groundY(S, opp.x) < 8.0
+			"striker_air":
+				open = f.y - WorldTerrain.groundY(S, f.x) > 20.0
+		if open:
+			cand.append(String(g.id))
+	var n: int = cand.size()
+	if n == 0:
+		return ""
+	var stepw: int = 3 if n % 3 != 0 else 5
+	var h: int = _hash(int(ex.n), slot, 11)
+	for tries in range(n):
+		var id: String = String(cand[(h + stepw * (ordinal + tries)) % n])
+		var ks = AnimData.keysets.get(id)
+		if ks == null:
+			continue
+		var two: String = String(ks.get("limb2", ""))
+		if two != "" and ((_arm_broken and (two.begins_with("hand") or two.begins_with("elbow"))) or (_leg_broken and (two.begins_with("foot") or two.begins_with("knee")))):
+			continue
+		debug["pair_picks"] = int(debug.get("pair_picks", 0)) + 1
+		return id
+	return ""
+
+
+## ---- the energy press and the pair's own events (data/anim/pair_live.json; docs/animation/pair-live.md). The sim's cues blast_windup, blast_charge, blast_full, blast_cancel and
+## buried_blast, its shot_fire and shot_deflect events, and the cues it does not send yet (taunt_close, drop_the_act, regalia_release, energy_shove) start the pose or
+## sequence of his own that his role names. Inside an exchange none of them play: a blast press there is a link of the string, drawn by the strike's own poses.
+func _en_role(role: String) -> Dictionary:
+	if pair_key == "" or not RenderAnim.pair_live:
+		return {}
+	return AnimData.pair.get("roles", {}).get(pair_key, {}).get(role, {})
+
+
+func _en_busy(S: SimState, f) -> bool:
+	var ex = S.dirS.ex
+	return ex != null and (ex.A == f or ex.D == f)
+
+
+func _en_play_seq(id: String, t0: float) -> void:
+	if AnimData.entries.has(id):
+		_seq = {"id": id, "t0": t0, "dur": float(AnimData.entries[id].dur) / 60.0, "wt": 0.6 if RenderAnim.reduced_motion else 1.0}
+		debug["energy"] = int(debug.get("energy", 0)) + 1
+
+
+## A pose held and eased: a fresh hold, or (while one is on) a switch to the next pose of the same envelope (the charge to the flash to the release).
+func _en_hold(pose: String, T: float, ticks: float, tin: float, tout: float, w: float) -> void:
+	if not AnimData.pose_exists(pose):
+		return
+	var on: bool = _en_t0 >= 0.0 and (_en_t1 < 0.0 or T < _en_t1 + _en_out)
+	if on:
+		_en_prev = _en_pose
+		_en_sw = T
+	else:
+		_en_prev = ""
+		_en_t0 = T
+		_en_in = tin
+	_en_pose = pose
+	_en_t1 = (T + ticks / 60.0) if ticks > 0.0 else -1.0
+	_en_out = tout
+	_en_w = w * (0.6 if RenderAnim.reduced_motion else 1.0)
+	debug["energy"] = int(debug.get("energy", 0)) + 1
+
+
+func _en_hold_spec(spec: Dictionary, T: float) -> void:
+	_en_hold(String(spec.get("pose", "")), T, float(spec.get("ticks", 20)), float(spec.get("in", 0.06)), float(spec.get("out", 0.15)), float(spec.get("w", 0.9)))
+
+
+func on_blast_cue(kind: String, T: float, S: SimState, f) -> void:
+	if not RenderAnim.pair_live or pair_key == "":
+		return
+	var act: String = String(AnimData.pair.get("cues", {}).get(kind, ""))
+	var busy: bool = _en_busy(S, f)
+	match act:
+		"windup":
+			if not busy and _en_role("bolt").has("seq"):
+				_en_play_seq(String(_en_role("bolt").seq), T)
+		"charge":
+			var rc: Dictionary = _en_role("charged")
+			if not busy and not rc.is_empty():
+				_en_hold(String(rc.get("charge", "")), T, -1.0, 0.12, 0.15, 0.9)
+		"full":
+			var rf: Dictionary = _en_role("charged")
+			if not rf.is_empty() and _en_t0 >= 0.0 and _en_t1 < 0.0:
+				_en_hold(String(rf.get("full", "")), T, -1.0, 0.12, 0.15, 0.9)
+		"cancel":
+			if _en_t0 >= 0.0 and _en_t1 < 0.0:
+				_en_t1 = T
+		"crater":
+			_en_hold_spec(_en_role("crater"), T)
+		"volley":
+			if not busy and _en_role("volley").has("seq"):
+				_en_play_seq(String(_en_role("volley").seq), T)
+		"taunt_close":
+			var rt: Dictionary = _en_role("taunt_close")
+			if f.y - WorldTerrain.groundY(S, f.x) > 20.0 and _en_role("taunt_close_air").has("seq"):   # in the air its first phase needs the ground: his own start for it, in the same 60 ticks
+				rt = _en_role("taunt_close_air")
+			if rt.has("seq"):
+				_en_play_seq(String(rt.seq), T)
+				_taunt_id = String(rt.seq)
+		"drop_the_act":
+			if _en_role("drop_the_act").has("seq"):
+				_en_play_seq(String(_en_role("drop_the_act").seq), T)
+		"crown_release":
+			_en_hold_spec(_en_role("crown_release"), T)
+		"shove":
+			_en_hold_spec(_en_role("shove"), T)
+
+
+## A shot left him (`link` the volley's group): its kind picks the role. A bolt is the wind-up's sequence aligned so that its fire beat is the shot; a bolt inside the spray
+## gap of his last one is a spray beat; a charged shot's release takes over from the charge.
+func on_shot(kind: String, T: float, S: SimState, f, tick: int, link: int) -> void:
+	if not RenderAnim.pair_live or pair_key == "" or _en_busy(S, f):
+		return
+	var role: String = String(AnimData.pair.get("kinds", {}).get(kind, ""))
+	if role == "":
+		return
+	match role:
+		"bolt":
+			var gap: int = tick - _en_last_bolt
+			_en_last_bolt = tick
+			if gap >= 0 and gap < int(AnimData.pair.get("spray_gap", 10)) and _en_role("spray").has("seq"):
+				_en_play_seq(String(_en_role("spray").seq), T)
+			elif _en_role("bolt").has("seq"):
+				_en_play_seq(String(_en_role("bolt").seq), T - float(_en_role("bolt").get("wind_ticks", 4)) / 60.0)
+		"charged":
+			var rr: Dictionary = _en_role("charged").get("release", {})
+			if not rr.is_empty():
+				_en_hold_spec(rr, T)
+		"rain":
+			_en_hold_spec(_en_role("rain"), T)
+		_:
+			if _en_role(role).has("seq"):
+				_en_play_seq(String(_en_role(role).seq), T)
+
+
+## He swatted a shot wild (the wild deflect): the swat, unless the perfect block's own sequence is playing.
+func on_deflect(T: float, S: SimState, f) -> void:
+	if not RenderAnim.pair_live or pair_key == "" or _en_busy(S, f) or String(_seq.get("id", "")).begins_with("s3."):
+		return
+	if _en_role("swat").has("seq"):
+		_en_play_seq(String(_en_role("swat").seq), T)
+
+
+## The held energy pose: eased in, held, eased out (an open charge ends in an exchange, a launch, a fall or after 2.5 s: the sim's hold cap is 45 ticks).
+func _energy_layer(S: SimState, f, T: float) -> void:
+	if _en_t0 < 0.0 or not AnimData.pose_exists(_en_pose):
+		return
+	if _en_t1 < 0.0 and (T - _en_t0 > 2.5 or f.state == "launched" or f.state == "down" or _en_busy(S, f)):
+		_en_t1 = T
+	var wgt: float = smoothstep(0.0, _en_in, T - _en_t0)
+	if _en_t1 >= 0.0:
+		wgt *= 1.0 - smoothstep(0.0, _en_out, T - _en_t1)
+		if T - _en_t1 >= _en_out:
+			_en_t0 = -1.0
+			_en_t1 = -1.0
+			_en_pose = ""
+			_en_prev = ""
+			return
+	wgt *= _en_w
+	if wgt <= 0.001:
+		return
+	var u: float = smoothstep(0.0, 0.08, T - _en_sw)
+	if _en_prev != "" and u < 1.0 and AnimData.pose_exists(_en_prev):
+		var pp: AnimPose = AnimData.pose(_en_prev)
+		AnimPose.mix(q, pp.q, wgt * (1.0 - u))
+		hips = hips.lerp(pp.hips, wgt * (1.0 - u))
+		curl = curl.lerp(pp.curl, wgt * (1.0 - u))
+	var ap: AnimPose = AnimData.pose(_en_pose)
+	AnimPose.mix(q, ap.q, wgt * u)
+	hips = hips.lerp(ap.hips, wgt * u)
+	curl = curl.lerp(ap.curl, wgt * u)
 
 
 ## The held agency pose: eased in, held, eased out. A charge ends by itself when its exchange starts (the sim begins it at the wind-up), when he falls or at its cap.
@@ -824,6 +1058,7 @@ func solve(S: SimState, f, prof: Dictionary) -> void:
 			hips = hips.lerp(rp.hips, lw)
 			curl = curl.lerp(rp.curl, lw)
 	_agency_layer(S, f, T)
+	_energy_layer(S, f, T)
 	if _gc_hold_t0 >= 0.0 and AnimData.pose_exists("gc.hold.brace_tumble"):
 		var hin: float = float(AnimData.ground.get("hold", {}).get("in", 0.08))
 		var hout: float = float(AnimData.ground.get("hold", {}).get("out", 0.15))
@@ -1291,9 +1526,9 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 				strikes.append([t0 + b.t, ordinal, {"o": {"big": true}}, "chain"])
 			ordinal += 1
 		elif b.op == "entry" and String(b.args.get("who", "A")) == role:
-			entries.append([t0 + b.t, float(b.args.dur), String(b.args.get("id", ""))])
+			entries.append([t0 + b.t, float(b.args.dur), AnimData.resolve_entry(pair_key, String(b.args.get("id", "")))])
 		elif b.op == "rush" and role == "A":
-			rushes.append([t0 + b.t, float(b.args.dur), String(b.args.get("entry", ""))])
+			rushes.append([t0 + b.t, float(b.args.dur), AnimData.resolve_entry(pair_key, String(b.args.get("entry", "")))])
 		elif b.op == "finRush" and String(b.args.w) == role:
 			rushes.append([t0 + b.t, float(b.args.dur), ""])
 	# approach: launch-off, flight, arrival (a rush is snappy)
@@ -1356,7 +1591,9 @@ func _exchange_layers(S: SimState, f, ex, T: float) -> void:
 	var side: bool = (_hash(int(ex.n), int(strikes[best][1]), slot + 1) & 1) == 1
 	var picks: Array = AnimData.picks["heavy" if heavy2 else "light"]
 	var ksid: String = String(picks[_hash(int(ex.n), int(strikes[best][1]), 3 + slot) % picks.size()])
-	var live_id: String = _live_pick(S, f, ex, int(strikes[best][1]), heavy2)
+	var live_id: String = _pair_pick(S, f, ex, int(strikes[best][1]), heavy2, String(strikes[best][2].get("piece", strikes[best][2].get("strike", ""))))   # his own waves first (docs/animation/pair-live.md), then go-live step 1
+	if live_id == "":
+		live_id = _live_pick(S, f, ex, int(strikes[best][1]), heavy2)
 	if live_id != "":
 		ksid = live_id
 	if RenderAnim.force_keyset != "" and AnimData.keysets.has(RenderAnim.force_keyset):

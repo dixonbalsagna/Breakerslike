@@ -9,10 +9,12 @@ const NEW = {
   body_hook: { like: 'haymaker', limb: 'hand', target: 'gut', weight: 'heavy', look: 'A heavy hook dug in along the ribs, the elbow a right angle, the hip turned through, the other forearm plate across his own chest.' },
   rib_shot: { like: 'spear_hand', limb: 'hand', target: 'chest', weight: 'heavy', look: 'A straight heavy blow to the chest from a low shoulder: arm, spine and rear leg one line.' },
 };
-export function rows(wave1) {
+export function rows(wave1, launchPair) {
+  const own = Object.fromEntries((launchPair?.rival?.strikes || []).map(r => [r.id.replace('strike.', ''), r]));
   const by = Object.fromEntries(wave1.map(r => [r.id.replace('strike.', ''), r]));
   return Object.entries(NEW).map(([n, o]) => {
     const b = by[o.like];
+    if (own[n]) return { ...b, ...own[n], range: { ...b.range, ...own[n].range, lunge: b.range.lunge, clear: b.range.clear } };   // Combat's own row
     return { ...b, id: 'strike.' + n, ...(o.limb ? { limb: o.limb } : {}), ...(o.target ? { target: o.target } : {}), ...(o.weight ? { weight: o.weight } : {}), look: o.look,
       ...(n === 'body_ram' ? {} : { _estimate: 'range and ticks borrowed from strike.' + o.like }) };
   });

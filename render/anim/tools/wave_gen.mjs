@@ -21,7 +21,7 @@ const mod = await import(pathToFileURL(resolve(project, 'render/anim/tools/waves
 const entriesMode = !!mod.entries;
 const seqMode = !!mod.sequences;
 const combatFile = resolve(opt('combat', join(project, 'docs/combat/pending/' + (entriesMode ? 'entries' : 'strikes') + '.antihero.' + wave + '.json')));
-const combat = seqMode ? { strikes: [], entries: [] } : mod.rows ? (entriesMode ? { entries: mod.rows(JSON.parse(readFileSync(join(project, 'docs/combat/pending/entries.antihero.wave2.json'), 'utf8')).entries) } : { strikes: mod.rows(JSON.parse(readFileSync(join(project, 'docs/combat/pending/strikes.antihero.wave1.json'), 'utf8')).strikes) }) : JSON.parse(readFileSync(combatFile, 'utf8'));
+const combat = seqMode ? { strikes: [], entries: [] } : mod.rows ? (entriesMode ? { entries: mod.rows(JSON.parse(readFileSync(join(project, 'docs/combat/pending/entries.antihero.wave2.json'), 'utf8')).entries) } : { strikes: mod.rows(JSON.parse(readFileSync(join(project, 'docs/combat/pending/strikes.antihero.wave1.json'), 'utf8')).strikes, existsSync(join(project, 'docs/combat/pending/strikes.launchpair.json')) ? JSON.parse(readFileSync(join(project, 'docs/combat/pending/strikes.launchpair.json'), 'utf8')) : null) }) : JSON.parse(readFileSync(combatFile, 'utf8'));
 const spec = mod.strikes;
 
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -110,7 +110,7 @@ if (seqMode) {
       if (ph.w !== undefined) e.w = ph.w;
       phases.push(e);
     }
-    sOut[id] = { dur: sp.dur, phases, _wave: wave, name, alt: sp.alt ? sp.alt.label : null };
+    sOut[id] = { dur: sp.dur, phases, _wave: wave, name, alt: sp.alt ? sp.alt.label : null, ...(sp.gate ? { _gate: sp.gate } : {}) };
     if (sp.alt) {
       const idb = id + '~b';
       const ob = { dur: sp.dur, phases: [], _wave: wave, name, _variant: 'b', _alt: sp.alt.label };
@@ -322,16 +322,24 @@ if (mod.reuse) {
   const r5 = x => Math.round(x * 2) / 2;
   const apply = (p0, limb, two) => applyProfile(pp, p0, limb, two);
   let n = 0;
-  for (const m of w1m) {
-    if (done.has(m.name)) continue;
+  const altCache = {};
+  const altOf = a => altCache[a.wave] ??= { poses: JSON.parse(readFileSync(join(project, `data/anim/waves/${a.wave}.poses.json`), 'utf8')).poses, ks: JSON.parse(readFileSync(join(project, `data/anim/waves/${a.wave}.keysets.json`), 'utf8')).keysets,
+    man: JSON.parse(readFileSync(join(project, `data/anim/waves/${a.wave}.manifest.json`), 'utf8')).strikes };
+  for (const m0 of w1m) {
+    if (done.has(m0.name)) continue;
+    const alt = mod.reuseFrom?.[m0.name];   // a slot the fighter takes from a later wave than wave 1 (a re-posed one)
+    const A = alt ? altOf(alt) : null;
+    const m = alt ? A.man.find(x => x.name === m0.name) : m0;
+    const srcPoses = alt ? A.poses : w1p;
+    const srcKs = alt ? A.ks : w1k;
     const id = `${prefix}.${m.name}`;
-    const ks = clone(w1k[m.id]);
+    const ks = clone(srcKs[m.id]);
     const two = (m.uses?.arms === 2 || m.uses?.legs === 2);
     ks._wave = wave;
     ks._via = 'profile of ' + m.id;
     ks.keys = [];
     for (const [role, part] of [['load', 'chamber'], ['contact', 'contact'], ['follow', 'follow']]) {
-      const src = w1p[`${m.id}.${part}`];
+      const src = srcPoses[`${m.id}.${part}`];
       const q = apply(src, m.limb, two);
       q._orig = String(src._orig || '').replace(/ \((the wind-up|the follow-through)\)$/, '') + ' (the rival\'s pose in his profile)' + (part === 'chamber' ? ' (the wind-up)' : part === 'follow' ? ' (the follow-through)' : '');
       outPoses[`${id}.${part}`] = q;

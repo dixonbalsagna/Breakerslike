@@ -1,0 +1,31 @@
+{
+ "schema": "anim.coverage.live/1",
+ "_about": "What of the launch-pair coverage table (launch-pair-coverage.json) plays in a live match now that the live loader and the energy events exist (docs/animation/pair-live.md). Rules are tried in order on every row that says live or parked; the first whose area (exact, or *), fighter (exact, or *) and `contains` (a substring of the row's item, optional) match sets its status. live: loaded by the live loader alone and started by an event or beat the sim sends today. wired: loaded, and the runtime starts it when the sim sends its trigger, which it does not yet (an entry beat that names an entry, a close-taunt cue, the shot kinds rain, split and curve, volley_fire, energy_shove, drop_the_act, regalia_release). baked: loaded for the fighter and nothing starts it yet (the emitting hands, the On the Chin, Blow for Blow and finisher poses, the checks). A row no rule matches keeps its status. Checked by render/anim/tools/coverage_live.gd.",
+ "rules": [
+  {"area": "strikes", "status": "live"},
+  {"area": "blur patterns", "status": "live"},
+  {"area": "Blow for Blow places", "status": "live"},
+  {"area": "entries", "status": "wired"},
+  {"area": "agency", "status": "live"},
+  {"area": "taunts", "contains": "close taunt", "status": "wired"},
+  {"area": "taunts", "contains": "far taunt", "status": "live"},
+  {"area": "endings", "contains": "hop_back", "status": "wired"},
+  {"area": "endings", "status": "live"},
+  {"area": "energy", "contains": "volley: a fan", "status": "wired"},
+  {"area": "energy", "contains": "lob", "status": "wired"},
+  {"area": "energy", "contains": "energy shove", "status": "wired"},
+  {"area": "energy", "contains": "curving shot", "status": "wired"},
+  {"area": "energy", "contains": "rain", "status": "wired"},
+  {"area": "energy", "contains": "splitting shot", "status": "wired"},
+  {"area": "energy", "contains": "crown release", "status": "wired"},
+  {"area": "energy", "contains": "shard", "status": "baked"},
+  {"area": "energy", "contains": "arc (a crescent", "status": "baked"},
+  {"area": "energy", "contains": "emitting hands", "status": "baked"},
+  {"area": "energy", "contains": "his two hands", "status": "baked"},
+  {"area": "energy", "status": "live"},
+  {"area": "set pieces", "contains": "Drop the Act", "status": "wired"},
+  {"area": "set pieces", "contains": "forms", "status": "live"},
+  {"area": "set pieces", "contains": "last stand", "status": "live"},
+  {"area": "set pieces", "status": "baked"}
+ ]
+}

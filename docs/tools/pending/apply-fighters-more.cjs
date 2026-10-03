@@ -76,7 +76,7 @@ const wj = (f, o) => fs.writeFileSync(f, JSON.stringify(o, null, 2) + '\n');
 {
   const f = 'docs/tools/README.md';
   let t = fs.readFileSync(f, 'utf8');
-  if (!t.includes('waves/more') && !t.includes('(the `more` ones too)')) {
+  if (!t.includes('each of `more`')) {
     const a = 'every wave it names (strikes, entries, energy) has a poses file';
     if (!t.includes(a)) throw new Error('fighters README row');
     t = t.replace(a, () => 'every wave it names (strikes, entries, energy, and each of `more`) has a poses file, and a `more` wave already named as strikes, entries or energy is a warning');

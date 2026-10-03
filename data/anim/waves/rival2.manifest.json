@@ -9,8 +9,8 @@
    "target": "chest",
    "limb": "shoulder_r",
    "limb2": null,
-   "offset": 34,
-   "reach": 68,
+   "offset": 38,
+   "reach": 66,
    "band": "close",
    "ticks": {
     "load": 10,
@@ -42,13 +42,13 @@
    "target": "gut",
    "limb": "hand_r",
    "limb2": null,
-   "offset": 58,
-   "reach": 98,
-   "band": "long",
+   "offset": 54,
+   "reach": 68,
+   "band": "mid",
    "ticks": {
-    "load": 12,
+    "load": 10,
     "follow": 6,
-    "recover": 12
+    "recover": 10
    },
    "ground": "ok",
    "uses": {
@@ -56,7 +56,7 @@
    },
    "from": null,
    "legal": [],
-   "look": "A heavy hook dug in along the ribs, the elbow a right angle, the hip turned through, the other forearm plate across his own chest.",
+   "look": "A heavy hook dug in along the ribs: the elbow at a right angle, the hip turned through, the other forearm plate across his own chest.",
    "orig": "a heavy hook dug in along the ribs, the elbow a right angle and the hip turned through, the other forearm plate across his own chest",
    "poses": [
     "rb.body_hook.chamber",
@@ -75,13 +75,13 @@
    "target": "chest",
    "limb": "hand_r",
    "limb2": null,
-   "offset": 54,
-   "reach": 98,
-   "band": "mid",
+   "offset": 58,
+   "reach": 74,
+   "band": "long",
    "ticks": {
-    "load": 6,
-    "follow": 4,
-    "recover": 5
+    "load": 10,
+    "follow": 6,
+    "recover": 10
    },
    "ground": "ok",
    "uses": {
