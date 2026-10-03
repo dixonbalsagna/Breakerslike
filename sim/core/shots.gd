@@ -365,7 +365,8 @@ static func hitFighter(S: SimState, sh, f) -> bool:
 ## A straight or lobbed shot has met a standing building (b, of S.buildings) at its position, on the building's face.
 ## Returns true if the shot ends there. The rule here ends it and does the building nothing; World fills in what a shot of
 ## this kind and power does to it (and may return false for a shot that levels the building and flies on).
-static func hitStructure(_S: SimState, _sh, _b) -> bool:
+static func hitStructure(S: SimState, sh, b) -> bool:
+	WorldBlast.shotBuilding(S, sh.owner, sh.kind, sh.power, b, sh.x, sh.y, sh.z, sh.vx, sh.vy, WorldBlast.chargeOf(sh))   # World: the shot's hit on the building (the wear pool, the floors, one building at most)
 	return true
 
 
@@ -499,7 +500,10 @@ static func _building(S: SimState, sh, mx: float, my: float, rad: float) -> int:
 ## A shot has met the world at its position (cause: ground or water; mine for a mine's blast, which may be in the air).
 ## Nothing happens here beyond its end; World adds what a blast does to the ground, the water and the structures around it.
 static func hitWorld(S: SimState, sh, cause: String) -> void:
-	WorldBlast.shotHit(S, sh.owner, sh.kind, sh.x, sh.y, sh.z, sh.vx, sh.vy, cause)   # World's blast on the ground, the structures and the water
+	if cause == "mine":
+		WorldBlast.mineBlast(S, sh.owner, sh.x, sh.y, sh.z)   # a mine's blast, on the ground or hanging in the air (the bowl fades with the height)
+		return
+	WorldBlast.shotHit(S, sh.owner, sh.kind, sh.x, sh.y, sh.z, sh.vx, sh.vy, cause, WorldBlast.chargeOf(sh))   # World's blast on the ground, the structures and the water; cause "air" for a burst where the shot's life ran out
 
 
 # ---------------------------------------------------------------- the step
@@ -746,6 +750,7 @@ static func step(S: SimState, dt: float) -> void:
 			hitWorld(S, sh, "water")
 			end(S, sh, "water")
 		elif arrived[i]:
+			hitWorld(S, sh, "air")   # a shot that ran out of life bursts where it is
 			end(S, sh, "life")
 	var live: Array = []
 	for sh in S.shots:

@@ -226,6 +226,7 @@ class Building:
 	var pop: float = 0.0
 	var seed: float = 0.0
 	var popAlive: float = 0.0
+	var wear: float = 0.0      # the unshown wear a building has taken from shots (WorldBlast.shotBuilding): 0 or more while it only scorches, -1 once it has shown
 
 
 class TreeState:

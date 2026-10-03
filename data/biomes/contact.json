@@ -12,8 +12,9 @@
   "leave": {
     "clear": 1.5,
     "lipLift": 1.0,
+    "rimLift": 3.0,
     "wall": 1.0,
-    "wallHaltBelow": 600,
+    "wallHaltBelow": 900,
     "stop": 60
   },
   "bounce": {

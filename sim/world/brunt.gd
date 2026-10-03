@@ -163,7 +163,11 @@ static func flightTo(S: SimState, x0: float, y0: float, vx0: float, vy0: float, 
 ## Returns {"floors": bool, "k", "hit": Array of standing floors covered, "sumS", "dmg", "ratio", "outcome" (punch, crack,
 ## dent for floors; collapse, heavy, wreck, crack for whole buildings), "pass": continues through, "keep", "deaths"}.
 static func outcomeOf(S: SimState, b, y: float, spN: float, tier: float) -> Dictionary:
-	var dmg: float = spN * (0.55 + 0.25 * tier) * BRUNT_MUL
+	return outcomeDmg(S, b, y, spN * (0.55 + 0.25 * tier) * BRUNT_MUL)
+
+
+## The same by the damage itself (a brunt's from its speed and tier, a shot's from its kind: WorldBlast.shotBuilding).
+static func outcomeDmg(S: SimState, b, y: float, dmg: float) -> Dictionary:
 	if b.floors >= FLOORS_MIN:
 		var gy: float = WorldStructures.baseY(S, b)
 		var fh: float = floorH(b)

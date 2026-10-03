@@ -80,7 +80,7 @@ static func shotHit(S: SimState, slot: int, kind: String, x: float, y: float, z:
 	SimFx.dust(S, x, g, int(k.dust), "", z)
 	SimFx.ring(S, x, g + 10.0, float(k.ringR), "#ffffff", 0.35, 8.0, z)
 	SimFx.shake(S, float(k.shake), x, z)
-	res.levelled = _area(S, f, k, D, ti, charge, x, maxf(y, g + 5.0), capLeft)   # an air burst blasts at its height
+	res.levelled = _area(S, f, k, D, ti, charge, x, g + 5.0, capLeft)
 	return res
 
 
@@ -98,7 +98,57 @@ static func _area(S: SimState, f, k: Dictionary, D: Dictionary, ti: int, charge:
 	return WorldStructures.damageArea(S, x, y, rad, dmg, f, false, 0.0, capLeft, 0.25, 1.0)
 
 
-## A shot hits building b at (x, y) (SimShots.hitStructure calls this): the damage by the shot's kind and the shooter's tier, through the building's floors (a skyscraper loses
+const STEP: float = 24.0   # the sample spacing along a shot's path this tick (the narrowest building is wider)
+
+
+## Does the shot (already moved this tick by dx, dy; radius r) fly into a standing building of the front street? If it does, the building takes
+## the shot's direct hit here (it reaches a building whose nearest face is within Z_REACH of its plane, as every blast does) and the call returns true (the caller ends the shot). A shot that meets a fighter first never gets here.
+static func shotMeetsBuilding(S: SimState, sh, dx: float, dy: float, r: float) -> bool:
+	var D: Dictionary = data()
+	if D.is_empty() or not D.kinds.has(sh.kind) or sh.kind == "mine":
+		return false
+	var len: float = SimDetMath.hypot(dx, dy)
+	var x0: float = sh.x - dx
+	var y0: float = sh.y - dy
+	var mxm: float = SimWrap.wrap(x0 + dx * 0.5)
+	var ylo: float = minf(y0, sh.y) - r
+	var yhi: float = maxf(y0, sh.y) + r
+	var hit = null
+	var hitS: float = 2.0
+	for i in WorldStructures.near(S, mxm, len * 0.5 + r):
+		var b = S.buildings[i]
+		if not b.alive or absf(SimWrap.sdx(mxm, b.x)) > b.w * 0.5 + len * 0.5 + r:
+			continue
+		if maxf(0.0, absf(sh.z - b.z) - b.d * 0.5) > WorldStructures.Z_REACH:
+			continue
+		if ylo > WorldTerrain.groundY(S, b.x) + b.h + 200.0 + r:   # well above it (the cheap reject: the ground here, the building's full height, a heap's worth)
+			continue
+		var gy: float = WorldStructures.baseY(S, b)
+		var top: float = gy + WorldStructures.curH(b) + r
+		if ylo > top or yhi < gy - 5.0:
+			continue
+		# the first sample along the path that is inside this building (the nearest to the start wins among buildings)
+		var n: int = maxi(1, int(ceil(len / STEP)))
+		for s in range(0, n + 1):
+			var px: float = SimWrap.wrap(x0 + dx * float(s) / float(n))
+			var py: float = y0 + dy * float(s) / float(n)
+			if absf(SimWrap.sdx(px, b.x)) <= b.w * 0.5 + r and py >= gy - 5.0 and py <= top:
+				var fs: float = float(s) / float(n)
+				if fs < hitS:
+					hitS = fs
+					hit = b
+				break
+	if hit != null:
+		var px2: float = SimWrap.wrap(x0 + dx * hitS)
+		var py2: float = y0 + dy * hitS
+		shotBuilding(S, sh.owner, sh.kind, sh.power, hit, px2, py2, sh.z, sh.vx, sh.vy, chargeOf(sh))
+		sh.x = px2
+		sh.y = py2
+		return true
+	return false
+
+
+## A shot hits building b at (x, y): the damage by the shot's kind and the shooter's tier, through the building's floors (a skyscraper loses
 ## floors: dent, crack or punch, and a punched span pancakes what stands above it) or its hit points (a house). A light shot (chip in the data)
 ## first piles into the building's wear pool (nothing shows); at chip.threshold of maxhp the pool is paid in one blow. Returns {"outcome",
 ## "dmg", "levelled"}: outcome chip (nothing shown), or what the floors did, or hit/collapse for a plain building.

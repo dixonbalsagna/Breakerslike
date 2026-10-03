@@ -40,6 +40,7 @@ static var K_WALL: float = 0.8
 static var K_STOP: float = 60.0
 static var K_LIFT: float = 1.0
 static var K_CLEAR: float = 1.5
+static var K_RIMLIFT: float = 1.0       # extra lift of a skid climbing a crater's lip (leave.rimLift)
 static var K_SK2TU: float = 600.0
 static var K_NOTHING: float = 350.0
 static var K_SLAM2: float = 0.883
@@ -176,6 +177,7 @@ static func _cache() -> void:
 	K_STOP = float(D.leave.stop)
 	K_LIFT = float(D.leave.lipLift)
 	K_CLEAR = float(D.leave.clear)
+	K_RIMLIFT = float(D.leave.get("rimLift", 1.0))
 	K_SK2TU = float(D.bands.skidToTumble)
 	K_NOTHING = float(D.bands.nothingBelow)
 	K_SLAM2 = float(D.bands.slamSin2)
@@ -481,6 +483,8 @@ static func stepContact(S: SimState, b: Body, dt: float, ev: Array) -> void:
 	# the leave test: would the next ballistic step end above the ground? he keeps his velocity along the ramp
 	var sprev: float = sl   # the slope ahead only: the central difference read the trench the body had just cut behind him as an upslope (it launched itself off its own furrow)
 	var vyT: float = sprev * vN2 * K_LIFT
+	if sprev > 0.0 and K_RIMLIFT != 1.0 and _nearRim(S, b.x):
+		vyT *= K_RIMLIFT   # a crater's lip throws him further than the same slope on natural ground (Orb's ramp)
 	var xa: float = SimWrap.wrap(b.x + dir * vN2 * tv * SimDetMath.pow(0.55, dt) * dt)
 	var yb: float = b.y + (vyT - 1000.0 * dt) * dt
 	# past the journey's caps (8 contacts or 4 s) he tumbles to a stop: no more leaving the ground

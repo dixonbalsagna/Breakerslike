@@ -408,6 +408,15 @@ static func chainLink(S: SimState, f, att, b, nb, y: float, r: Dictionary, link:
 	e.owner = float(S.fighters.find(att)); e.victim = float(S.fighters.find(f))
 
 
+## A shot hit floors of a skyscraper (WorldBlast.shotBuilding): the same event as a brunt's, victim -1, the shot's direction in ux, uy.
+static func floorHitShot(S: SimState, b, floor_: int, n: int, outcome: String, ratio: float, y: float, slot: int, ux: float, uy: float) -> void:
+	var e := _ev(S, "floor_hit")
+	e.b = float(b.idx); e.floor = floor_; e.n = n; e.outcome = outcome; e.ratio = ratio
+	e.x = b.x; e.y = y; e.z = WorldBrunt.faceZ(b)
+	e.ux = ux; e.uy = uy
+	e.kind = b.kind; e.owner = float(slot); e.victim = -1.0
+
+
 ## B2: a brunt hit floors of a skyscraper: the lowest floor, how many were cleared (0 for a crack or a dent).
 static func floorHit(S: SimState, f, b, floor_: int, n: int, outcome: String, ratio: float, y: float, by) -> void:
 	var e := _ev(S, "floor_hit")
