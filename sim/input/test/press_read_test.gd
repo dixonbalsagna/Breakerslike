@@ -29,6 +29,8 @@ func _init() -> void:
 	_mix()
 	_grades()
 	_timing()
+	_section20_steady()
+	_section20_recipe()
 	_release()
 	_determinism()
 	print("press_read_test: %d checks, %d failed" % [checks, fails])
@@ -178,8 +180,10 @@ func _mix() -> void:
 	ok(c2["mix_short"]["light"] == 2 and c2["mix_short"]["heavy"] == 3, "mix: and the short mix the latest five (2 light, 3 heavy)")
 	ok(SimPressRead.classify(long_log, 190)["mix_long"]["light"] == 8, "mix: a press exactly 90 ticks old still counts")
 	var c3: Dictionary = SimPressRead.classify(long_log, 191)
-	ok(c3["mix_long"]["light"] == 7 and c3["mix_long"]["heavy"] == 3, "mix: a press 91 ticks old has expired")
-	ok(SimPressRead.classify(long_log, 400)["mix_long"]["light"] == 0 and SimPressRead.classify(long_log, 400)["mix_long"]["heavy"] == 0, "mix: a log gone cold has an empty mix")
+	ok(c3["mix_long"]["light"] == 8 and c3["mix_long"]["heavy"] == 3, "mix: old presses stay while the window is live (section 20: the lapse is of the whole window, not press by press)")
+	ok(SimPressRead.classify(long_log, 270)["mix_long"]["heavy"] == 3, "mix: 90 ticks after the last press the window is still whole")
+	var cold: Dictionary = SimPressRead.classify(long_log, 271)
+	ok(cold["mix_long"]["light"] == 0 and cold["mix_long"]["heavy"] == 0 and cold["mix_short"]["heavy"] == 0 and cold["presses"] == 0, "mix: after 90 idle ticks the whole window is empty")
 
 
 func _determinism() -> void:
@@ -202,12 +206,14 @@ func _grades() -> void:
 
 func _timing() -> void:
 	# A steady mash is perfect; a ragged one is not.
-	var steady: Dictionary = SimPressRead.classify(_mk([100, 108, 116, 124]), 127)
-	ok(steady["style"] == "mash" and steady["steady"] and steady["timing"] == "perfect", "timing: a steady mash is a perfect blur")
+	var steady: Dictionary = SimPressRead.classify(_mk([100, 108, 116, 124], [0, 1, 0, -1]), 127)
+	ok(steady["steady"] and steady["timing"] == "perfect", "timing: an even mash on the blows is steady, a perfect blur")
+	var blind: Dictionary = SimPressRead.classify(_mk([100, 108, 116, 124]), 127)
+	ok(blind["style"] == "mash" and not blind["steady"] and blind["timing"] == "none", "timing: the same spacing with no blows to be on is a mash, not steady")
 	var ragged: Dictionary = SimPressRead.classify(_mk([100, 106, 116, 123]), 126)
 	ok(ragged["style"] == "mash" and not ragged["steady"] and ragged["timing"] == "none", "timing: a ragged mash is a mash, not a perfect one")
-	ok(SimPressRead.classify(_mk([100, 108, 117, 125]), 128)["steady"], "timing: gaps of 8, 9, 8 are steady (within 3)")
-	ok(not SimPressRead.classify(_mk([100, 108, 120, 128]), 131)["steady"], "timing: gaps of 8, 12, 8 are not")
+	ok(SimPressRead.classify(_mk([100, 108, 117, 125], [0, 0, 0, 0]), 128)["steady"], "timing: gaps of 8, 9, 8 on the blows are steady (within 3)")
+	ok(not SimPressRead.classify(_mk([100, 108, 120, 128], [0, 0, 0, 0]), 131)["steady"], "timing: gaps of 8, 12, 8 are not, however on the beat")
 	# Taps in time: perfect after three in a row, good before.
 	var three: Dictionary = SimPressRead.classify(_mk([100, 115, 130], [0, 2, -3]), 133)
 	ok(three["style"] == "rhythm" and three["streak"] == 3 and three["timing"] == "perfect", "timing: three perfect taps in a row land clean (perfect)")
@@ -254,3 +260,150 @@ func _release() -> void:
 	SimPressRead.push(l4, SimPressRead.LIGHT, 0, 150)
 	var c4: Dictionary = SimPressRead.classify(l4, 153)
 	ok(c4["release"] == "perfect" and c4["style"] == "taps", "release: the latest release grade stays available after the next press")
+
+
+## A log of presses at `press_ticks` against blow contacts at `blows` (each press's beat is its distance to the nearest blow).
+func _beat_log(press_ticks: Array, blows: Array) -> Array:
+	var log: Array = []
+	for pt in press_ticks:
+		SimPressRead.push(log, SimPressRead.LIGHT, 0, int(pt), SimPressRead.beat_offset(int(pt), blows))
+		SimPressRead.release(log, SimPressRead.LIGHT, int(pt) + 3)
+	return log
+
+
+## Section 20: steady needs the blows. A blind metronome against a blur's cadence.
+func _section20_steady() -> void:
+	var p: Dictionary = SimPressRead.params()
+	ok(p["steadyPresses"] == 4 and p["blurBeatHalf"] == 2 and p["blurBeatBonus"] == 2 and p["powerShare"] == 60, "s20 data: four presses, 2 ticks (+2), power over 60 percent")
+	# Presses on the contacts, for each cadence in the set, are steady and a perfect blur.
+	for cad in [7, 8, 9, 10]:
+		var blows: Array = []
+		for k in range(12):
+			blows.append(100 + cad * k)
+		var on: Array = [100 + cad * 2, 100 + cad * 3, 100 + cad * 4, 100 + cad * 5]
+		var c: Dictionary = SimPressRead.classify(_beat_log(on, blows), on[3] + 3)
+		ok(c["steady"] and c["timing"] == "perfect", "s20: presses on the contacts of a %d-tick cadence are steady and perfect" % cad)
+		# A person's jitter of 1 tick is still on them; 3 ticks is not.
+		var near: Array = [on[0] + 1, on[1] + 1, on[2] - 1, on[3] - 1]
+		ok(SimPressRead.classify(_beat_log(near, blows), near[3] + 3)["steady"], "s20: 1 tick of jitter on a %d-tick cadence is still steady" % cad)
+		var off: Array = [on[0], on[1] + 3, on[2], on[3]]
+		ok(not SimPressRead.classify(_beat_log(off, blows), off[3] + 3)["steady"], "s20: one press 3 ticks off a %d-tick cadence breaks it" % cad)
+	# A blind 8-tick metronome, over every phase, against each cadence.
+	var counts: Dictionary = {}
+	for cad in [7, 8, 9, 10]:
+		var blows2: Array = []
+		for k in range(14):
+			blows2.append(100 + cad * k)
+		var steady_phases: int = 0
+		for phase in range(cad):
+			var pt: Array = []
+			for k in range(4):
+				pt.append(100 + cad * 3 + phase + 8 * k)
+			if SimPressRead.classify(_beat_log(pt, blows2), pt[3] + 3)["steady"]:
+				steady_phases += 1
+		counts[cad] = steady_phases
+	ok(counts[10] == 0, "s20: a blind 8-tick metronome is never steady against a 10-tick cadence (drifts 2 ticks a press)")
+	print("s20 measured: a blind 8-tick metronome is steady in %d of 7 phases at cadence 7, %d of 8 at 8, %d of 9 at 9, %d of 10 at 10 (four presses, 2 ticks)" % [counts[7], counts[8], counts[9], counts[10]])
+	ok(counts[7] < 7 and counts[9] < 9, "s20: against a 7 or 9 cadence most phases are not steady")
+	ok(counts[7] <= 3 and counts[9] <= 3, "s20: and no more than 3 phases are (the drift is a tick a press)")
+	ok(counts[8] >= 5, "s20: at the cadence of 8 itself the metronome is on the beat for most phases, as Game Design's one string in four expects")
+	# Data knobs: five or six presses in a row shut the 7 and 9 windows (the QA band's lever).
+	for need in [5, 6]:
+		var q: Dictionary = SimPressRead.params()
+		q["steadyPresses"] = need
+		var worst: int = 0
+		for cad in [7, 9]:
+			var blows3: Array = []
+			for k in range(16):
+				blows3.append(100 + cad * k)
+			for phase in range(cad):
+				var pt3: Array = []
+				for k in range(need):
+					pt3.append(100 + cad * 3 + phase + 8 * k)
+				if SimPressRead.classify(_beat_log(pt3, blows3), pt3[need - 1] + 3, {"p": q})["steady"]:
+					worst += 1
+		print("s20 measured: with steadyPresses %d a blind 8-tick metronome is steady in %d phases of cadences 7 and 9 together" % [need, worst])
+		if need == 6:
+			ok(worst == 0, "s20: six presses in a row shut the 7 and 9 cadences to a blind metronome")
+	# Touch, 30 fps and assist widen the blur's beat.
+	var blows4: Array = [100, 108, 116, 124, 132, 140]
+	var off3: Array = _beat_log([103, 111, 119, 127], blows4)   # 3 ticks late each time, even
+	ok(not SimPressRead.classify(off3, 130)["steady"], "s20: 3 ticks late each time is outside the blur's 2")
+	ok(SimPressRead.classify(off3, 130, {"touch": true})["steady"], "s20: on touch the blur's window is 4, so it is steady")
+	ok(SimPressRead.classify(off3, 130, {"slow": true})["steady"], "s20: at 30 fps likewise")
+	ok(SimPressRead.classify(off3, 130, {"assist": true})["steady"], "s20: the assist doubles it")
+	ok(SimPressRead.classify(off3, 130, {"offset": 3})["steady"], "s20: and the player's timing offset moves the mark")
+	# Evenly spaced is still needed: on the blows but ragged is not steady.
+	var blows5: Array = [100, 107, 117, 124, 134, 141]
+	ok(SimPressRead.classify(_beat_log([100, 107, 117, 124], blows5), 127)["steady"], "s20: gaps of 7, 10, 7 differ by exactly 3: steady")
+	var blows6: Array = [100, 107, 118, 125]
+	ok(not SimPressRead.classify(_beat_log([100, 107, 118, 125], blows6), 128)["steady"], "s20: a gap of 11 is no longer a mash cadence, however on the beat")
+	# A string of N presses: the metronome walks across the cadence's phases, so a short run can line up by drift. Count the
+	# strings (cadence and phase) in which a blind 8-tick metronome is steady at ANY point, for strings of 8, 12 and 20 presses.
+	for need in [4, 5, 6]:
+		var q: Dictionary = SimPressRead.params()
+		q["steadyPresses"] = need
+		for length in [8, 12, 20]:
+			var hit: Dictionary = {}
+			for cad in [7, 8, 9, 10]:
+				var blows7: Array = []
+				for k in range(40):
+					blows7.append(100 + cad * k)
+				var n_hit: int = 0
+				for phase in range(cad):
+					var pt7: Array = []
+					for k in range(length):
+						pt7.append(100 + phase + 8 * k)
+					var any: bool = false
+					for k in range(need - 1, length):
+						var sub: Array = pt7.slice(maxi(0, k - 7), k + 1)
+						if SimPressRead.classify(_beat_log(sub, blows7), int(sub[sub.size() - 1]) + 3, {"p": q})["steady"]:
+							any = true
+							break
+					if any:
+						n_hit += 1
+				hit[cad] = n_hit
+			var share: float = (0.25 * float(hit[7]) / 7.0 + 0.25 * float(hit[8]) / 8.0 + 0.25 * float(hit[9]) / 9.0 + 0.25 * float(hit[10]) / 10.0) * 100.0
+			print("s20 measured: steadyPresses %d, strings of %d presses: a blind 8-tick metronome is steady at some point in %d of 7 phases (cadence 7), %d of 8 (8), %d of 9 (9), %d of 10 (10): %.1f%% of strings, the four cadences equally likely" % [need, length, hit[7], hit[8], hit[9], hit[10], share])
+			if need == 6 and length == 20:
+				ok(hit[7] == 0 and hit[9] == 0 and hit[10] == 0, "s20: with six presses in a row a blind 8-tick metronome is never steady on a 7, 9 or 10 cadence, however long the string")
+			if need == 4 and length == 20:
+				ok(hit[10] == 0, "s20: with four presses a 10-tick cadence still shuts it out however long the string")
+
+
+func _section20_recipe() -> void:
+	var lone: Array = []
+	SimPressRead.push(lone, SimPressRead.HEAVY, 0, 100)
+	ok(SimPressRead.classify(lone, 103)["recipe"] == "power", "s20 recipe: one heavy alone reads power")
+	var lone_l: Array = []
+	SimPressRead.push(lone_l, SimPressRead.LIGHT, 0, 100)
+	ok(SimPressRead.classify(lone_l, 103)["recipe"] == "blur", "s20 recipe: one light alone is blur")
+	ok(SimPressRead.classify([], 103)["recipe"] == "none", "s20 recipe: no presses, none")
+	var two: Array = _mk([100, 130], [], [1, 1])
+	ok(SimPressRead.classify(two, 133)["recipe"] == "power", "s20 recipe: two heavies running read power")
+	var mixed: Array = _mk([100, 130, 160], [], [0, 1, 0])
+	ok(SimPressRead.classify(mixed, 163)["recipe"] == "combo", "s20 recipe: a heavy among lights (one in three) is a combo")
+	# Four heavies 47 ticks apart: the old press-by-press expiry could never hold them; the window does.
+	var four: Array = _mk([100, 147, 194, 241], [], [1, 1, 1, 1])
+	var c4: Dictionary = SimPressRead.classify(four, 244)
+	ok(c4["recipe"] == "power" and c4["mix_short"]["heavy"] == 4 and c4["presses"] == 4, "s20 recipe: four heavies 47 ticks apart read power, all four present")
+	# Five presses: the old rule exactly (none blur, one to three combo, four or five power).
+	var rules: Array = [[0, "blur"], [1, "combo"], [2, "combo"], [3, "combo"], [4, "power"], [5, "power"]]
+	for r in rules:
+		var kinds: Array = []
+		for k in range(5):
+			kinds.append(1 if k < int(r[0]) else 0)
+		var l5: Array = _mk([100, 110, 120, 130, 140], [], kinds)
+		ok(SimPressRead.classify(l5, 143)["recipe"] == r[1], "s20 recipe: five presses with %d heavies read %s (the old rule)" % [r[0], r[1]])
+	# Only the latest five count: eight presses of which the last five are lights.
+	var old_heavy: Array = _mk([100, 110, 120, 130, 140, 150, 160, 170], [], [1, 1, 1, 0, 0, 0, 0, 0])
+	ok(SimPressRead.classify(old_heavy, 173)["recipe"] == "blur", "s20 recipe: the recipe reads the latest five, so earlier heavies are out")
+	# The lapse: the window holds for 90 idle ticks, then clears as a whole.
+	var held: Array = _mk([100, 147, 194, 241], [], [1, 1, 1, 1])
+	ok(SimPressRead.classify(held, 241 + 90)["recipe"] == "power", "s20 lapse: 90 ticks after the last press the window still reads")
+	var gone: Dictionary = SimPressRead.classify(held, 241 + 91)
+	ok(gone["recipe"] == "none" and gone["presses"] == 0 and gone["mix_short"]["heavy"] == 0, "s20 lapse: 91 idle ticks clears the whole window")
+	# A new press after the lapse starts a fresh window of its own (the director clears the log; the read of a stale entry is empty).
+	SimPressRead.push(held, SimPressRead.LIGHT, 0, 400)
+	var fresh: Dictionary = SimPressRead.classify(held, 403)
+	ok(fresh["mix_short"]["light"] == 1 and fresh["mix_short"]["heavy"] == 4, "s20 lapse: a log the director has not cleared still counts its entries once a press comes (clearing is the director's)")

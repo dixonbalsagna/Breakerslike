@@ -18,6 +18,11 @@ extends RefCounted
 ## Timing grades (docs/controls/agency-input.md 1a): a press or a release is "perfect" within beatHalf ticks of its mark, "good"
 ## within 2 * beatHalf, otherwise "off". A style's top level comes from perfect timing: a steady mash, three perfect presses in
 ## a row, or a hold released on the flash. The sim reads the grade; the damage, the blur and the guard break are Game Design's.
+##
+## Agency pass section 20 (2026-10-03): "steady" is on the beat, not only evenly spaced (gaps within steadyJitter AND every one of
+## the last steadyPresses presses within blurBeatHalf ticks of a blow's contact, so a blind metronome is not steady); the window
+## of presses lapses as a whole after expireTicks with no press (not press by press); and the recipe style (blur, combo, power)
+## goes by the share of heavies among the presses present, so a lone heavy is a power blow.
 
 const LIGHT: int = 0
 const HEAVY: int = 1
@@ -37,7 +42,11 @@ const DEFAULTS: Dictionary = {
 	"mashClear": 20,      # a mash is over after this many ticks without a press
 	"staleTicks": 60,     # a log older than this reads as nothing
 	"mixShort": 5,        # the short mix window: the latest presses the recipe reads
-	"expireTicks": 90,    # a press older than this no longer counts in either mix
+	"expireTicks": 90,    # the whole window lapses after this many ticks with no press (section 20)
+	"powerShare": 60,     # heavies over this percent of the presses present make the power style; up to it, combo; none, blur
+	"steadyPresses": 4,   # a steady mash is this many presses in a row, evenly spaced and on the beat
+	"blurBeatHalf": 2,    # each within this many ticks of a blow's contact (the combo's timed press is beatHalf, 4)
+	"blurBeatBonus": 2,   # added on touch or at 30 fps ("slow"); the assist factor doubles it
 	"assistFactor": 2,    # accessibility: the beat window doubles
 	"steadyJitter": 3,    # a mash is steady when its gaps differ by this many ticks or fewer
 	"perfectStreak": 3,   # this many perfect presses in a row make a timed string
@@ -127,21 +136,28 @@ static func beat_offset(tick: int, blows: Array) -> int:
 
 ## Read a log at tick `now`. `opts`: touch (bool, the wider beat window), assist (bool, the doubled one), offset (int, the
 ## player's timing offset in ticks, -6 to 6: it shifts where the beat is for them), p (a params dictionary, for tests).
-## Returns {style, hold_ticks, on_beat, presses, mix_short, mix_long, rate}:
+## `slow` (bool) is a 30 fps client: the blur's beat gets blurBeatBonus ticks more, as on touch.
+## Returns {style, hold_ticks, on_beat, presses, mix_short, mix_long, recipe, rate}:
 ##   style: "none" (nothing recent), "hold", "rhythm", "mash" or "taps";
 ##   timing: "perfect" (a timed string: a steady mash, a run of perfect presses, or the last release on the flash), "good" (some
 ##     timing: a perfect press or a good release) or "none";
-##   streak: perfect presses in a row ending at the latest; steady: whether the mash's gaps are within steadyJitter;
+##   streak: perfect presses in a row ending at the latest; steady: the last steadyPresses presses are evenly spaced (gaps within
+##     steadyJitter, none over mashGap) AND each is within blurBeatHalf ticks of a blow's contact (any style: it makes timing perfect);
 ##   release: the grade of the latest released charge ("none" if there is none);
 ##   hold_ticks: how long the held button has been down (0 if none held);
 ##   on_beat: how many of the last `rhythmOf` presses were on the beat;
-##   mix_short / mix_long: {light, heavy, sig, energy} counts over the last `mixShort` and `logSize` presses, leaving out any
-##     press older than `expireTicks` (90);
-##   rate: presses a second over the log (0 with fewer than two).
+##   mix_short / mix_long: {light, heavy, sig, energy} counts over the last `mixShort` and `logSize` presses; the whole window is
+##     empty once `expireTicks` (90) have passed with no press;
+##   recipe: the string's style from the share of heavies among the presses present in mix_short: "none" (no press present),
+##     "blur" (no heavy), "combo" (heavies up to powerShare percent) or "power" (over it). With five presses present: none is
+##     blur, one to three combo, four or five power; a lone heavy is power;
+##   rate: presses a second over the latest `mixShort` presses (0 with fewer than two); for display only.
 ## Precedence: hold, then rhythm, then mash, then taps. A mash that lands on the blows is rhythm.
 static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 	var p: Dictionary = opts.get("p", params())
-	var out: Dictionary = {"style": "none", "timing": "none", "streak": 0, "steady": false, "release": "none", "hold_ticks": 0, "on_beat": 0, "presses": log.size(), "mix_short": _mix(log, int(p["mixShort"]), now, int(p["expireTicks"])), "mix_long": _mix(log, int(p["logSize"]), now, int(p["expireTicks"])), "rate": 0.0}
+	var lapsed: bool = log.is_empty() or now - int(log[log.size() - 1]["down"]) > int(p["expireTicks"])
+	var ms: Dictionary = _mix(log, int(p["mixShort"]), lapsed)
+	var out: Dictionary = {"style": "none", "timing": "none", "streak": 0, "steady": false, "release": "none", "hold_ticks": 0, "on_beat": 0, "presses": 0 if lapsed else log.size(), "mix_short": ms, "mix_long": _mix(log, int(p["logSize"]), lapsed), "recipe": _recipe(ms, int(p["powerShare"])), "rate": 0.0}
 	if log.is_empty():
 		return out
 	var last: Dictionary = log[log.size() - 1]
@@ -164,10 +180,36 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 			break
 	if now - int(last["down"]) > int(p["staleTicks"]):
 		return out
-	out["rate"] = _rate(log)
+	out["rate"] = _rate(log, int(p["mixShort"]))
 	# Rhythm: the player is watching the blows.
 	var half: int = _half(p, opts)
 	var shift: int = int(opts.get("offset", 0))
+	# Steady (section 20): the last steadyPresses presses evenly spaced, no gap over mashGap, and every one on a blow's contact
+	# within the blur's tolerance. A blind metronome has the spacing but not the beat, so it is not steady.
+	var sneed: int = int(p["steadyPresses"])
+	var bhalf: int = int(p["blurBeatHalf"])
+	if opts.get("touch", false) or opts.get("slow", false):
+		bhalf += int(p["blurBeatBonus"])
+	if opts.get("assist", false):
+		bhalf *= int(p["assistFactor"])
+	if log.size() >= sneed:
+		var glo: int = 1 << 30
+		var ghi: int = 0
+		var even: bool = true
+		for k in range(log.size() - sneed, log.size()):
+			var bb: int = int(log[k]["beat"])
+			if bb == NO_BEAT or absi(bb - shift) > bhalf:
+				even = false
+				break
+			if k > log.size() - sneed:
+				var gp: int = int(log[k]["down"]) - int(log[k - 1]["down"])
+				if gp > int(p["mashGap"]):
+					even = false
+					break
+				glo = mini(glo, gp)
+				ghi = maxi(ghi, gp)
+		if even and ghi - glo <= int(p["steadyJitter"]):
+			out["steady"] = true
 	var of: int = mini(int(p["rhythmOf"]), log.size())
 	var on: int = 0
 	for k in range(log.size() - of, log.size()):
@@ -191,7 +233,7 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 			any_perfect = true
 	if on >= int(p["rhythmNeed"]):
 		out["style"] = "rhythm"
-		out["timing"] = "perfect" if streak >= int(p["perfectStreak"]) else "good"
+		out["timing"] = "perfect" if (streak >= int(p["perfectStreak"]) or out["steady"]) else "good"
 		return out
 	# Mash: the last mashPresses presses all close together, and still going.
 	var need: int = int(p["mashPresses"])
@@ -203,13 +245,6 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 				break
 		if fast:
 			out["style"] = "mash"
-			var lo: int = 1 << 30
-			var hi: int = 0
-			for k in range(log.size() - need + 1, log.size()):
-				var gap: int = int(log[k]["down"]) - int(log[k - 1]["down"])
-				lo = mini(lo, gap)
-				hi = maxi(hi, gap)
-			out["steady"] = hi - lo <= int(p["steadyJitter"])
 			out["timing"] = "perfect" if out["steady"] else ("good" if any_perfect else "none")
 			return out
 	out["style"] = "taps"
@@ -217,11 +252,11 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 	return out
 
 
-static func _mix(log: Array, n: int, now: int, expire: int) -> Dictionary:
+static func _mix(log: Array, n: int, lapsed: bool) -> Dictionary:
 	var m: Dictionary = {"light": 0, "heavy": 0, "sig": 0, "energy": 0}
+	if lapsed:
+		return m
 	for k in range(maxi(0, log.size() - n), log.size()):
-		if now - int(log[k]["down"]) > expire:
-			continue
 		match int(log[k]["kind"]):
 			LIGHT: m["light"] += 1
 			HEAVY: m["heavy"] += 1
@@ -231,10 +266,23 @@ static func _mix(log: Array, n: int, now: int, expire: int) -> Dictionary:
 	return m
 
 
-static func _rate(log: Array) -> float:
-	if log.size() < 2:
+## The string's style from the share of heavies among the presses present: "none" with no press, "blur" with no heavy, "combo"
+## up to powerShare percent heavies, "power" over it. Integer arithmetic, so no float decides a style.
+static func _recipe(m: Dictionary, power_share: int) -> String:
+	var n: int = int(m["light"]) + int(m["heavy"]) + int(m["sig"])
+	if n == 0:
+		return "none"
+	var h: int = int(m["heavy"])
+	if h == 0:
+		return "blur"
+	return "power" if h * 100 > power_share * n else "combo"
+
+
+static func _rate(log: Array, n: int) -> float:
+	var first: int = maxi(0, log.size() - n)
+	if log.size() - first < 2:
 		return 0.0
-	var span: int = int(log[log.size() - 1]["down"]) - int(log[0]["down"])
+	var span: int = int(log[log.size() - 1]["down"]) - int(log[first]["down"])
 	if span <= 0:
 		return 0.0
-	return float(log.size() - 1) * 60.0 / float(span)
+	return float(log.size() - first - 1) * 60.0 / float(span)

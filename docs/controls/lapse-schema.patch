@@ -1,0 +1,33 @@
+--- a/tools/schemas/input-timing.schema.json	2026-10-03 11:45:36.799969000 -0700
++++ b/tools/schemas/input-timing.schema.json	2026-10-03 11:45:36.827732800 -0700
+@@ -293,7 +293,29 @@
+         "expireTicks": {
+           "type": "integer",
+           "minimum": 1,
+-          "description": "A press older than this no longer counts in the recipe mix or the running mix (90)."
++          "description": "The whole window of presses lapses after this many ticks with no press (90; agency-pass.md section 20), not press by press."
++        },
++        "powerShare": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 100,
++          "description": "Heavies over this percent of the presses present make the power style; up to it, combo; none, blur (60)."
++        },
++        "steadyPresses": {
++          "type": "integer",
++          "minimum": 2,
++          "maximum": 20,
++          "description": "A steady mash is this many presses in a row, evenly spaced and each on a blow's contact (4; section 20)."
++        },
++        "blurBeatHalf": {
++          "type": "integer",
++          "minimum": 0,
++          "description": "Each of those presses within this many ticks of a blow's contact (2; the combo's timed press is beatHalf, 4)."
++        },
++        "blurBeatBonus": {
++          "type": "integer",
++          "minimum": 0,
++          "description": "Added to blurBeatHalf on touch or at 30 fps; the assist factor doubles the result (2)."
+         },
+         "debounce": {
+           "type": "integer",
