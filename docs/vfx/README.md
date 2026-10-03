@@ -214,3 +214,7 @@ Encounter's blasts fire real shots and nothing drew them; `docs/vfx/shots-plan.m
 ### Round two of the blasts on screen (2026-10-03)
 
 The sim's own mines (an entry of `S.shots` with mode MINE) are drawn by their look; `mine_trip`, `shot_deflect` (a mark where a wild shot will land) and the shot ends `mine`, `building` and `life` have their bursts; the spray's muzzle rings are rationed. docs/vfx/shots-plan.md, last section; needs from Simulation listed there.
+
+### The beam plays on screen (2026-10-03)
+
+The 20-tick crossing of a beam and the five plays (swat, split, walk-through, wade, late answer) each have their own look, driven by the slice 8 cues. `render/vfx/beamplay.gd`, drawn in the shots view; flag `beamplay_enabled`. docs/vfx/shots-plan.md, last section; `effects_check.gd` `_beamplay()`.

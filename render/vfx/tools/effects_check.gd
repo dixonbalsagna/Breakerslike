@@ -193,6 +193,7 @@ func _run() -> void:
 	_shots()
 	_explosions()
 	_blast_round2()
+	_beamplay()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -2524,6 +2525,203 @@ func _blast_round2() -> void:
 	_tick(S, hbud, [])
 	view.update(hbud, host, 1.0, plains + 1000.0, 0.7, 2400.0)
 	_check(view.count <= VfxShotsView.CAP and view.shots_drawn == 20, "twelve mines and twenty bolts in one draw: %d quads of %d, all 20 bolts drawn" % [view.count, VfxShotsView.CAP])
+	view.queue_free()
+	SimCore.dispose(S)
+
+
+## The beam plays on screen (Encounter's slice 8): the crossing, and a swat, a split, a walk, a wade and a late answer each by its cue.
+func _beamplay() -> void:
+	print("beam plays")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f0 = S.fighters[0]
+	var f1 = S.fighters[1]
+	f0.x = plains
+	f0.y = g
+	f1.x = SimWrap.wrap(plains + 1500.0)
+	f1.y = g
+	var host := FakeHost.new()
+	host.S = S
+	var view := VfxShotsView.new()
+	root.add_child(view)
+	var shapes_of := func(want: float) -> int:
+		var k: int = 0
+		for q in range(view.count):
+			if is_equal_approx(view._buf[q * VfxShotsView.STRIDE + 18], want):
+				k += 1
+		return k
+	var cue := func(slot: int, name: String): return VfxMock.ev("cue", {"actor": slot, "kind": name, "text": "", "source": ""})
+	_check(VfxLook.BEAMPLAY_DEFAULT and VfxHub.new().beamplay_enabled, "on by default")
+	# --- 1. The 20-tick crossing: the beam's front is seen to travel, with a head leading it and thin rings left behind.
+	var hub := VfxHub.new()
+	hub.reset(S, 6)
+	S.beams = []
+	var dist: float = 1500.0
+	var oy: float = f0.y + 38.0
+	var dyy: float = (f1.y + 36.0) - oy
+	var L: float = sqrt(dist * dist + dyy * dyy)
+	DirBeam.fireBeam(S, f0, f0.x, oy, dist / L, dyy / L, dist + 600.0, "HORIZON CLEAVE")
+	DirInterrupt.si(f0, DirInterrupt.BEAM_TRAVEL, 20)
+	DirInterrupt.si(f0, DirInterrupt.BEAM_REACH, int(L))
+	var b = S.beams[0]
+	var head_x: Array = []
+	var crossing_ticks: int = 0
+	for k in range(24):
+		DirBeam.beamStep(S, SimConst.DT)
+		_tick(S, hub, [])
+		view.update(hub, host, 1.0, plains + 750.0, 0.7, 1500.0)
+		if VfxBeamPlay.crossing(b):
+			crossing_ticks += 1
+			var wedge_x: float = -1e9
+			for q in range(view.count):
+				if is_equal_approx(view._buf[q * VfxShotsView.STRIDE + 18], VfxShotsView.SHAPE_STREAK):
+					wedge_x = maxf(wedge_x, view._buf[q * VfxShotsView.STRIDE + 3])
+			head_x.append(wedge_x)
+	var advancing: bool = head_x.size() > 10
+	for i in range(1, head_x.size()):
+		if head_x[i] <= head_x[i - 1]:
+			advancing = false
+	_check(advancing and crossing_ticks >= 18, "the beam crosses: its head is drawn in front of it and moves on every tick for %d ticks (x %.0f to %.0f)" % [crossing_ticks, head_x[0] if head_x.size() > 0 else 0.0, head_x[head_x.size() - 1] if head_x.size() > 0 else 0.0])
+	_check(hub.beamplay.made.get("wake", 0) >= 3 and hub.beamplay.made.get("wake", 0) <= 12, "it leaves thin rings behind its head as it goes (%d)" % hub.beamplay.made.get("wake", 0))
+	for k in range(40):
+		DirBeam.beamStep(S, SimConst.DT)
+		_tick(S, hub, [])
+	view.update(hub, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	_check(not VfxBeamPlay.crossing(b) or S.beams.is_empty(), "and when the beam has crossed the head is gone")
+	# --- 2. The cues. A fresh hub and beam each time, the plays' own helpers making the extra beams (the director's code, not mine).
+	var fresh_beam := func() -> VfxHub:
+		var h := VfxHub.new()
+		h.reset(S, 6)
+		S.beams = []
+		DirBeam.fireBeam(S, f0, f0.x, oy, dist / L, dyy / L, dist + 600.0, "HORIZON CLEAVE")
+		DirInterrupt.si(f0, DirInterrupt.BEAM_TRAVEL, 20)
+		DirInterrupt.si(f0, DirInterrupt.BEAM_REACH, int(L))
+		for k in range(21):
+			DirBeam.beamStep(S, SimConst.DT)
+			_tick(S, h, [])
+		return h
+	var counts: Dictionary = {}
+	var h_fire := VfxHub.new()
+	h_fire.reset(S, 6)
+	_tick(S, h_fire, [cue.call(0, "beam_fire")])
+	_check(h_fire.beamplay.made.get("launch", 0) == 1, "beam_fire: a launch at the muzzle")
+	view.update(h_fire, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	counts["launch"] = view.count
+	# the swat
+	var h_swat: VfxHub = fresh_beam.call()
+	var main_b = S.beams[0]
+	DirBeamPlay._stop(f0, main_b)
+	DirBeamPlay._swat(S, main_b, f0, f1)
+	_tick(S, h_swat, [cue.call(1, "beam_swat")])
+	var sweep = null
+	for e in h_swat.beamplay.fx:
+		if e.kind == "sweep":
+			sweep = e
+	var out_b = S.beams[S.beams.size() - 1]
+	_check(sweep != null and out_b.A == f1 and absf(fposmod(sweep.a1 - atan2(out_b.uy, out_b.ux) + PI, TAU) - PI) < 0.01, "beam_swat: a slash that sweeps round to the swatted beam's own line, the beam he sends off from where he stands (angle %.2f)" % (sweep.a1 if sweep != null else 0.0))
+	view.update(h_swat, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	counts["swat"] = view.count
+	# the split
+	var h_split: VfxHub = fresh_beam.call()
+	main_b = S.beams[0]
+	var n_before: int = S.beams.size()
+	DirBeamPlay._stop(f0, main_b)
+	DirBeamPlay._split(S, main_b, f0, f1, {"ux": dist / L, "uy": dyy / L})
+	_tick(S, h_split, [cue.call(1, "beam_split")])
+	_check(h_split.beamplay.made.get("part", 0) == 1 and S.beams.size() == n_before + 2, "beam_split: the parting, and the sim adds two forks to the state (%d beams)" % S.beams.size())
+	view.update(h_split, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	counts["split"] = view.count
+	# the added beams draw: each fork is a beam crossing for its first moments, with its own head
+	var fork_heads: int = 0
+	for bb in S.beams:
+		if bb.A == f0 and bb != main_b and VfxBeamPlay.crossing(bb):
+			fork_heads += 1
+	_check(fork_heads == 2, "and the forks of a split are crossing beams of their own, each drawn with its head (%d)" % fork_heads)
+	# the walk and the wade
+	var h_walk: VfxHub = fresh_beam.call()
+	S.beams = []          # the beam itself is Rendering's: only what a walk adds is counted here
+	h_walk.beamplay.fx.clear()
+	_tick(S, h_walk, [cue.call(1, "beam_walk")])
+	var w_on: bool = h_walk.beamplay.walks[1].on and h_walk.beamplay.walks[1].look == "walk"
+	view.update(h_walk, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	var walk_quads: int = view.count
+	var walk_rings: int = shapes_of.call(VfxShotsView.SHAPE_RING)
+	var h_wade: VfxHub = fresh_beam.call()
+	S.beams = []
+	h_wade.beamplay.fx.clear()
+	_tick(S, h_wade, [cue.call(1, "beam_wade")])
+	var wd_on: bool = h_wade.beamplay.walks[1].on and h_wade.beamplay.walks[1].look == "wade"
+	view.update(h_wade, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	var wade_quads: int = view.count
+	var wade_rings: int = shapes_of.call(VfxShotsView.SHAPE_RING)
+	_check(w_on and wd_on and walk_rings >= 1 and wade_rings == 0 and wade_quads > walk_quads, "beam_walk is a clean bow wave (a tall ring and two parting wedges: %d quads); beam_wade is a rough fan of guard blades and a spray with no ring (%d quads)" % [walk_quads, wade_quads])
+	counts["walk"] = walk_quads
+	counts["wade"] = wade_quads
+	# it follows him for as long as the walk lasts, and ends at beam_arrive
+	var moved: float = 0.0
+	f1.x = SimWrap.wrap(f1.x - 200.0)
+	view.update(h_walk, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	moved = view._buf[3]
+	f1.x = SimWrap.wrap(f1.x + 200.0)
+	view.update(h_walk, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	_check(w_on and absf(view._buf[3] - moved) > 150.0, "while he walks the effect stays on him (it moved with him %.0f units)" % absf(view._buf[3] - moved))
+	var spawn0: int = h_walk.debris.spawned
+	_tick(S, h_walk, [cue.call(1, "beam_arrive")])
+	_check(not h_walk.beamplay.walks[1].on and h_walk.beamplay.made.get("land", 0) == 1 and h_walk.debris.spawned > spawn0, "beam_arrive: the walk ends, a flat ring and a puff of dust where he lands against the attacker")
+	var h_idle: VfxHub = fresh_beam.call()
+	_tick(S, h_idle, [cue.call(1, "beam_walk")])
+	for k in range(80):
+		_tick(S, h_idle, [])
+	_check(not h_idle.beamplay.walks[1].on, "a walk that never gets its arrival cue ends of itself (70 ticks)")
+	# the late answer: the beam is gone from the state in the same tick as the cue, so the cut is where its head last was
+	var h_late: VfxHub = fresh_beam.call()
+	var last_head = h_late.beamplay.heads[0]
+	S.beams = []
+	_tick(S, h_late, [cue.call(1, "beam_late")])
+	var cut = null
+	var answer = null
+	for e in h_late.beamplay.fx:
+		if e.kind == "cut":
+			cut = e
+		if e.kind == "answer":
+			answer = e
+	_check(cut != null and answer != null and last_head != null and absf(cut.x - SimWrap.wrap(float(last_head[0]))) < 1.0 and absf(answer.x1 - cut.x) < 1.0, "beam_late: the beam is cut where its head had got to (x %.0f) and his answer runs out to that point" % (cut.x if cut != null else 0.0))
+	view.update(h_late, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	counts["late"] = view.count
+	# --- 3. Each play is its own picture: five different effects, none a plain beam outcome.
+	var kinds: Dictionary = {"swat": "sweep", "split": "part", "late": "cut", "launch": "launch"}
+	var distinct: bool = true
+	var seen: Dictionary = {}
+	for k in kinds.values():
+		if seen.has(k):
+			distinct = false
+		seen[k] = true
+	var all_drawn: bool = true
+	for k in counts.keys():
+		if int(counts[k]) < 2:
+			all_drawn = false
+	_check(distinct and all_drawn and walk_quads != wade_quads, "each play has its own effect (sweep, part, bow wave, guard fan, cut and answer) and each is drawn (quads: %s)" % str(counts))
+	# --- 4. Colours: the lane colours of whose they are, never white, gold or red.
+	var lane0: Color = VfxBeamPlay.lane_of(S, 0)
+	var lane1: Color = VfxBeamPlay.lane_of(S, 1)
+	_check(lane0.to_html(false) != lane1.to_html(false) and not (lane0.s < 0.12 and lane0.v > 0.9) and not (lane1.s < 0.12 and lane1.v > 0.9), "the effects take the fighters' lane colours (%s, %s)" % [lane0.to_html(false), lane1.to_html(false)])
+	# --- 5. Budget: three beams crossing, a walk on each fighter and a handful of cue effects stay inside the draw.
+	var hb := VfxHub.new()
+	hb.reset(S, 6)
+	S.beams = []
+	for k in range(3):
+		DirBeam.fireBeam(S, f0 if k < 2 else f1, f0.x, oy, dist / L, dyy / L, dist + 600.0, "HORIZON CLEAVE")
+	_tick(S, hb, [cue.call(0, "beam_fire"), cue.call(1, "beam_swat"), cue.call(1, "beam_split"), cue.call(0, "beam_late"), cue.call(1, "beam_wade"), cue.call(0, "beam_walk")])
+	view.update(hb, host, 1.0, plains + 750.0, 0.7, 1500.0)
+	_check(view.count <= VfxShotsView.CAP, "the busiest tick draws %d quads of %d" % [view.count, VfxShotsView.CAP])
+	var hoff := VfxHub.new()
+	hoff.beamplay_enabled = false
+	hoff.reset(S, 6)
+	_tick(S, hoff, [cue.call(1, "beam_walk"), cue.call(0, "beam_fire")])
+	_check(hoff.beamplay.made.is_empty() and not hoff.beamplay.walks[1].on, "beamplay_enabled off: nothing")
+	S.beams = []
 	view.queue_free()
 	SimCore.dispose(S)
 

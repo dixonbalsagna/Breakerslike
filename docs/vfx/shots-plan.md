@@ -146,3 +146,24 @@ No picture of a building chip or an air burst (tested: `effects_check.gd` `_blas
 2. `shot_end` with cause `building` has no direction or face (`ux, uy` of the shot, or a normal). With it the chips would fly out of the face, not both ways.
 3. Game Design's wear pool says a light shot shows only scorch until the pool is paid. The event does not say whether this hit paid it, so every building hit shows its small burst. A flag (`chip` or `paid`) on `shot_end` would let a bolt that has not paid show only its grains.
 4. A mine's own `blastR` and `tierR` are read from my constants (2 bh, 1.25 and 1.5); the event does not carry them (`mine_trip` has no radius). The warning ring would follow the data exactly with a `r` on `mine_trip`.
+
+## The beam plays (2026-10-03)
+
+Slice 8 of the agency work (docs/director/agency-slice-8.md) made a beam take 20 ticks to reach its target and gave the answer a play: a swat, a split, a walk-through, a wade, and a late answer. Code: `render/vfx/beamplay.gd` (what is happening) and `_beamplay()` in `render/vfx/shots_view.gd` (how it is drawn, in the shots view's one draw). Flag `hub.beamplay_enabled` (`VfxLook.BEAMPLAY_DEFAULT`, on). No sim write, no `S.rng`; the cues `beam_fire`, `beam_swat`, `beam_split`, `beam_walk`, `beam_wade`, `beam_arrive`, `beam_late` and the beams in `S.beams` are only read.
+
+| Play | Cue | What is drawn |
+| :-- | :-- | :-- |
+| The crossing (every beam, 20 ticks) | `beam_fire`, then the beam's own `p` and `t` | A bright head (two wedges and a pulsing ring) that advances each tick, with thin wake rings let go behind it, so the beam crosses the gap and does not appear. A burst at the muzzle on the fire beat. Gone when it has crossed. |
+| Swat | `beam_swat` | A sweep arc from the beam's old angle to the swatter's new one (the shorter way round), at the swatter; the swatted beam is the sim's own new entry in `S.beams`. |
+| Split | `beam_split` | A part: two wedges opening from the point of contact, and each fork has its own crossing head. |
+| Walk-through | `beam_walk` | A tall bow-wave ring and two long parting wedges that follow him while he walks into it. Ends on `beam_arrive` (a landing ring and 4 dust puffs) or after 70 ticks. |
+| Wade | `beam_wade` | Three jittering guard blades and four spray lines (no ring, so it never reads as the walk), plus dust every third tick; 7 dust puffs at the arrive. |
+| Late answer | `beam_late` | A cut where the beam's head was when the answer came, and an answer streak that runs to it. |
+
+Pictures (web build, a scratch staging hook, the sim's own `fireBeam`, `_swat` and `_split`): ![](img/bp-cross.jpg) ![](img/bp-swat.jpg) ![](img/bp-split.jpg) ![](img/bp-walk.jpg) ![](img/bp-wade.jpg) ![](img/bp-late.jpg)
+
+Note on the pictures: the dust along the whole beam is the sim's own carving (Rendering's and the blast debris), not these plays; the plays are the heads, rings, wedges and blades at the ends. In the swat and split pictures the old beam's scorch is still on the ground; the swatted beam leaves the defender at the upper left.
+
+`render/core/beam_view.gd`: no patch needed. Beams that the swat and the split add to `S.beams` are drawn by it as any beam (confirmed in the swat and split pictures: the second beam is drawn, at its own angle).
+
+Tested: `effects_check.gd` `_beamplay()` (the head drawn and advancing every tick for the 20 ticks, 3 to 12 wake rings, gone once crossed; the swat's sweep angle equals the swatter's beam; the split's two forks each with a head; walk 3 quads with one ring against wade 7 quads and no ring, each following him; arrive and timeout; late; every kind distinct; lane colours; flag off draws nothing; the busiest tick 36 quads of 380).

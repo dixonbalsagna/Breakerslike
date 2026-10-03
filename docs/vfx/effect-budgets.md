@@ -80,3 +80,7 @@ Debris pool only (no draw call): a bolt's explosion about 9 bits, a full charged
 ## Round two of the blasts (2026-10-03)
 
 Twelve mines (the most there can be) and twenty bolts in one view: 123 quads of 320, one draw call. A mine is 7 to 13 quads. A building hit or an air burst costs a bolt's explosion (about 9 bits) or a charged shot's (about 24 to 32) from the debris pool; a spray's misses are bounded by the pool's caps (flames 40, sparks 12 a tick). Not measured: the web build and an old laptop.
+
+## The beam plays (2026-10-03)
+
+Quads only, in the shots view's one draw (cap raised from 320 to 380): a crossing head about 5 quads, a walk 3, a wade 7, a sweep, part, land, cut or answer 1 to 4 for 8 to 14 ticks; the busiest test tick draws 36 quads of 380. Debris pool: dust puffs only (every third tick of a wade, 4 at the arrive of a walk, 7 at a wade's), inside the pool's existing caps. Not measured: the web build under load and an old laptop.

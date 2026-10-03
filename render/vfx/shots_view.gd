@@ -14,7 +14,7 @@ extends MultiMeshInstance3D
 ## on it and a tail that wobbles, with the smoke trail (shots.gd) behind it. The mines of concept (shots.gd `Mine`, look only) are
 ## drawn here too, in the same draw call, each fighter's own look: the Anti-hero's plates, the others' thin rings.
 
-const CAP := 320
+const CAP := 380
 const STRIDE := 20
 const SHAPE_STREAK := 0.0
 const SHAPE_RING := 1.0
@@ -132,6 +132,9 @@ func update(hub: VfxHub, host, a: float, cam_x: float, zoom: float, half_w: floa
 			xc.a = alpha * 0.9
 			n = _put(n, Vector2(px, py), Vector2(cos(ang0), sin(ang0)), rad * 3.4, rad * 0.5, pz + 0.5, xc, 1.0, 1.0, SHAPE_STREAK)
 			n = _put(n, Vector2(px, py), Vector2(cos(ang0 + PI * 0.5), sin(ang0 + PI * 0.5)), rad * 2.2, rad * 0.4, pz + 0.5, xc, 1.0, 1.0, SHAPE_STREAK)
+	# The beam plays: a crossing beam's head, the cues' effects, a walk or a wade in progress.
+	if hub.beamplay_enabled:
+		n = _beamplay(n, S, hub, host, cam_x, half_w, a, bh, minpx, alpha)
 	# The mines (concept).
 	n = _mines(n, S, hub, sh, cam_x, half_w, a, bh, minpx, alpha)
 	# The short effects the events call for.
@@ -249,6 +252,175 @@ static func shot_back(sp, a: float, still: bool) -> Vector2:
 static func arc_y(prog: float, total: int, bh: float) -> float:
 	var h: float = VfxShots.p("shots", "arc_bh") * bh * clampf(float(total) / 10.0, VfxShots.p("shots", "arc_min"), VfxShots.p("shots", "arc_max"))
 	return h * sin(PI * clampf(prog, 0.0, 1.0))
+
+
+## A hard-edged wedge: from base, along dir, length l, width w (narrow at the tip, wide at the back, brightest at the tip).
+func _wedge(n: int, base: Vector2, dir: Vector2, l: float, w: float, z: float, col: Color) -> int:
+	return _put(n, base + dir * (l * 0.5), dir, l, w, z, col, 0.04, 0.5, SHAPE_STREAK)
+
+
+## A thin ring seen edge-on across dir: an ellipse short along dir (a share of its height) and size tall across it.
+func _across(n: int, c: Vector2, dir: Vector2, size: float, along: float, z: float, col: Color, minpx: float) -> int:
+	return _put(n, c, dir, size * along, size, z, col, maxf(0.05, 1.6 * minpx / maxf(size * 0.5, 1.0)), 0.0, SHAPE_RING)
+
+
+## The beam plays (beamplay.gd). All hard-edged wedges and thin rings in the lane colour of whose they are.
+func _beamplay(n: int, S: SimState, hub: VfxHub, host, cam_x: float, half_w: float, a: float, bh: float, minpx: float, alpha: float) -> int:
+	var bp: VfxBeamPlay = hub.beamplay
+	var al: float = alpha * VfxBeamPlay.p("beamplay", "alpha")
+	var z0: float = Z_FX + 1.0
+	# A beam crossing: its head leads it, so it is seen to travel.
+	for b in S.beams:
+		if n >= CAP - 30:
+			break
+		if not VfxBeamPlay.crossing(b):
+			continue
+		var slot: int = S.fighters.find(b.A)
+		var lane: Color = VfxBeamPlay.lane_of(S, slot)
+		var s0: float = float(b.p) * float(b.len)
+		var rx0: float = SimWrap.sdx(cam_x, float(b.ox)) + float(b.ux) * s0
+		if absf(rx0) > half_w + 8.0 * bh:
+			continue
+		var hd := Vector2(rx0, float(b.oy) + float(b.uy) * s0)
+		var dv := Vector2(float(b.ux), float(b.uy))
+		var pulse: float = 1.0 if hub.reduced_motion else 0.8 + 0.2 * sin(TAU * (float(bp.clock) + a) / 6.0)
+		var c1: Color = lane
+		c1.a = al * 0.85 * pulse
+		n = _wedge(n, hd - dv * 24.0, dv, VfxBeamPlay.p("beamplay", "head_len"), VfxBeamPlay.p("beamplay", "head_w") * (0.8 + 0.1 * float(b.pw)), float(b.oz) + z0, c1)
+		var c2: Color = lane.lightened(0.18)
+		c2.a = al * pulse
+		n = _wedge(n, hd - dv * 10.0, dv, VfxBeamPlay.p("beamplay", "head_len") * 0.62, VfxBeamPlay.p("beamplay", "head_w") * 0.4, float(b.oz) + z0 + 0.1, c2)
+		var c3: Color = lane
+		c3.a = al * 0.6
+		n = _across(n, hd + dv * 6.0, dv, VfxBeamPlay.p("beamplay", "head_ring"), 0.34, float(b.oz) + z0 - 0.2, c3, minpx)
+	# The effects the cues made.
+	for e: VfxBeamPlay.Fx in bp.fx:
+		if n >= CAP - 14:
+			break
+		var rx: float = SimWrap.sdx(cam_x, e.x)
+		if absf(rx) > half_w + 6.0 * bh:
+			continue
+		var st: float = maxf(e.age - (1.0 - a), 0.0)
+		var u: float = clampf(st / e.life, 0.0, 1.0)
+		var eo: float = 1.0 - pow(1.0 - u, 2.0)
+		var c := Vector2(rx, e.y)
+		var dv2 := Vector2(e.dx, e.dy)
+		var pv := Vector2(-e.dy, e.dx)
+		var ez: float = e.z + z0
+		var fa: float = al * (1.0 - u)
+		match e.kind:
+			"wake":
+				var wc: Color = e.col
+				wc.a = al * 0.5 * (1.0 - u)
+				n = _across(n, c, dv2, e.size * lerpf(0.8, 1.3, eo), 0.3, ez - 0.4, wc, minpx)
+			"launch":
+				var lc: Color = e.col
+				lc.a = fa
+				n = _wedge(n, c, dv2, lerpf(40.0, e.size, eo), 54.0 * (1.0 - 0.6 * u), ez, lc)
+				var lr: Color = e.col
+				lr.a = fa * 0.7
+				n = _across(n, c + dv2 * 20.0, dv2, lerpf(60.0, 130.0, eo), 0.3, ez - 0.2, lr, minpx)
+			"sweep":
+				# A slash: wedges at the angles it has swept through, the newest the brightest, then a ring at his hand.
+				for k in range(4):
+					var tk: float = clampf(eo - 0.14 * float(k), 0.0, 1.0)
+					var ang: float = lerpf(e.a0, e.a1, tk)
+					var sd := Vector2(cos(ang), sin(ang))
+					var sc: Color = e.col if k == 0 else e.col.lerp(e.col2, 0.35)
+					sc.a = al * (1.0 - u * 0.7) * (1.0 - 0.22 * float(k))
+					n = _wedge(n, c + sd * 36.0, sd, e.size * (1.0 - 0.1 * float(k)), 34.0 * (1.0 - 0.15 * float(k)), ez + 0.05 * float(k), sc)
+				var sr: Color = e.col2
+				sr.a = fa * 0.6
+				n = _across(n, c, Vector2(cos(e.a1), sin(e.a1)), lerpf(70.0, 150.0, eo), 0.35, ez - 0.3, sr, minpx)
+			"part":
+				# The beam parts round him: two wedges slide apart along the forks' lines, with a tall ring across him.
+				var ang0: float = atan2(e.dy, e.dx)
+				for sg in [-1.0, 1.0]:
+					var pa: float = ang0 + sg * 14.0 * PI / 180.0
+					var pd := Vector2(cos(pa), sin(pa))
+					var pc: Color = e.col
+					pc.a = fa
+					n = _wedge(n, c + pv * (sg * 26.0 * eo), pd, lerpf(40.0, e.size, eo), 30.0, ez, pc)
+				var pr: Color = e.col2
+				pr.a = fa * 0.7
+				n = _across(n, c, dv2, lerpf(90.0, 170.0, eo), 0.3, ez - 0.3, pr, minpx)
+			"land":
+				# He arrives against the attacker: a flat ring on the ground and a second inside it.
+				var rr: float = lerpf(e.size * 0.4, e.size, eo)
+				var lr2: Color = e.col
+				lr2.a = fa
+				n = _put(n, c, Vector2(1.0, 0.0), rr * 2.0, rr * 2.0 * 0.28, ez, lr2, maxf(0.05, 1.6 * minpx / maxf(rr, 1.0)), 0.0, SHAPE_RING)
+				var lr3: Color = e.col2
+				lr3.a = fa * 0.6
+				n = _put(n, c, Vector2(1.0, 0.0), rr * 1.2, rr * 1.2 * 0.28, ez + 0.1, lr3, maxf(0.07, 1.6 * minpx / maxf(rr * 0.6, 1.0)), 0.0, SHAPE_RING)
+			"cut":
+				# The beam is cut where it had got to: lines burst back from the cut and a ring across it.
+				for k in range(5):
+					var ca: float = atan2(e.dy, e.dx) + (float(k) - 2.0) * 0.45
+					var cd := Vector2(cos(ca), sin(ca))
+					var cc: Color = e.col if k % 2 == 0 else e.col2
+					cc.a = fa
+					n = _wedge(n, c + cd * lerpf(10.0, 40.0, eo), cd, lerpf(24.0, e.size * 0.8, eo), 14.0, ez, cc)
+				var cr: Color = e.col
+				cr.a = fa * 0.8
+				n = _across(n, c, Vector2(-e.dx, -e.dy), lerpf(70.0, 150.0, eo), 0.3, ez - 0.2, cr, minpx)
+			"answer":
+				# His answer runs out along the line to where the beam was cut.
+				var to := Vector2(SimWrap.sdx(cam_x, e.x1), e.y1)
+				var dd: Vector2 = to - c
+				var dl: float = maxf(dd.length(), 1.0)
+				var ad: Vector2 = dd / dl
+				var head: Vector2 = c + ad * (dl * eo)
+				var ac: Color = e.col
+				ac.a = al * (1.0 - smoothstep(0.7, 1.0, u))
+				n = _wedge(n, head - ad * minf(e.size, dl * eo), ad, minf(e.size, dl * eo + 10.0), 32.0, ez, ac)
+	# A walk or a wade in progress, on the defender and following him.
+	for si in range(mini(2, S.fighters.size())):
+		var w: VfxBeamPlay.Walk = bp.walks[si]
+		if not (w.on or w.fade > 0.0):
+			continue
+		if n >= CAP - 14:
+			break
+		var fx: float = host.fighter_x(si, a)
+		var rxw: float = SimWrap.sdx(cam_x, fx)
+		if absf(rxw) > half_w + 6.0 * bh:
+			continue
+		var pose: Vector3 = host.fighter_pose(si, a)
+		var fzw: float = host.fighter_z(si, a)
+		var toward: float = 1.0 if SimWrap.sdx(S.fighters[si].x, S.fighters[1 - si].x) >= 0.0 else -1.0
+		var fwd := Vector2(toward, 0.0)
+		var chest: Vector2 = Vector2(rxw, pose.y + VfxLook.CHEST_Y)
+		var vis: float = 1.0 if w.on else w.fade / 6.0
+		var beamc: Color = VfxBeamPlay.lane_of(S, 1 - si)
+		var selfc: Color = VfxBeamPlay.lane_of(S, si)
+		var ww: float = (float(bp.clock) + a)
+		var zw: float = fzw + z0
+		if w.look == "walk":
+			# Clean: a tall thin bow wave in front of him and the beam parting round him in two long wedges.
+			var bc: Color = beamc
+			bc.a = al * 0.75 * vis
+			n = _across(n, chest + fwd * 34.0, fwd, VfxBeamPlay.p("beamplay", "wave_h"), 0.3, zw, bc, minpx)
+			for sg in [-1.0, 1.0]:
+				var pd2 := Vector2(-toward * cos(0.42), sg * sin(0.42)).normalized()
+				var wc2: Color = beamc
+				wc2.a = al * 0.6 * vis
+				n = _wedge(n, chest + fwd * 40.0 + Vector2(0.0, sg * 26.0), pd2, 150.0, 22.0, zw - 0.1, wc2)
+		else:
+			# Rough: a fan of short guard blades in front of him, jittering, and a spray of short lines peeling back along the beam.
+			for k in range(3):
+				var ja: float = (float(k) - 1.0) * 0.8 + (0.0 if hub.reduced_motion else sin(ww * 1.7 + float(k) * 2.0) * 0.12)
+				var gd := Vector2(toward * cos(ja), sin(ja))
+				var gc: Color = selfc
+				gc.a = al * 0.9 * vis
+				n = _wedge(n, chest + gd * 26.0, gd, 84.0, 24.0, zw, gc)
+			for k in range(4):
+				var ra: float = (float(k) - 1.5) * 0.55
+				var jit: float = 0.0 if hub.reduced_motion else fposmod(ww * 0.37 + float(k) * 0.31, 1.0)
+				var rd2 := Vector2(-toward * cos(ra), sin(ra))
+				var rc2: Color = beamc
+				rc2.a = al * 0.7 * vis * (1.0 - jit * 0.5)
+				n = _wedge(n, chest + fwd * 30.0 + rd2 * (20.0 + 60.0 * jit), rd2, 56.0, 9.0, zw - 0.1, rc2)
+	return n
 
 
 ## The mines, each fighter's own look, and never a sphere (Legal, RL-062): the others' is a hexagonal plate (a flat hexagon with a raised
