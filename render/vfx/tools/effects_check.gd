@@ -187,6 +187,7 @@ func _run() -> void:
 	_trails()
 	_intro()
 	_rocks()
+	_rocks_world()
 	_blast()
 	_pressure()
 	_shots()
@@ -2201,6 +2202,100 @@ func _explosions() -> void:
 	var fallback: bool = VfxExplode.p("flames") == 5.0
 	VfxExplode._data = saved
 	_check(fallback, "missing data falls back to the defaults")
+	SimCore.dispose(S)
+
+
+## GB-007 (qa/known-bugs.md): the levitating rocks must not ride along with a fast mover, and none may stay locked to a fighter who has left the
+## state. Pieces leave in world space (fall and fade) the moment he speeds up or leaves the state.
+func _rocks_world() -> void:
+	print("levitating rocks: left behind in world space (GB-007)")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f = S.fighters[0]
+	var o = S.fighters[1]
+	o.x = SimWrap.wrap(plains + 9000.0)
+	o.y = WorldTerrain.groundY(S, o.x)
+	var host := FakeHost.new()
+	host.S = S
+	var view := VfxRocksView.new()
+	root.add_child(view)
+	var bh: float = VfxLook.BH
+	var place := func(tier: float):
+		f.x = plains
+		f.y = g
+		f.vx = 0.0
+		f.vy = 0.0
+		f.state = "free"
+		f.hidden = false
+		f.beamCharge = null
+		f.tier = tier
+	# How far the drawn pieces are from the fighter (camera on him), nearest first: -1 when none is drawn.
+	var nearest := func(h: VfxHub) -> float:
+		view.update(h, host, 1.0, f.x, 1200.0)
+		var best: float = -1.0
+		for q in range(view.count):
+			var dx: float = absf(view._buf[q * VfxRocksView.STRIDE + 3])
+			best = dx if best < 0.0 else minf(best, dx)
+		return best
+	_check(VfxRocks.p("rocks", "max_speed_bh") <= 8.0, "he is 'still' only below about a walking pace (%.0f fighter heights a second), not at a dash (14 to 18)" % VfxRocks.p("rocks", "max_speed_bh"))
+	# 1. A fast mover: stands 90 ticks (the rocks are up), then dashes at 14.4 fighter heights a second.
+	var h := VfxHub.new()
+	h.reset(S, 6)
+	place.call(4.0)
+	for k in range(90):
+		_tick(S, h, [])
+	var up: float = h.rocks.level[0]
+	_check(up > 0.99, "standing, the rocks are up (%.2f)" % up)
+	var riding: bool = false
+	var gone_in: int = -1
+	for k in range(40):
+		f.x = SimWrap.wrap(f.x + 18.0)
+		_tick(S, h, [])
+		if h.rocks.level[0] > 0.0 and k >= 3:
+			riding = true
+		if gone_in < 0 and h.rocks.level[0] == 0.0:
+			gone_in = k
+	_check(not riding and gone_in >= 0 and gone_in <= 3, "the moment he dashes none stays attached to him (level 0 after %d ticks)" % gone_in)
+	var near_fast: float = nearest.call(h)
+	_check(near_fast < 0.0 or near_fast > 3.0 * bh, "forty ticks into the dash none rides beside him: the nearest drawn piece is %s from him (3 fighter heights is %.0f)" % [("%.0f units" % near_fast) if near_fast >= 0.0 else "gone", 3.0 * bh])
+	for k in range(60):
+		f.x = SimWrap.wrap(f.x + 18.0)
+		_tick(S, h, [])
+	_check(nearest.call(h) < 0.0, "and a second later they are all gone (fallen and faded)")
+	# 2. A standing fighter who leaves the state (charges): nothing stays in a field round him.
+	var h2 := VfxHub.new()
+	h2.reset(S, 6)
+	place.call(3.0)
+	for k in range(90):
+		_tick(S, h2, [])
+	f.state = "charging"
+	for k in range(80):
+		_tick(S, h2, [])
+	_check(h2.rocks.level[0] == 0.0 and nearest.call(h2) < 0.0, "a standing fighter who starts to charge: every piece has gone within a second and a half, none left in a field round him")
+	f.state = "free"
+	# 3. Hovering at the threshold does not leave a few pieces stuck: speed alternating about a walking pace for 300 ticks, then still.
+	var h3 := VfxHub.new()
+	h3.reset(S, 6)
+	place.call(3.0)
+	for k in range(60):
+		_tick(S, h3, [])
+	var releases: int = 0
+	var was_up: bool = true
+	for k in range(300):
+		var spd_u: float = 4.2 if (k / 10) % 2 == 0 else 7.0      # fighter heights a second, as units a tick: x75/60
+		f.x = SimWrap.wrap(f.x + spd_u * bh / 60.0)
+		_tick(S, h3, [])
+		var up_now: bool = h3.rocks.level[0] > 0.0
+		if was_up and not up_now:
+			releases += 1
+		was_up = up_now
+	for k in range(120):
+		_tick(S, h3, [])
+	_check(releases <= 2, "speed hovering about the limit does not make the rocks flicker on and off (%d releases in 300 ticks)" % releases)
+	_check(h3.rocks.level[0] > 0.99, "and standing still again they come all the way up, not a few stuck at part (%.2f)" % h3.rocks.level[0])
+	view.queue_free()
 	SimCore.dispose(S)
 
 

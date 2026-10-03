@@ -206,3 +206,7 @@ Encounter's blasts fire real shots and nothing drew them; `docs/vfx/shots-plan.m
 ### Blast explosions and mines of concept (2026-10-03)
 
 `docs/vfx/shots-plan.md`, last section: a shot's hit and end are explosions (flame, sparks, smoke, thrown chunks, a flat ring, a smouldering scorch) sized by Game Design's blast radii, a knocked-loose shot tumbles and trails smoke, and the mines are drawn as a look only (hexagonal plates and caltrops, never a sphere). Flag `explosions_enabled`, on. New: `render/vfx/explode.gd`; a hexagon shape in `transform.gdshader`.
+
+### GB-007: the levitating rocks no longer ride along (2026-10-03)
+
+"Still" is now a walking pace (6 fighter heights a second, not 40) and every piece is let go in world space (falls and fades) the moment he speeds up or leaves the state, so none rides beside a fast mover or stays locked to him. docs/vfx/power-language.md, last section; `effects_check.gd` `_rocks_world()`.

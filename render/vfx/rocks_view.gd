@@ -4,7 +4,7 @@ extends MultiMeshInstance3D
 ## shader's earth chunk (shape 3, mode 2). Every piece is placed from the fighter's interpolated pose and the clock, so it follows him
 ## smoothly between ticks. Reads only.
 
-const CAP := 2 * VfxRocks.MAX_PIECES + 4
+const CAP := 2 * VfxRocks.MAX_PIECES + VfxRocks.MAX_LOOSE + 4
 const STRIDE := 20
 
 var _buf := PackedFloat32Array()
@@ -31,7 +31,7 @@ func _ready() -> void:
 	_buf.resize(CAP * STRIDE)
 
 
-func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, half_w: float) -> void:
+func update(hub: VfxHub, host, a: float, cam_x: float, half_w: float) -> void:
 	var n: int = 0
 	var bh: float = VfxLook.BH
 	var rk: VfxRocks = hub.rocks
@@ -75,6 +75,21 @@ func update(hub: VfxHub, host: SimHost, a: float, cam_x: float, half_w: float) -
 			var sx: float = pc.size * size_k * (0.6 + 0.4 * act)
 			_put(n, Vector2(px, py), pc.rot0 + pc.spin * t, sx, sx * 0.8, pz, col, pc.seed)
 			n += 1
+	# The pieces that were let go: in world space, falling and fading, no longer anything to do with the fighter.
+	for l: VfxRocks.Loose in rk.loose:
+		if n >= CAP:
+			break
+		var lrel: float = SimWrap.sdx(cam_x, l.x)
+		if absf(lrel) > half_w + 5.0 * bh:
+			continue
+		var lal: float = VfxRocks.loose_alpha(l)
+		if lal < 0.01:
+			continue
+		var ltones: Array = [VfxPalette.dust(VfxPalette.biome_key(l.x), "mid"), VfxPalette.dust(VfxPalette.biome_key(l.x), "light"), VfxPalette.dust(VfxPalette.biome_key(l.x), "shadow")]
+		var lc: Color = ltones[l.tone]
+		lc.a = VfxRocks.p("rocks", "alpha") * lal
+		_put(n, Vector2(lrel, l.y), l.rot + l.spin * (l.age + a / 60.0), l.size, l.size * 0.8, l.z, lc, l.seed)
+		n += 1
 	count = n
 	rk.shown = n
 	multimesh.visible_instance_count = n

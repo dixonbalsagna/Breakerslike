@@ -242,7 +242,7 @@ func _consume(S: SimState, events: Array) -> void:
 		debris.reduced = reduced_motion
 		water.begin_tick()
 		if rocks_enabled and not frozen:
-			rocks.step(S, xform.forms, [trails[0].speed_bh, trails[1].speed_bh])
+			rocks.step(S, xform.forms, [trails[0].speed_bh, trails[1].speed_bh], VfxLook.QUALITY_SHARDS[clampi(quality, 0, 2)] * (0.5 if reduced_motion else 1.0))
 		if earth_enabled and not frozen:
 			earth.step_skid(S)
 		if react_enabled and not frozen:
