@@ -78,6 +78,10 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 - **Encounter's four constants, now data.** The `dodge` beat with `"side": "cross"` carries the step-around's length (`dur`, 8 ticks, `tempo.stepAround`), rise (`rise`, 98 u) and end distance (`off`, 74 u); the contact block carries the placement limit (`placementReaches`, 3). Two more schema keys for `apply-contact.cjs`: `tempo.stepAround` and `contact.placementReaches` (`../contact-spacing.md` section 6, rows 4 and 5).
 - `styles.2b.json` is not affected.
 
+## The launch pair (parked; Game Design sets the scope)
+
+`launch-pair.json`, with `../launch-pair-movesets.md`: what the Anti-hero and the Protagonist ship with in the next update (17 or 20 sketches for him, 33 for the Protagonist), each fighter's energy kinds, and On the Chin's beats.
+
 ## Start here: `waves-index.md`
 
 One page for Orb: what each of the six waves adds in plain words, its new-pose count, what it needs before it can play, and the order they could go live in.

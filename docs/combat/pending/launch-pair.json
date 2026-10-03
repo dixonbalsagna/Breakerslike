@@ -1,0 +1,262 @@
+{
+ "schema": "combat-launch-pair/0-draft",
+ "_about": "PARKED. What each fighter of the launch pair ships with in the next update, and what waits (../launch-pair-movesets.md). Counts are authored sketches. Game Design's launch-pair-plan.md sets the scope.",
+ "posed": {
+  "shared": {
+   "poses.json": 103,
+   "step3": 32,
+   "agency1": 12,
+   "energy1": 8,
+   "ground1": 16,
+   "intro1": 11,
+   "laststand1": 15
+  },
+  "antihero": {
+   "wave1": 120,
+   "wave2": 62
+  },
+  "protagonist": {}
+ },
+ "antihero": {
+  "ships": [
+   {
+    "piece": "his 34 strikes (wave 1)",
+    "status": "posed",
+    "sketches": 1,
+    "_note": "the body ram, redesigned"
+   },
+   {
+    "piece": "his 11 straight entries (wave 2)",
+    "status": "posed",
+    "sketches": 0
+   },
+   {
+    "piece": "the barrage: six hands, the charged brace, the kiting turn (wave 6)",
+    "sketches": 9
+   },
+   {
+    "piece": "energy kinds: rain, splitting shot",
+    "sketches": 1,
+    "_note": "the rain's upward throw"
+   },
+   {
+    "piece": "On the Chin",
+    "sketches": 6
+   },
+   {
+    "piece": "Blow for Blow, if the framework's power style ships",
+    "sketches": 3,
+    "optional": true
+   }
+  ],
+  "later": [
+   "wave 5: clashes and beam answers (the pulse)",
+   "wave 3: the ping-pong and curved entries (curved flight)",
+   "wave 4: grabs and throws (the held state)",
+   "wave 7: the first kit",
+   "the rest of the kit, finishers, form cinematics, tail pieces"
+  ],
+  "energyKinds": [
+   {
+    "kind": "rain",
+    "order": 1,
+    "why": "a spread on a marked patch tells the rival where he may not stand: his hierarchy made playable"
+   },
+   {
+    "kind": "splitting shot",
+    "order": 2,
+    "why": "his barrage in one press: five shards from one charged shot punish a late dodge"
+   }
+  ]
+ },
+ "protagonist": {
+  "ownStrikes": [
+   {
+    "id": "strike.palm_push",
+    "limb": "hand",
+    "target": "chest",
+    "weight": "heavy",
+    "sends": [
+     "across"
+    ]
+   },
+   {
+    "id": "strike.ridge_hand",
+    "limb": "hand",
+    "target": "head",
+    "weight": "light",
+    "sends": [
+     "turned"
+    ]
+   },
+   {
+    "id": "strike.rising_palm",
+    "limb": "hand",
+    "target": "jaw",
+    "weight": "heavy",
+    "sends": [
+     "up"
+    ]
+   },
+   {
+    "id": "strike.knife_chop",
+    "limb": "hand",
+    "target": "arm",
+    "weight": "light",
+    "sends": [
+     "down"
+    ]
+   },
+   {
+    "id": "strike.hammer_fist",
+    "limb": "hand",
+    "target": "head",
+    "weight": "light",
+    "sends": [
+     "down"
+    ],
+    "classes": [
+     "mid",
+     "return"
+    ]
+   },
+   {
+    "id": "strike.crescent_kick",
+    "limb": "foot",
+    "target": "chest",
+    "weight": "heavy",
+    "sends": [
+     "turned"
+    ]
+   },
+   {
+    "id": "strike.hook_kick",
+    "limb": "foot",
+    "target": "chest",
+    "weight": "light",
+    "sends": [
+     "turned"
+    ]
+   },
+   {
+    "id": "strike.spinning_back_kick",
+    "limb": "foot",
+    "target": "gut",
+    "weight": "heavy",
+    "sends": [
+     "across"
+    ]
+   }
+  ],
+  "ownEntries": [
+   "entry.air_roll",
+   "entry.cartwheel_step"
+  ],
+  "ships": [
+   {
+    "piece": "8 own strikes",
+    "sketches": 8
+   },
+   {
+    "piece": "strike deltas that change silhouette",
+    "sketches": 12
+   },
+   {
+    "piece": "2 own entries and entry deltas",
+    "sketches": 8
+   },
+   {
+    "piece": "two hands of his own and his charged brace",
+    "sketches": 4
+   },
+   {
+    "piece": "energy kind: curving shot",
+    "sketches": 1
+   }
+  ],
+  "later": [
+   "heat beats and the Open Hand cinematic",
+   "specials, signatures, finisher, showcases",
+   "the fold",
+   "the ricochet shot"
+  ],
+  "energyKinds": [
+   {
+    "kind": "curving shot",
+    "order": 1,
+    "why": "a martial artist's precision: the stick bends it round cover or a guard, drawing his arcs"
+   },
+   {
+    "kind": "ricochet shot",
+    "order": 2,
+    "why": "a bank shot: the craftsman's version of the same idea"
+   }
+  ],
+  "openForOrb": [
+   "teleports: he is the natural owner; nothing here uses one",
+   "his finisher shape has teleport strikes and needs a flight version while teleports are on hold"
+  ]
+ },
+ "onTheChin": {
+  "rules": "docs/design/spec-wounds.md section 3: hold context 12 ticks at Pride 60+; up to 4 s; 3 hits or 1 signature; nothing moves him; 20 ticks to let go; 25 s cooldown; a throw beats it",
+  "beats": [
+   {
+    "beat": "plant",
+    "ticks": 12,
+    "pose": "chin.plant"
+   },
+   {
+    "beat": "stance",
+    "ticks": "up to 240",
+    "pose": "chin.plant"
+   },
+   {
+    "beat": "hit absorbed",
+    "ticks": 6,
+    "pose": null,
+    "react": 0.2
+   },
+   {
+    "beat": "acknowledgement",
+    "ticks": 6,
+    "pose": "chin.lift"
+   },
+   {
+    "beat": "absorb completed",
+    "ticks": 18,
+    "pose": "chin.done"
+   },
+   {
+    "beat": "signature absorbed",
+    "ticks": 90,
+    "poses": [
+     "chin.beam_in",
+     "chin.beam_out",
+     "chin.bravado"
+    ],
+    "pause": "the bank, else live with a cut"
+   },
+   {
+    "beat": "let go early",
+    "ticks": 20,
+    "pose": null
+   },
+   {
+    "beat": "thrown out of it",
+    "pose": "showcase.seal_break"
+   }
+  ],
+  "poses": 6,
+  "limits": [
+   "arms out to the sides a little forward of the body line, never behind it",
+   "the rear thigh at most 45 degrees back",
+   "no scream, no aura",
+   "the arms-open stance is his alone"
+  ]
+ },
+ "totals": {
+  "antihero": 17,
+  "antiheroWithBlowForBlow": 20,
+  "protagonist": 33
+ }
+}
