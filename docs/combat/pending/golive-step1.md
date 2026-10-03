@@ -30,7 +30,7 @@ The sim places every striker at 58 u. Sixteen of the 23 land there on the hips' 
 | roundhouse | 50 u | 8 u | 78 u |  |
 | spinning heel | 50 u | 8 u | 70 u |  |
 | drop kick | 50 u | 8 u | 64 u |  |
-| axe kick | 48 u | 10 u | 66 u | at the foot's default limit of 10: give the key set a `step_max` of 12 |
+| axe kick | 48 u | 10 u | 68 u | at the foot's default limit of 10: give the key set a `step_max` of 12 |
 
 Six of them are kicks, and the seventh is the hammer by 2 u. They sit properly when each strike has its own distance (`../contact-spacing.md` section 8).
 

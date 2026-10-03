@@ -1,0 +1,408 @@
+{
+ "schema": "combat-strike-specs/0-draft",
+ "_about": "PARKED. Combat's own rows for the launch pair's new strikes and entries, replacing the rows Animation borrowed from wave 1 slots (_estimate). Not loaded, not hashed. offset is the contact distance; reach is the limb's envelope to the socket; lunge and clear are left for Animation's strike_lab to fill on the posed strike.",
+ "protagonist": {
+  "strikes": [
+   {
+    "id": "strike.palm_push",
+    "limb": "hand",
+    "target": "chest",
+    "weight": "heavy",
+    "classes": [
+     "opener",
+     "ender"
+    ],
+    "sends": [
+     "across"
+    ],
+    "ends": [
+     "knock-back",
+     "launch"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 58,
+     "reach": 74,
+     "band": "long",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 10,
+     "follow": 6,
+     "recover": 10
+    },
+    "look": "One open hand driven from the shoulder into the chest, the other hand open at his own chest."
+   },
+   {
+    "id": "strike.ridge_hand",
+    "limb": "hand",
+    "target": "head",
+    "weight": "light",
+    "classes": [
+     "mid",
+     "return"
+    ],
+    "sends": [
+     "turned"
+    ],
+    "ends": [
+     "level"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 58,
+     "reach": 72,
+     "band": "long",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 6,
+     "follow": 4,
+     "recover": 6
+    },
+    "look": "The edge of the open hand swung round in an arc to the head."
+   },
+   {
+    "id": "strike.rising_palm",
+    "limb": "hand",
+    "target": "jaw",
+    "weight": "heavy",
+    "classes": [
+     "opener",
+     "ender"
+    ],
+    "sends": [
+     "up"
+    ],
+    "ends": [
+     "knock-back",
+     "launch"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 58,
+     "reach": 72,
+     "band": "long",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 10,
+     "follow": 6,
+     "recover": 10
+    },
+    "look": "The heel of an open hand lifted under the jaw, the body rising behind it.",
+    "_legal": "no leap and no spin; the arm lowers at once"
+   },
+   {
+    "id": "strike.knife_chop",
+    "limb": "hand",
+    "target": "arm_r",
+    "weight": "light",
+    "classes": [
+     "mid"
+    ],
+    "sends": [
+     "down"
+    ],
+    "ends": [
+     "level"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 56,
+     "reach": 74,
+     "band": "long",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 6,
+     "follow": 4,
+     "recover": 5
+    },
+    "look": "A short downward chop with a flat hand to the shoulder, the elbow bent through it.",
+    "_note": "the arm socket is new: the reach stands at the chest's 74 until strike_lab measures it"
+   },
+   {
+    "id": "strike.hammer_fist",
+    "limb": "hand",
+    "target": "head",
+    "weight": "light",
+    "classes": [
+     "mid",
+     "return"
+    ],
+    "sends": [
+     "down"
+    ],
+    "ends": [
+     "level"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 56,
+     "reach": 72,
+     "band": "long",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 6,
+     "follow": 4,
+     "recover": 5
+    },
+    "look": "The bottom of one fist brought down in a short blow: the return blow that sends down.",
+    "_legal": "one fist, never two clasped; nothing held up after it"
+   },
+   {
+    "id": "strike.crescent_kick",
+    "limb": "foot",
+    "target": "chest",
+    "weight": "heavy",
+    "classes": [
+     "opener",
+     "ender"
+    ],
+    "sends": [
+     "turned"
+    ],
+    "ends": [
+     "knock-back",
+     "launch"
+    ],
+    "uses": {
+     "legs": 1
+    },
+    "ground": "plant",
+    "range": {
+     "offset": 50,
+     "reach": 60,
+     "band": "mid",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 12,
+     "follow": 6,
+     "recover": 12
+    },
+    "look": "A straight leg swept round from the inside out at chest height, the hands up and open."
+   },
+   {
+    "id": "strike.hook_kick",
+    "limb": "foot",
+    "target": "chest",
+    "weight": "light",
+    "classes": [
+     "mid",
+     "return"
+    ],
+    "sends": [
+     "turned"
+    ],
+    "ends": [
+     "level"
+    ],
+    "uses": {
+     "legs": 1
+    },
+    "ground": "plant",
+    "range": {
+     "offset": 50,
+     "reach": 60,
+     "band": "mid",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 6,
+     "follow": 4,
+     "recover": 6
+    },
+    "look": "The leg carried past the target and the heel hooked back round into the chest."
+   },
+   {
+    "id": "strike.spinning_back_kick",
+    "limb": "foot",
+    "target": "gut",
+    "weight": "heavy",
+    "classes": [
+     "opener",
+     "ender"
+    ],
+    "sends": [
+     "across"
+    ],
+    "ends": [
+     "knock-back",
+     "launch"
+    ],
+    "uses": {
+     "legs": 1
+    },
+    "ground": "plant",
+    "range": {
+     "offset": 54,
+     "reach": 64,
+     "band": "mid",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 14,
+     "follow": 6,
+     "recover": 12
+    },
+    "look": "One turn with his back shown and a straight kick with the heel into the belly.",
+    "_legal": "a single turn; no travelling or multi-hit spin"
+   }
+  ],
+  "entries": [
+   {
+    "id": "entry.air_roll",
+    "fighter": "protagonist",
+    "direction": "rush",
+    "ground": "no",
+    "path": "straight",
+    "ticks": {
+     "travel": "c",
+     "start": 4,
+     "arrive": 4
+    },
+    "favours": [
+     "strike.hammer_fist",
+     "strike.crescent_kick",
+     "strike.palm_push"
+    ],
+    "look": "A tumble that opens into the blow, limbs extended, at most one revolution, never a tight spinning ball (Legal)."
+   },
+   {
+    "id": "entry.cartwheel_step",
+    "fighter": "protagonist",
+    "direction": "stand",
+    "ground": "only",
+    "uses": {
+     "arms": 1,
+     "legs": 2
+    },
+    "ticks": {
+     "travel": 18,
+     "start": 0,
+     "arrive": 4
+    },
+    "favours": [
+     "strike.crescent_kick",
+     "strike.hook_kick",
+     "strike.spinning_back_kick"
+    ],
+    "look": "A cartwheel step along the ground that comes up into the blow."
+   }
+  ]
+ },
+ "antihero": {
+  "strikes": [
+   {
+    "id": "strike.body_hook",
+    "limb": "hand",
+    "target": "gut",
+    "weight": "heavy",
+    "classes": [
+     "opener",
+     "ender"
+    ],
+    "sends": [
+     "turned",
+     "across"
+    ],
+    "ends": [
+     "knock-back",
+     "launch"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 54,
+     "reach": 68,
+     "band": "mid",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 10,
+     "follow": 6,
+     "recover": 10
+    },
+    "look": "A heavy hook dug in along the ribs: the elbow at a right angle, the hip turned through, the other forearm plate across his own chest.",
+    "_note": "the ribs: the gut socket until a ribs socket exists"
+   },
+   {
+    "id": "strike.rib_shot",
+    "limb": "hand",
+    "target": "chest",
+    "weight": "heavy",
+    "classes": [
+     "opener",
+     "ender"
+    ],
+    "sends": [
+     "across"
+    ],
+    "ends": [
+     "knock-back",
+     "launch"
+    ],
+    "uses": {
+     "arms": 1
+    },
+    "ground": "ok",
+    "range": {
+     "offset": 58,
+     "reach": 74,
+     "band": "long",
+     "lunge": null,
+     "clear": null,
+     "_measure": "lunge and clear come from Animation's strike_lab on the posed strike; the offset must sit between them"
+    },
+    "ticks": {
+     "load": 10,
+     "follow": 6,
+     "recover": 10
+    },
+    "look": "A straight heavy blow to the chest from a low shoulder: arm, spine and rear leg one line."
+   }
+  ],
+  "bodyRam": {
+   "offset": 38,
+   "_note": "Animation's re-pose put the heads 6.3 u together at 34 u; 38 u sits clear. The row is in strikes.antihero.wave1.json"
+  }
+ }
+}

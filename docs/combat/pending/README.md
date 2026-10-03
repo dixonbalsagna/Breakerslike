@@ -78,6 +78,10 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 - **Encounter's four constants, now data.** The `dodge` beat with `"side": "cross"` carries the step-around's length (`dur`, 8 ticks, `tempo.stepAround`), rise (`rise`, 98 u) and end distance (`off`, 74 u); the contact block carries the placement limit (`placementReaches`, 3). Two more schema keys for `apply-contact.cjs`: `tempo.stepAround` and `contact.placementReaches` (`../contact-spacing.md` section 6, rows 4 and 5).
 - `styles.2b.json` is not affected.
 
+## The launch pair's own strike and entry rows
+
+`strikes.launchpair.json`: Combat's rows for the Protagonist's eight own strikes and two entries, and for the Anti-hero's body hook and rib shot (range, ticks, classes, tags), replacing the rows Animation borrowed from wave 1 slots. Lunge and clear are left for Animation's strike_lab.
+
 ## The launch pair (parked; Game Design sets the scope)
 
 `launch-pair.json`, with `../launch-pair-movesets.md`: what the Anti-hero and the Protagonist ship with in the next update (23 sketches for him, 37 for the Protagonist), each fighter's energy kinds, On the Chin's beats, and one finisher each in the live finishers' form.
@@ -92,7 +96,7 @@ One page for Orb: what each of the six waves adds in plain words, its new-pose c
 
 ## The alchemist's recipes, the traded-blows set piece and the charges (parked; the rules are Game Design's)
 
-`recipes.alchemist.json`: the pieces each of Game Design's three styles calls (blur, combo, power), at its base and with timing, the flow count's endings, and six blur patterns. `templates.agency.json`: the traded-blows set piece (in-house label Blow for Blow: turns, a different strike and place each turn, the travel, 3 poses, camera notes, Legal's twelve rules), the light and heavy charges at range, and the meeting when a taunt is answered. Read them with `../alchemist-recipes.md`.
+`recipes.alchemist.json`: in the form of `data/combat/recipes.json` (`combat.recipes/1`), not moved yet: the three styles at their base and with timing, the flow's endings, six blur patterns, and each fighter's pools with every piece's status (live, posed or waiting). `templates.agency.json`: the traded-blows set piece (in-house label Blow for Blow: turns, a different strike and place each turn, the travel, 3 poses, camera notes, Legal's twelve rules), the light and heavy charges at range, and the meeting when a taunt is answered. Read them with `../alchemist-recipes.md`.
 
 ## Go-live step 1 (for Animation to apply after Orb's review of the wave 1 pack)
 

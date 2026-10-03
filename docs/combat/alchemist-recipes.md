@@ -170,3 +170,31 @@ Game Design's rule: a far taunt is a challenge. If the rival presses attack duri
 | **World** | the furrow under the set piece, by tier |
 | **Narrative** | the player-facing name; at most one short line per fighter; taunt lines that read as a challenge |
 | **QA** | Orb asked for balance tests: consistent timing should give a substantial edge. Compare base against timed in each style |
+
+## 5. The recipes as live data (parked, not moved)
+
+`pending/recipes.alchemist.json` is now in the form Encounter's slice A2 asks for (`docs/director/alchemy-plan.md`): it becomes `data/combat/recipes.json` as it stands, with `"schema": "combat.recipes/1"`. It is not moved yet.
+
+**What changed from the draft.** The pools are per fighter, as queries over each fighter's pieces, and every piece carries its status:
+
+| Status | Meaning | Anti-hero | Protagonist |
+| :--- | :--- | ---: | ---: |
+| `live` | plays in live matches today | 0 | 0 |
+| `posed` | posed in Animation's packs and parked; it plays when its fighter lands | 36 of 40 (wave 1 and rival2) | 42 of 42 (protag1) |
+| `waiting` | not posed yet | 4: the tail strikes, held for Orb's ruling | 0 |
+
+Nothing is live because KAI and VORR still draw on the placeholder key sets, and go-live step 1 is a flag, off. Each blur pattern is checked against both fighters' lights. The director's own numbers (the window, the flow's thresholds, the multipliers) stay out of this file: they belong in Encounter's `data/director/alchemy.json`.
+
+**Schema keys for Tools** (`tools/schemas/combat-recipes.schema.json`, closed, with `^_` keys as notes):
+
+| Key | Shape |
+| :--- | :--- |
+| `schema` | the constant `combat.recipes/1` |
+| `styles` | three objects: `id` (blur, combo or power), `heaviesInFive` (two integers), `base` and `timed` (each with `read`, a string, and pool names: `pool`, `towardPool`, `linkPool`, `accentPool`, `lastPool`, `ender`; `timed` also `plays` and `endsIn`) |
+| `flow`, `direction` | objects of strings |
+| `blurPatterns` | name to five `[limb, target]` pairs. Limb: hand, foot, elbow, knee, shoulder, head or own. Target: one of Animation's sockets |
+| `patternRule` | a string |
+| `lastPress` | `light` and `heavy`, each a list of ending ids |
+| `pools` | fighter to pool name to a list of `{id, status}`; `status` is live, posed or waiting |
+
+**Cross-checks for Tools:** the styles' `heaviesInFive` cover 0 to 5 with no overlap; every pool a style names exists for every fighter; every pool id is one of that fighter's pieces; every blur step can be filled from that fighter's lights; the `lastPress` ids exist in the templates once the endings land.

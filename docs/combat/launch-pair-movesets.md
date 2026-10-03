@@ -29,7 +29,7 @@ Owner: Combat and Choreography. Date: 2026-10-02. Status: a go-live plan with pa
 ### 2.1 Ships in this update (the minimum that makes him himself)
 | Piece | Status | New sketches |
 | :--- | :--- | ---: |
-| **His 34 strikes** (wave 1) | posed. They play through the alchemist's pieces when the framework is in, and through go-live step 1's pick lists until then | 1: the body ram, redesigned |
+| **His 34 strikes** (wave 1) | posed. They play through the alchemist's pieces when the framework is in, and through go-live step 1's pick lists until then. The body ram, re-posed shoulder first, sits at 38 u (at 34 the heads met) | 1: the body ram, redesigned |
 | **His 11 straight entries** (wave 2) | posed. The arc dive, the skid and the spiral wait for curved flight; the lane step for fight lanes | 0 |
 | **His energy, the barrage** (wave 6, the part this update needs) | the 13 strikes that emit reuse their wave 1 poses. New: the six hands, the charged brace (two), the kiting turn | 9 |
 | **His two energy kinds:** rain and the splitting shot (section 4) | the splitting shot leaves from the charged brace; the rain needs its upward throw | 1 |
@@ -54,21 +54,21 @@ He has nothing of his own posed. KAI's blows today are the six placeholder key s
 ### 3.1 How he gets a full set cheaply
 - **The grammar is shared.** The alchemist's styles, the trade beats, the endings, the charges and Blow for Blow are fighter-neutral; each fighter fills them from his own pieces.
 - **Wave 1's 34 strike slots are re-posed for his body,** as deltas: the same blows with open hands and rounder arcs, played on his profile (bouncy, open). Animation's estimate for a further fighter is about 30 deltas. I count 12 that must change silhouette to read as his (the hand strikes and the round kicks); the rest re-use the rival's contact with his profile.
-- **8 strikes of his own** give him an identity core no one else has:
+- **8 strikes of his own** give him an identity core no one else has. Their full rows (range, ticks, classes, the `sends` and `ends` tags) are in `pending/strikes.launchpair.json`, replacing the rows Animation borrowed from wave 1 slots:
 
 | His strike | Limb to target | Weight | Sends | Look | Inside the joint limits |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Palm push | hand to chest | heavy | across | one open hand driven from the shoulder, the other hand open at his own chest | the elbow short of 160 degrees |
 | Ridge hand | hand to head | light | turned | the edge of the open hand swung round in an arc | the upper arm's twist inside 100 degrees |
 | Rising palm | hand to jaw | heavy | up | the heel of an open hand lifted under the jaw, the body rising behind it | no leap; the arm lowers at once |
-| Knife-hand chop | hand to shoulder | light | down | a short downward chop with a flat hand | the elbow bent through the chop |
+| Knife-hand chop | hand to the arm (`arm_r`) | light | down | a short downward chop with a flat hand | the elbow bent through the chop |
 | Hammer-fist | hand to head | light | down | the bottom of the fist brought down: a return blow that sends down, which the juggle needs | no arm straight back in the load |
 | Crescent kick | foot to chest | heavy | turned | a straight leg swept round from the inside out | the hip inside 105 degrees out |
 | Hook kick | foot to chest | light | turned | the heel hooked back round from beyond the target | the knee folds one way, to 155 degrees |
 | Spinning back kick | foot to gut | heavy | across | one turn and a straight kick with the heel | a single turn; the thigh at most 45 degrees back in the turn's load |
 
 - **Kicks stay at chest height and below,** as wave 1's do: Animation measured that a foot cannot reach a head from a neutral stance.
-- **Entries:** wave 2's 15 slots as deltas (about 6 change silhouette), and 2 of his own: an air roll and a cartwheel step on the ground. Both read as circles. **The air roll** (Legal) is a tumble that opens into the blow, limbs extended, at most one revolution: never a tight spinning ball.
+- **Entries:** wave 2's 15 slots as deltas (about 6 change silhouette), and 2 of his own: an air roll and a cartwheel step on the ground. Both read as circles. The air roll has a rush's timing (4 ticks to start, the travel by distance, 4 to arrive); the cartwheel step has 18 ticks of travel and 4 to arrive. **The air roll** (Legal) is a tumble that opens into the blow, limbs extended, at most one revolution: never a tight spinning ball.
 
 ### 3.2 Ships in this update
 | Piece | New sketches |

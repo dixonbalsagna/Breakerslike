@@ -23,7 +23,7 @@ Each strike has its own reach, so one 58 u for every blow no longer fits: an elb
 
 **Height limits the joints.** An elbow, a knee or the head is aimed, not reached with: it cannot rise to a head at its own height (Animation's test key sets, `pose-pipeline.md` section 9.13). So elbows go to the chest or the jaw, never the head's centre, and the headbutt goes to the jaw, bending from the waist.
 
-**The rule.** A strike's contact distance is the smaller of 58 and its measured lunge, and never under its clear distance. So every blow lands on the hips' lunge alone, with no extra step, and no other part of him passes into the rival. All 34 posed strikes meet it; five moved to do so (the hammer to 56, the axe kick to 48, the short knee and the driving knee to 28, the spinning elbow to 34).
+**The rule.** A strike's contact distance is the smaller of 58 and its measured lunge, and never under its clear distance. So every blow lands on the hips' lunge alone, with no extra step, and no other part of him passes into the rival. All 34 posed strikes meet it but one; five moved to do so (the hammer to 56, the axe kick to 48, the short knee and the driving knee to 28, the spinning elbow to 34). On the joint-limited rig the rising knee lands on its lunge only to 26 u, under the 28 u floor, so it sits at 28 with a 2 u step-in.
 
 | Band | Contact at | Strikes | Which |
 | :--- | ---: | ---: | :--- |
@@ -34,7 +34,7 @@ Each strike has its own reach, so one 58 u for every blow no longer fits: an elb
 - **A floor of 28 u** (`clinch`, proposed) for a strike's own step-in: the two knees that sit there are clear of the rival from 20 to 22 u.
 - **The headbutt is at 36 u:** inside its lunge (38) and outside its clear distance (34).
 - **Targets as posed:** the three elbows that go high and the headbutt land on the `jaw` socket; the sweep lands on `shins`. The hook and the backfist may also be aimed at the near arm (`arm_r`, `arm_l`), for arm wounds.
-- **One redesign: the body ram.** As first posed, his head passed 6.4 u into the rival's neck at any distance. It now leads with the plated back and the back of the shoulder, head turned away. It needs a new pose and a new measurement.
+- **One redesign: the body ram.** As first posed, his head passed 6.4 u into the rival's neck. Animation re-posed it shoulder first, chin tucked behind the plate; at 34 u the heads still met, so its contact distance is 38 u.
 
 ## 4. The strikes
 
@@ -43,12 +43,12 @@ Each strike has its own reach, so one 58 u for every blow no longer fits: an elb
 | Strike | Base | Limb to target | Weight; fills | Clear, lunge, reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
 | `jab` | jab | hand to head | light; opener, mid, return | 44, 76, 98 / **58** | 6, 4, 5 | 1 arm | A straight blade hand from the lead shoulder, the arm one line with the rear leg; the body barely turns. |
-| `cross` | cross | hand to chest | light; opener, mid | 48, 86, 98 / **58** | 6, 4, 5 | 1 arm | The rear hand driven straight through the chest, hips turned full, the lead forearm guard folded across the ribs. |
+| `cross` | cross | hand to chest | light; opener, mid | 46, 86, 98 / **58** | 6, 4, 5 | 1 arm | The rear hand driven straight through the chest, hips turned full, the lead forearm guard folded across the ribs. |
 | `hook` | hook | hand to head (or the near arm) | light; mid, return | 44, 76, 98 / **58** | 6, 4, 6 | 1 arm | A flat, tight arc at head height, the elbow a sharp right angle, the plated forearm leading the hand. |
 | `backfist` | hook, new pose | hand to head (or the near arm) | light; mid, return | 40, 74, 88 / **58** | 6, 4, 6 | 1 arm | The arm unfolds backhanded to full length, the back of the hand leading, chest opened away from the rival. |
-| `palm_heel` | jab | hand to chest | light; mid | 46, 84, 98 / **58** | 6, 4, 5 | 1 arm | A clawed open palm pushed straight in from the ribs, fingers spread like tines, the wrist bent back. **Legal:** the hand stays open, flat or clawed, never cupped; never a hand chambered at the hip for an energy release afterwards. |
+| `palm_heel` | jab | hand to chest | light; mid | 44, 84, 98 / **58** | 6, 4, 5 | 1 arm | A clawed open palm pushed straight in from the ribs, fingers spread like tines, the wrist bent back. **Legal:** the hand stays open, flat or clawed, never cupped; never a hand chambered at the hip for an energy release afterwards. |
 | `spear_hand` | cross | hand to gut | light; opener, mid | 40, 84, 98 / **54** | 6, 4, 5 | 1 arm | A low blade-hand thrust from the crouch into the gut, the spine and the arm one long diagonal. |
-| `uppercut` | upper | hand to jaw | heavy; opener, ender | 38, 58, 98 / **58** | 10, 6, 10 | 1 arm | A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body. **Legal:** no leap and no spin: not a jumping, turning uppercut; no fist held up after it as a victory pose. |
+| `uppercut` | upper | hand to jaw | heavy; opener, ender | 38, 64, 98 / **58** | 10, 6, 10 | 1 arm | A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body. **Legal:** no leap and no spin: not a jumping, turning uppercut; no fist held up after it as a victory pose. |
 | `hammer` | new pose | hand to head | heavy; ender | 44, 56, 86 / **56** | 14, 6, 12 | 1 arm | The fist comes straight down from above the head like a dropped blade, the body folding over it. |
 | `overhand` | hook, new pose | hand to head | heavy; opener, ender | 46, 62, 86 / **58** | 10, 6, 10 | 1 arm | A looping blow over the rival's guard, the shoulder rolled high, the head ducked off the line. |
 | `haymaker` | hook | hand to head | heavy; opener, ender | 42, 62, 98 / **58** | 12, 6, 12 | 1 arm | The widest swing he has: the arm nearly straight, the whole torso thrown round behind it. |
@@ -69,20 +69,20 @@ Each strike has its own reach, so one 58 u for every blow no longer fits: an elb
 | `twin_spear` | new pose | both hands to chest | light; mid | 44, 80, 98 / **52** | 8, 4, 6 | 2 arms | Both blade hands thrust side by side, a hand apart, elbows locked: two parallel lines. |
 | `double_palm` | new pose | both hands to chest | heavy; opener, ender | 40, 68, 98 / **52** | 10, 6, 10 | 2 arms | Both clawed palms shoved in at shoulder width, fingers up, elbows flared wide. **Legal:** a melee strike only: no light, glow or beam leaves the hands, no shouted name, no pause with the palms forward after it; never wrists together, and never chambered as cupped hands at one hip. |
 | `double_hammer` | new pose | both hands to head | heavy; ender | 44, 60, 84 / **50** | 14, 6, 12 | 2 arms | Both forearm guards brought down side by side like a dropped bar; the hands are apart and open. **Legal:** not a two-fisted clasped overhead smash. |
-| `cross_arm_ram` | new pose | both elbows to chest | heavy; opener | 28, 46, 70 / **38** | 10, 5, 12 | 2 arms; grounded: needs the other leg | The forearm guards crossed into a wedge and driven in behind the shoulders, head tucked behind the plates. **Legal:** a strike in motion, never a held crossed-arms power pose. |
+| `cross_arm_ram` | new pose | both elbows to chest | heavy; opener | 28, 44, 70 / **38** | 10, 5, 12 | 2 arms; grounded: needs the other leg | The forearm guards crossed into a wedge and driven in behind the shoulders, head tucked behind the plates. **Legal:** a strike in motion, never a held crossed-arms power pose. |
 
 ### Foot
 
 | Strike | Base | Limb to target | Weight; fills | Clear, lunge, reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
-| `front_kick` | kick | foot to gut | light; opener, mid | 40, 64, 82 / **54** | 6, 4, 6 | 1 leg; grounded: needs the other leg | A straight push with the ball of the foot from a high knee, the body leaning back off the line. |
+| `front_kick` | kick | foot to gut | light; opener, mid | 38, 64, 82 / **54** | 6, 4, 6 | 1 leg; grounded: needs the other leg | A straight push with the ball of the foot from a high knee, the body leaning back off the line. |
 | `side_kick` | kick, new pose | foot to chest | light; mid, return | 34, 56, 70 / **50** | 6, 4, 6 | 1 leg; grounded: needs the other leg | Turned fully side-on, the leg and the opposite arm one horizontal line, the heel leading. |
 | `low_kick` | round | foot to legs | light; mid | 34, 64, 76 / **50** | 6, 4, 5 | 1 leg; grounded: needs the other leg | A short chop of the shin into the thigh, his own body upright and still. |
 | `snap_round` | round | foot to chest | light; mid, return | 36, 58, 72 / **50** | 6, 4, 6 | 1 leg; grounded: needs the other leg | A quick whip from the knee, the hips barely turned, the foot back before the rival moves. |
 | `roundhouse` | round | foot to chest | heavy; opener, ender | 40, 50, 78 / **50** | 12, 6, 12 | 1 leg; grounded: needs the other leg | The full turn of the hips, the leg a long blade through the ribs, the arms thrown back the other way. |
-| `axe_kick` | new pose | foot to chest | heavy; ender | 26, 48, 66 / **48** | 14, 6, 12 | 1 leg; grounded: needs the other leg | The leg lifted straight and brought down heel first onto the collar, his body a vertical line beside it. |
-| `spinning_heel` | new pose | foot to chest | heavy; ender | 22, 50, 70 / **50** | 14, 6, 12 | 1 leg; grounded: needs the other leg | One turn with his back shown, the heel coming round at the end of a straight leg. **Legal:** a single turn; no travelling or multi-hit spin. |
-| `stomp` | new pose | foot to gut | heavy; ender | 30, 58, 76 / **54** | 12, 6, 12 | 1 leg; grounded: needs the other leg | The knee drawn to his chest and the sole driven straight down; his arms spread for balance. |
+| `axe_kick` | new pose | foot to chest | heavy; ender | 20, 48, 68 / **48** | 14, 6, 12 | 1 leg; grounded: needs the other leg | The leg lifted straight and brought down heel first onto the collar, his body a vertical line beside it. |
+| `spinning_heel` | new pose | foot to chest | heavy; ender | 20, 50, 70 / **50** | 14, 6, 12 | 1 leg; grounded: needs the other leg | One turn with his back shown, the heel coming round at the end of a straight leg. **Legal:** a single turn; no travelling or multi-hit spin. |
+| `stomp` | new pose | foot to gut | heavy; ender | 28, 58, 76 / **54** | 12, 6, 12 | 1 leg; grounded: needs the other leg | The knee drawn to his chest and the sole driven straight down; his arms spread for balance. |
 | `sweep` | new pose | foot to shins | light; mid | 36, 52, 72 / **50** | 8, 4, 8 | 1 leg; ground only | Dropped onto one hand, the other leg scything flat along the ground. |
 | `drop_kick` | new pose | both foots to chest | heavy; opener | 20, 50, 64 / **50** | 12, 5, 14 | 2 legs; air only | Both feet together with the body laid flat behind them, arms back along his sides. |
 
@@ -91,7 +91,7 @@ Each strike has its own reach, so one 58 u for every blow no longer fits: an elb
 | Strike | Base | Limb to target | Weight; fills | Clear, lunge, reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
 | `short_knee` | new pose | knee to gut | light; mid | 22, 28, 48 / **28** | 6, 4, 5 | 1 leg; grounded: needs the other leg | A short knee from the clinch, one hand on the rival's shoulder, the standing leg straight. |
-| `rising_knee` | new pose | knee to gut | heavy; opener, ender | 20, 32, 54 / **32** | 10, 6, 10 | 1 leg; grounded: needs the other leg | The knee driven up as he rises onto the toes, hips thrust through, both hands pulling down. |
+| `rising_knee` | new pose | knee to gut | heavy; opener, ender | 20, 26, 54 / **28** | 10, 6, 10 | 1 leg; grounded: needs the other leg | The knee driven up as he rises onto the toes, hips thrust through, both hands pulling down. |
 | `driving_knee` | new pose | knee to gut | heavy; opener | 20, 28, 54 / **28** | 10, 5, 12 | 1 leg; grounded: needs the other leg | A knee carried in on the end of a run, the body leaning back, the trailing leg straight behind. |
 
 ### Head (close range)
@@ -105,7 +105,7 @@ Each strike has its own reach, so one 58 u for every blow no longer fits: an elb
 | Strike | Base | Limb to target | Weight; fills | Clear, lunge, reach / contact at | Load, follow, recover | Uses | Look |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- | :--- |
 | `shoulder_check` | new pose | shoulder to chest | light; opener, mid | 26, 42, 60 / **34** | 6, 4, 6 | neither | A short step and the plated shoulder into the chest, chin tucked behind it, arms close. |
-| `body_ram` | new pose | shoulder to chest | heavy; opener | 24, 42, 68 / **34** (est.) | 10, 5, 12 | neither; grounded: needs the other leg | He turns as he arrives and throws his plated back and the back of the shoulder into the chest, head turned away over the far shoulder, both feet leaving the ground. |
+| `body_ram` | new pose | shoulder to chest | heavy; opener | 22, 42, 66 / **38** (est.) | 10, 5, 12 | neither; grounded: needs the other leg | A short step and the plated shoulder driven into the chest, the chin tucked behind it, the forearm guards close (Animation's re-pose). |
 
 ### Own limb: the tail (held until Orb rules)
 
