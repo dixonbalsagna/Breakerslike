@@ -633,3 +633,24 @@ Spam is the bigger show and the weaker attack, which is the same rule as mashing
 
 - **The buried follow-up is exempt from the reach height check.** The attacker strikes down into a crater 1.75 bh deep, so the height between them is larger than a normal strike's reach by design. He must still have arrived over the crater: the sideways reach holds. QA counts these strikes apart, as it now does.
 - **The hard AI's perfect blocks** are 20.3 per 100 exchanges, against 12 to 20. **The AI moves, not the band:** its rate goes from ×1.0 to **×0.9** of R5's numbers, for about 18 per 100. A perfect block is worth more now that it also gives a free approach against blasts, so the hard AI shouldn't land more of them. Data: `ai.pbRate` 0.35, 0.6 and 0.9.
+
+## 17. Rulings on slice 7 and the mines (2026-10-02)
+
+**A decisive shot can finish** (Encounter's `docs/director/agency-slice-7.md`). Confirmed. A full charged shot that knocks back, or a barrage's ender, is a decisive win like any other:
+- it closes the shooter's own opening on the brink;
+- it is a set-up against a fighter on the brink;
+- against a fighter who is open, or past the time cap, it starts the shooter's finisher as its own exchange, which plays from range.
+
+**The AI's guard against a barrage** is confirmed at 0.2, 0.5 and 0.8 by difficulty. It puts a bolt-only player at 34 of 100 against the medium AI, inside the 20 to 40% band.
+
+**A defenceless script falls fast, and that is correct.** A bolt-only player takes a lights-only masher from the brink to the KO in 9 s, because neither script defends. The brink band (45 to 90 s) is measured between AIs that do. `barrage.immune` stays at 90.
+
+**Mines** (Simulation's `docs/architecture/shots.md` §16 to §18). Simulation's placeholders become these numbers:
+
+| Key | Value | Why |
+| :--- | :--- | :--- |
+| `chainR` | **3 bh** at every tier | Mines are at least 2 bh apart, so with the 2 bh blast a chain could only happen at the minimum gap. At 3 bh, a field laid at normal spacing chains |
+| A mine's radius (what a shot must touch to set it off) | **30 units** (0.4 bh), up from 20 | So a rival can clear a field by shooting it, as §15.5 intends |
+| `fuseTicks` | **8 when a body sets it off, 0 when a shot does** | A short beep after a fighter flies into the trigger radius gives him a moment to see what he did. A shot sets it off at once |
+| `awayChance` | **0.75**, confirmed | The wild shot favours the side away from the deflector |
+| The wild flight's shape | `speed` ×0.8 of the shot's own; `minTicks` 12; `arcPer` 0.15 for the near landings and 0.35 for the far ones | It visibly flies off before it comes down, and the far ones arc higher |
