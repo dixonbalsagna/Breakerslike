@@ -116,6 +116,10 @@ For the split (`docs/combat/pending/apply-order.md` step 1). Run once from the r
 
 Keys from Encounter (`docs/director/update-apply-order.md` step 2). Run once from the repo root, in the commit that lands the slice's data: `node docs/tools/pending/apply-slice9.cjs`. It does **not** edit `data/`. `data/director/interrupts.json` `blast` gains the required `light.aiGapTicks` (integer, 0 or more) and the required closed `deflect` {freeApproachTicks (integer, 0 or more), context {ki}}, `spray` {measuredTicks (integer), perBolt, max, missShare, slopeMin, slopeMax, recoverPerSec (numbers, 0 or more)} and `mine` {enabled, kind, ki, shoveWithinBh, groundWithinBh, blowR} (`_note` allowed). `data/director/ai.json` gains the required `mineMinKi` (`_mine` allowed) and per level `mineShare` (a chance). Rules: `blast-mine-kind` (the mine's kind is a kind of `shots.json` that has a mine block), `blast-spray` (slopeMin at most slopeMax; missShare above 1 is a warning). The two fixtures get the keys; the earlier whole-blast cases are patched to carry them; 56 cases. `deflect.scatter` true needs no schema change. The new cue names (mine_lay, mine_refused, context_deflect_set, context_deflect, volley_fire) are sim render cues that nothing in tools checks, so nothing is added for them. Re-runnable. Tested on a clean `git archive HEAD` (2af1915) with the tree's actual `interrupts.json`, `ai.json` and `shots.json`: 8 errors before, then 0 errors and 0 warnings, self-test passes (3143 of 3143).
 
+## `apply-slice10.cjs`: Encounter's slice 10, the alchemist's switches
+
+Schema for the new file `data/director/alchemy.json` (`director.alchemy/1`; draft `docs/director/pending/agency10/alchemy.json`). It lands in the same commit as `data/combat/recipes.json`, so run it with `apply-recipes.cjs` (either order): `node docs/tools/pending/apply-slice10.cjs`. It does **not** copy the data. It adds `director-alchemy.schema.json` (closed; `recipes` {enabled, fighters: roster id (upper case) to a pool name; `_note` allowed}), the map entry, a validator fixture keyed by the fixture roster, the rules `alchemy-fighter` (every fighters key is a roster id) and `alchemy-pool` (every value is a key of the recipes pools; a roster id with no entry and no pool of his lower-case id is a warning) and 21 cases. Re-runnable. Tested on a clean `git archive HEAD` (5de548b) with both drafts dropped in, both orders: 0 errors and 0 warnings, self-test passes (3241 of 3241 with the recipes script). When the split renames the roster ids, `fighters` must follow (KAI to protagonist, VORR to rival today; after it RIVAL and PROTAGONIST each map or use the lower-case pool).
+
 ## Which script goes with which commit (the next big update)
 
 | Script | State | Goes in the commit of | Needs |
@@ -127,7 +131,8 @@ Keys from Encounter (`docs/director/update-apply-order.md` step 2). Run once fro
 | `apply-beamplay.cjs` | ready | Encounter's slice 8 (data: `interrupts.json` and `ai.json`) | nothing else |
 | `apply-split-keys.cjs` | ready | Combat's re-key at Simulation's split (`finishers.json`, `styles.json`, the roster ids) | the roster ids upper case |
 | `apply-slice9.cjs` | ready | Encounter's slice 9 data (`interrupts.json` blast, `ai.json`) | nothing else |
-| (slices 10, 11) | not drafted | Encounter's slices 10 and 11 | their data |
+| `apply-slice10.cjs` | ready | Encounter's slice 10 with `data/combat/recipes.json` (run with `apply-recipes.cjs`) | the recipes draft |
+| (slice 11) | not drafted | Encounter's slice 11 | its data |
 | (launch pair finishers and templates) | held | Combat's go-live of `launch-pair.json` finishers, `templates.agency.json` and `templates.brawl.json` | their live form (see the report) |
 
 The scripts are independent of each other and of the order (tested mixed). Each adds its own cases, so a run on a tree that already has its keys changes nothing.
