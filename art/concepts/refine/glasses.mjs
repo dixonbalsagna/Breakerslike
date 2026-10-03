@@ -19,6 +19,9 @@ export const FRAMES = {
   shard: { name: 'Shard', sw: 5, lens: [[-56, -22], [62, -30], [24, 20], [-40, 24]] },
   slash: { name: 'Slash cut', sw: 5, lens: [[-50, -26], [46, -30], [58, -8], [34, 22], [-58, 18]] },
   kite: { name: 'Kite', sw: 5, lens: [[-56, -6], [-8, -30], [56, -18], [30, 18], [-20, 22]] },
+  // the lead with its chamfers (the plate cuts on the frame) changed, and dropped: for the side-by-side
+  bladebevel: { name: 'Blade lenses, chamfers changed', sw: 5, lens: [[-54, -6], [-42, -20], [10, -31], [68, -28], [76, -22], [36, 14], [-34, 19], [-52, 10]], tabs: true, topplate: true },
+  bladebare: { name: 'Blade lenses, chamfers dropped', sw: 4, lens: [[-52, -12], [74, -28], [36, 14], [-46, 16]], lit: false },
 };
 
 const abs = key => FRAMES[key].lens.map(([x, y]) => [x * 1.12 + C[0], y * 1.28 + C[1]]);
@@ -32,6 +35,12 @@ function bite(a) {
 }
 // the glint: one hard-edged wedge (a flat sweep cut in his blade language), pointed at the lower left and widening toward the upper right
 const wedge = (cx, cy, k = 1) => poly([[cx - 44 * k, cy + 30], [cx + 14 * k, cy - 46], [cx + 40 * k, cy - 46], [cx - 20 * k, cy + 30]], GLARE_HI);
+
+// a small chamfered hinge tab on the outer end of a lens (the 'plates' of the changed variant)
+function tab(a, s) {
+  const o = a.reduce((m, p) => (s * p[0] > s * m[0] ? p : m), a[0]), d = s;
+  return poly([[o[0] - d * 2, o[1] - 7], [o[0] + d * 14, o[1] - 7], [o[0] + d * 20, o[1] - 1], [o[0] + d * 20, o[1] + 7], [o[0] - d * 2, o[1] + 7]], FRAME_INK);
+}
 
 // the glasses layer, drawn over the face. state: 'clear' | 'glare' | 'glint'; stage: 0 to 3 (the battle damage); t: the glint's place, 0 to 1
 export function glassesLayer(key, state, stage, t, id) {
@@ -54,7 +63,7 @@ export function glassesLayer(key, state, stage, t, id) {
       inner += '</g>';
     }
     // the lens, then the thin rim and its lit top edge
-    o += `<g transform="${tr}">${inner}${poly(a, 'none', `stroke="${FRAME_INK}" stroke-width="${F.sw}" stroke-linejoin="round"`)}${line([...a.slice(0, 2)], FRAME_LIT, 2, 'opacity="0.9"')}`;
+    o += `<g transform="${tr}">${inner}${poly(a, 'none', `stroke="${FRAME_INK}" stroke-width="${F.sw}" stroke-linejoin="round"`)}${F.topplate ? line([...a.slice(0, 2)], FRAME_INK, 10) : ''}${F.lit === false ? '' : line([...a.slice(0, 2)], FRAME_LIT, 2, 'opacity="0.9"')}${F.tabs ? tab(a, s) : ''}`;
     // damage on the lens: a scratch, then one crack, then two parallel cracks (never crossing)
     if (stage >= 1) o += line([[c[0] - 20, c[1] - 12], [c[0] + 12, c[1] + 8]], '#efe6fc', 2.4, 'opacity="0.8"');
     if (stage >= 2 && s === 1) o += line([[c[0] + 24, c[1] - 26], [c[0] + 6, c[1] - 6], [c[0] + 14, c[1] + 12]], FRAME_INK, 3.4) + line([[c[0] + 24, c[1] - 26], [c[0] + 6, c[1] - 6], [c[0] + 14, c[1] + 12]], '#efe6fc', 1.2);
@@ -91,6 +100,8 @@ const PROF = {
   shard: [[1.0, 8.8], [7.2, 9.4], [4.4, 11.2], [1.4, 11.0]],
   slash: [[1.2, 8.6], [6.6, 9.0], [7.2, 10.0], [5.4, 11.2], [1.2, 10.8]],
   kite: [[1.0, 9.6], [3.6, 8.4], [7.2, 9.0], [5.6, 10.8], [3.0, 11.2]],
+  bladebevel: [[1.0, 9.6], [1.6, 9.0], [7.8, 10.5], [8.5, 10.9], [3.6, 11.3], [1.2, 10.7]],
+  bladebare: [[1.2, 9.4], [7.6, 10.8], [3.4, 11.2], [1.4, 10.6]],
 };
 export function profileGlasses(key, state) {
   return (ctx, sk) => {

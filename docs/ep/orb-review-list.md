@@ -67,4 +67,5 @@ Written by the EP on 2026-10-01. Paths are from the project folder. The fuller s
 - The sky: docs/rendering/sky-gap-anchored.md (accept a world-anchored cloud gap, or drop it).
 - The launch pair plan (the Protagonist and the rival): docs/design/launch-pair-plan.md. Decide: the rival gains +2 Pride per building he levels (yes or no); names for both.
 - The rival's glasses: art/concepts/refine/anti-hero-glasses.svg. Decide: the frame (Art's lead: blade lenses; second: cut hex), whether the glare hides his eyes completely, and whether the glasses are always on.
+- The launch pair's look (2026-10-03), three sheets in art/concepts/refine/: glasses-compare.svg (frame A lead blade lenses with a lit top line, B bevelled with hinge tabs, C bare wedge, D the earlier plates; Art picks A), launch-pair-protagonist.svg (big fists and a broader body with the forelock, or the long swept tuft?), launch-pair-rival.svg (long tail and coat blades, or the swept shoulder blade?).
 - The Protagonist's strikes (42 slots, 12 re-posed, 8 of his own): art/animation/review/protag1/README.md.
