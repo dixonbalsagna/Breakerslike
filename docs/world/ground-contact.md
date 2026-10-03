@@ -506,7 +506,9 @@ On a clean export of a56187a (headless): `probe.gd` 0 failed (no NaN in 240 jour
 
 Held as asked: `wallHaltBelow` 1200 and `slamSin2` 0.93 wait for QA's halted share.
 
-## 32. The front-row lever applied: `area.touch` 0.2 and `area.slam` 0.7 (2026-10-03, on HEAD 5de548b, slice 9)
+## 32. The front-row lever measured: `area.touch` 0.2 and `area.slam` 0.7 (2026-10-03, on HEAD 5de548b, slice 9)
+
+**Measured and not applied (EP, 2026-10-03):** the values below were tried in the tree and restored to `touch` 0.4 and `slam` 0.9; two points of front row for softer slams is a poor trade against the destruction pillar, and the choice (soften landings to a third, gate the beams, or raise the ceiling) is Orb's. Where the text says "applied", read "tried".
 
 **Applied** (`data/biomes/contact.json`, data only): `area.touch` 0.4 to 0.2, `area.slam` 0.9 to 0.7, one golden regeneration (the contact data moves every match that has a landing). QA read the front row at 57.0% on Encounter's four arms. My measure, the share of row-1 buildings dead at the KO (seeds 1 to 160), on HEAD: **56.1%** (all structures 44.1%); `touch` 0.2 alone 54.6% (42.6%); **`touch` 0.2 and `slam` 0.7, 53.9% (all structures 42.2%)**. It is still above the ceiling of 50, so the second step was taken as ruled, and it is not enough.
 
