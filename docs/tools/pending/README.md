@@ -120,6 +120,10 @@ Keys from Encounter (`docs/director/update-apply-order.md` step 2). Run once fro
 
 Schema for the new file `data/director/alchemy.json` (`director.alchemy/1`; draft `docs/director/pending/agency10/alchemy.json`). It lands in the same commit as `data/combat/recipes.json`, so run it with `apply-recipes.cjs` (either order): `node docs/tools/pending/apply-slice10.cjs`. It does **not** copy the data. It adds `director-alchemy.schema.json` (closed; `recipes` {enabled, fighters: roster id (upper case) to a pool name; `_note` allowed}), the map entry, a validator fixture keyed by the fixture roster, the rules `alchemy-fighter` (every fighters key is a roster id) and `alchemy-pool` (every value is a key of the recipes pools; a roster id with no entry and no pool of his lower-case id is a warning) and 21 cases. Re-runnable. Tested on a clean `git archive HEAD` (5de548b) with both drafts dropped in, both orders: 0 errors and 0 warnings, self-test passes (3241 of 3241 with the recipes script). When the split renames the roster ids, `fighters` must follow (KAI to protagonist, VORR to rival today; after it RIVAL and PROTAGONIST each map or use the lower-case pool).
 
+## `apply-pieces.cjs`: Combat's slice 11 `pieces` block
+
+For `docs/combat/pending/recipes.slice11.json` (`data/combat/recipes.json` with a top-level `pieces`). Run once from the repo root, in the commit where that file replaces `data/combat/recipes.json` (drop `_target` and `_changes`); `apply-recipes.cjs` is applied already: `node docs/tools/pending/apply-pieces.cjs`. It does **not** edit `data/`. `combat-recipes.schema.json` gains the required `pieces` (underscore keys are notes; every other key is a piece id with a closed `{limb, target}`, both required; limb is hand, foot, elbow, knee, shoulder, head or own). The validator fixture gets the same block. New rule `recipes-pieces`: every pool id and showcase strike has a row (an error), a row nothing uses is a warning, a row's target is a region of `sockets.json`, and a piece that is not waiting in any pool has the limb (without `_l` or `_r`) and target of each of its manifest rows. `recipes-blur` now reads `pieces` instead of the manifests: the steps of a pattern are filled from the fighter's non-waiting `blur.base` and `blur.toward` pieces, and a step used k times needs k. 17 cases, and the earlier waiting-piece case gets its row. Re-runnable. Tested on a clean `git archive HEAD` (7c97ba2) with the draft as `data/combat/recipes.json`: 0 errors and 0 warnings, self-test passes (3258 of 3258).
+
 ## Which script goes with which commit (the next big update)
 
 | Script | State | Goes in the commit of | Needs |
@@ -132,7 +136,8 @@ Schema for the new file `data/director/alchemy.json` (`director.alchemy/1`; draf
 | `apply-split-keys.cjs` | ready | Combat's re-key at Simulation's split (`finishers.json`, `styles.json`, the roster ids) | the roster ids upper case |
 | `apply-slice9.cjs` | ready | Encounter's slice 9 data (`interrupts.json` blast, `ai.json`) | nothing else |
 | `apply-slice10.cjs` | ready | Encounter's slice 10 with `data/combat/recipes.json` (run with `apply-recipes.cjs`) | the recipes draft |
-| (slice 11) | not drafted | Encounter's slice 11 | its data |
+| `apply-pieces.cjs` | ready | Combat's slice 11 `recipes.json` (with `pieces`) | `apply-recipes.cjs` applied (it is) |
+| (slice 11, Encounter's own keys) | not drafted | Encounter's slice 11 | its data |
 | (launch pair finishers and templates) | held | Combat's go-live of `launch-pair.json` finishers, `templates.agency.json` and `templates.brawl.json` | their live form (see the report) |
 
 The scripts are independent of each other and of the order (tested mixed). Each adds its own cases, so a run on a tree that already has its keys changes nothing.
