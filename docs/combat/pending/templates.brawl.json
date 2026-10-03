@@ -1,8 +1,8 @@
 {
   "schema": "combat-brawl/0-draft",
-  "_about": "PARKED. Endings that are not a launch, the knock-back vector, six trade beats and the lights-against-a-heavy pair (../alchemist-content.md sections 3 and 4). Not loaded, not hashed, no schema. Beat lists use the live tick form, relative to their own start: an ending starts on the string's last contact tick, a trade beat on its own beat. `slot` names the pool a strike is filled from at M0. Which one plays when is Game Design's, after Orb's questionnaire 14.",
-  "tempo": {"_live": "step, follow, foot, stepIn, heavyWindup are the live profiles.dynamic.tempo names", "new": {"linkLoad": 6, "tradeHalf": 7, "checkHold": 4, "recoil": 6, "bind": 12, "shove": 6, "breakOff": 9, "advantage": 6, "slideShort": 18, "slideLong": 30, "drift": 20}, "_new": "ticks; proposals"},
-  "launchVectors": {"knockBack": {"label": "KNOCK BACK", "what": "a flat, short send: the body slides on the ground or drifts in the air and stops on its feet. Not a launch: no planner candidates, no bounce, no journey", "direction": {"ground": "along the ground, away from the striker; the piece must send across", "air": "the piece's first direction: across is level, up is 20 degrees above level, down is 20 degrees below"}, "distanceBh": {"tier1": 3.5, "tier2": 5, "tier3": 6.5, "tier4": 8, "_note": "PROPOSAL for Game Design, inside its 'under about 8 bh'. A double slide gives each fighter half"}, "kinds": {"slideShort": "under 4 bh: he stays upright on both feet", "slideLong": "4 bh and over: he drops to the low brace, one hand on the ground; World cuts a trench by tier", "bump": "an obstacle inside the slide's length stops it: a wall, a formation, a crater's edge; a light brunt inside the collateral budgets", "drift": "in the air: he is carried back and rights himself"}, "ticks": {"slideShort": 18, "slideLong": 30, "drift": 20}, "after": "the sent fighter is free when the slide or drift ends; the striker is free `advantage` ticks before that", "stick": "the tilt cannot turn a ground slide; in the air it picks among the piece's directions", "limits": ["never through the striker", "never a launch's wear: it is a knock, counted apart from launches by QA", "it does not start a chain window by itself"], "event": {"name": "knockback", "fields": ["actor (the one sent)", "by", "kind (slideShort, slideLong, bump, drift)", "distance", "startTick", "endTick"]}}},
+  "_about": "PARKED. Endings that are not a launch, six trade beats and the lights-against-a-heavy pair (../alchemist-content.md sections 3 and 4). Not loaded, not hashed, no schema. Beat lists use the live tick form, relative to their own start. Checked against HEAD a56187a: the knock-back vector, the knockBack and stagger ops and the knockback event have landed in the director; what is still new is listed under newForEncounter.",
+  "tempo": {"_live": "step, follow, foot, stepIn, heavyWindup are the live profiles.dynamic.tempo names", "new": {"linkLoad": 6, "tradeHalf": 7, "checkHold": 4, "recoil": 6, "bind": 12, "shove": 6, "breakOff": 9, "advantage": 6}, "_new": "ticks; proposals", "_landed": "the slide and the drift are the director's now: data/director/launch.json knockBack.slideTicks 18 and driftTicks 20; the long slide is the skid, World's slide on the feet"},
+  "launchVectors": {"knockBack": {"label": "KNOCK BACK", "what": "a flat, short send: the body slides on the ground or drifts in the air and stops on its feet. Not a launch: no planner candidates, no bounce, no journey", "direction": {"ground": "along the ground, away from the striker; the piece must send across", "air": "the piece's first direction: across is level, up is 20 degrees above level, down is 20 degrees below"}, "kinds": {"slideShort": "under 4 bh: he stays upright on both feet", "slideLong": "4 bh and over: he drops to the low brace, one hand on the ground; World cuts a trench by tier", "bump": "an obstacle inside the slide's length stops it: a wall, a formation, a crater's edge; a light brunt inside the collateral budgets", "drift": "in the air: he is carried back and rights himself"}, "after": "the sent fighter is free when the slide or drift ends. PROPOSAL, not live: the striker is free `advantage` ticks before that", "stick": "the tilt cannot turn a ground slide; in the air it picks among the piece's directions", "limits": ["never through the striker", "never a launch's wear: it is a knock, counted apart from launches by QA", "it does not start a chain window by itself"], "event": {"name": "knockback", "fields": ["the one sent", "the striker", "kind (slideShort, slideLong, bump, drift)", "distance", "endTick"], "_live": "SimFx.knockback, as the director emits it"}, "_live": "LANDED (Encounter): data/director/launch.json knockBack carries the numbers (distBh 3.5, 5, 6.5 and 8 by tier; slideUnderBh 4; slideTicks 18; driftTicks 20; skidSpeed by tier), sim/director/launch.gd knock() plays it, and the knockback event names the kind. This block stays as the description of the look"}},
   "endings": [
     {
       "id": "level.shove_off",
@@ -51,10 +51,10 @@
       "pieces": ["any heavy that sends across"],
       "poses": ["slide.feet_high"],
       "beats": [
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "slideShort"}},
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "D"}},
-        {"tick": {"at": "start", "add": ["follow", "slideShort"], "sub": ["advantage"]}, "op": "nop"}
-      ]
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"w": "A"}}
+      ],
+      "live": "slideShort",
+      "_live": "LANDED: one live beat, the knockBack op (w sends the other). The director picks this kind by the distance, the ground and what stands in the way, and emits the slide_brace cue itself; the row keeps the look"
     },
     {
       "id": "knock.slide_long",
@@ -64,10 +64,10 @@
       "pieces": ["any heavy that sends across"],
       "poses": ["slide.feet_high", "slide.feet_low"],
       "beats": [
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "slideLong"}},
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "D"}},
-        {"tick": {"at": "start", "add": ["follow", "slideLong"], "sub": ["advantage"]}, "op": "nop"}
-      ]
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"w": "A"}}
+      ],
+      "live": "slideLong",
+      "_live": "LANDED: one live beat, the knockBack op (w sends the other). The director picks this kind by the distance, the ground and what stands in the way, and emits the slide_brace cue itself; the row keeps the look"
     },
     {
       "id": "knock.bump",
@@ -77,10 +77,10 @@
       "pieces": ["any heavy that sends across"],
       "poses": ["slide.feet_high"],
       "beats": [
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "bump"}},
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "D"}},
-        {"tick": {"at": "start", "add": ["follow", "slideShort"], "sub": ["advantage"]}, "op": "nop"}
-      ]
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"w": "A"}}
+      ],
+      "live": "bump",
+      "_live": "LANDED: one live beat, the knockBack op (w sends the other). The director picks this kind by the distance, the ground and what stands in the way, and emits the slide_brace cue itself; the row keeps the look"
     },
     {
       "id": "knock.drift",
@@ -90,9 +90,10 @@
       "pieces": ["any heavy"],
       "poses": [],
       "beats": [
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "drift"}},
-        {"tick": {"at": "start", "add": ["follow", "drift"], "sub": ["advantage"]}, "op": "nop"}
-      ]
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"w": "A"}}
+      ],
+      "live": "drift",
+      "_live": "LANDED: one live beat, the knockBack op (w sends the other). The director picks this kind by the distance, the ground and what stands in the way, and emits the slide_brace cue itself; the row keeps the look"
     },
     {
       "id": "knock.double_slide",
@@ -102,11 +103,10 @@
       "pieces": ["the cross-counter's two blows"],
       "poses": ["slide.feet_high"],
       "beats": [
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "D", "kind": "slideShort", "half": true}},
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"to": "A", "kind": "slideShort", "half": true}},
-        {"tick": {"at": "start", "add": ["follow"]}, "op": "cue", "args": {"cue": "slide_brace", "who": "both"}},
-        {"tick": {"at": "start", "add": ["follow", "slideShort"]}, "op": "nop"}
-      ]
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"w": "A", "half": true}},
+        {"tick": {"at": "start", "add": ["follow"]}, "op": "knockBack", "args": {"w": "D", "half": true}}
+      ],
+      "_live": "the op is live; half (each fighter sent half the distance) is new"
     }
   ],
   "tradeBeats": [
@@ -192,7 +192,7 @@
         {"tick": {"at": "start", "add": ["linkLoad", "linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid"}}},
         {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "strike", "args": {"a": "A", "d": "D", "slot": "link", "dmg": {"ref": "base"}, "o": {"class": "mid"}}},
         {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "drop", "args": {"who": "D", "what": "its pending heavy"}},
-        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "stagger", "args": {"who": "D"}}
+        {"tick": {"at": "start", "add": ["linkLoad", "linkLoad", "linkLoad"]}, "op": "stagger", "args": {"w": "D", "ticks": {"ref": "perfectBlock.staggerTicks"}}}
       ]
     },
     {
@@ -208,5 +208,6 @@
       ]
     }
   ],
-  "newForEncounter": {"ops": {"knockBack": "send a fighter by the knock-back vector", "hold": "both locked, as wave 4's hold", "stagger": "the live stagger of a perfect block (24 ticks)", "drop": "remove a fighter's pending strike"}, "strikeArgs": {"slot": "link, heavy or ender: the pool the composer fills it from", "o.trade": "cross: both strikes of the tick land", "o.checked": "the blow is stopped on a limb: no damage, the defender plays a check", "o.clash": "limb onto limb: no damage to either", "o.whiff": "the blow misses a fighter who slipped it", "o.react": "the strength of the computed reaction, 0 to 1.6", "o.push": "a shove: no launch, the rival set back to fighting distance"}, "cues": ["reset (live)", "circle", "slide_brace", "check", "clash_light", "slip", "over_commit"]}
+  "newForEncounter": {"_landed": {"ops": {"knockBack": "live in sim/director/exchange.gd: args {w}, w sends the other. Not in Tools' op list yet", "stagger": "live: args {w, ticks}"}, "cues": ["reset", "circle", "recoil", "brace", "slide_brace (emitted by the director; not in the cue vocabulary of finishers.json yet)"]}, "ops": {"hold": "both locked, as wave 4's hold: args {both, dur}", "drop": "remove a fighter's pending strike: args {who, what}"}, "opArgs": {"knockBack.half": "each fighter is sent half the tier's distance (the double slide)"}, "strikeArgs": {"slot": "link, heavy or ender: the pool the composer fills it from", "o.trade": "cross: both strikes of the tick land", "o.checked": "the blow is stopped on a limb: no damage, the defender plays a check", "o.clash": "limb onto limb: no damage to either", "o.whiff": "the blow misses a fighter who slipped it", "o.react": "the strength of the computed reaction, 0 to 1.6", "o.push": "a shove: no launch, the rival set back to fighting distance"}, "tempo": ["advantage", "bind", "breakOff", "checkHold", "linkLoad", "recoil", "shove", "tradeHalf"], "cues": ["check", "clash_light", "slip", "over_commit"]},
+  "_target": "data/combat/brawl.json (a new file, combat.brawl/1), so templates.json and its frozen parity copy stay untouched"
 }

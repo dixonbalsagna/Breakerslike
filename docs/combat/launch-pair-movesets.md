@@ -148,6 +148,8 @@ Animation's `s3.absorb.brace` is a guard taking a burst, with the forearms up. I
 
 Game Design needs one finisher per fighter for launch (`docs/design/launch-pair-plan.md` section 8). Both are written in the live finishers' form: the beats up to the contest, then the two outcomes, landed and survived (`data/combat/finishers.json`). The contest keeps its live timing: it opens, and resolves 66 ticks later. Ticks below are from the finisher's start.
 
+**As data (2026-10-03).** Both are rows in `pending/launch-pair.json` (`finishers.rows`), ready for the `finishers` list of `data/combat/finishers.json` with their `select` block: ids `rival` and `protagonist`, working roster ids `RIVAL` and `PROTAGONIST` until Simulation's folders and Orb's names. On a scratch copy of HEAD they pass Tools' validator, and every beat is a live op. Two things wait for Encounter and are carried as hints the live ops ignore: the rival's three volleys (render cues with no damage until a finisher volley exists: 25 a volley) and the Protagonist's curved flights (straight crossings until then). Damage: the Protagonist's four blows are 25 each and his blast 60, the same 160 as the live placeholder; the rival's last blow is 60.
+
 ### 6.1 The Anti-hero: his base finisher, by hand
 The shape already in `finishers.json` ("the barrage until the loser gives way, the slow walk in, the contest, the last blow by hand"), sized.
 
@@ -173,16 +175,16 @@ The shape in `finishers.json` ("the catch, a flurry, rise and gather, the contes
 
 | Ticks | Beat | Pieces |
 | :--- | :--- | :--- |
-| 0 to 20 | the tell and the catch | the live tell cue; the catch |
-| 20 to 92 | **the flurry:** 3 to 5 strikes (4 shown here). Each follows a spiral flight of 18 ticks round the loser on the ping-pong's path, arriving from a new side, and lands on arrival | his own strikes, a different one each time: palm push, crescent kick, spinning back kick, rising palm, hammer-fist; `fin.turn` on each arrival |
-| 92 to 104 | he rises above the rival | a move up |
-| 104 | the gather; the contest opens | `fin.gather` |
-| 170 | the contest resolves | live |
+| 0 to 21 | the tell and the catch | the live tell cue; the catch |
+| 21 to 93 | **the flurry:** 3 to 5 strikes (4 shown here). Each follows a spiral flight of 18 ticks round the loser on the ping-pong's path, arriving from a new side, and lands on arrival | his own strikes, a different one each time: palm push, crescent kick, spinning back kick, rising palm, hammer-fist; `fin.turn` on each arrival |
+| 93 to 105 | he rises above the rival | the live rise cue |
+| 105 | the gather; the contest opens | `fin.gather` |
+| 171 | the contest resolves | live |
 | landed: 20 | **the blast:** one open hand thrust from the shoulder at point blank, the other open behind him for balance | `fin.blast` |
 | landed: after | the held pose as the smoke clears | `fin.after` |
 | survived | the rival breaks the hold and they separate | live |
 
-- **About 190 ticks to the blast,** 3.2 s.
+- **About 191 ticks to the blast,** 3.2 s. Durations are multiples of 3 ticks, as the live rows.
 - **How many strikes (proposal for Game Design):** 3 at Heated, 4 at Simmering, 5 at Boiling, so his heat shows in his finisher. Each extra strike adds 18 ticks.
 - **The sides** come from the terrain and where the loser is: in front, above, behind, below. Each flight goes round the loser and never through him, so the pair changes sides on purpose, as a dodge does.
 - **It needs curved flight,** the spiral on the rush. Until Encounter has it, each flight is two straight legs round the loser, which reads less well but never passes through him.

@@ -1,7 +1,8 @@
 {
  "schema": "combat-launch-pair/0-draft",
- "_about": "PARKED. What each fighter of the launch pair ships with in the next update, and what waits (../launch-pair-movesets.md). Counts are authored sketches. Game Design's launch-pair-plan.md sets the scope.",
+ "_about": "PARKED. What each fighter of the launch pair ships with in the next update, and what waits (../launch-pair-movesets.md). Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. Counts are authored sketches. Game Design's launch-pair-plan.md sets the scope. Checked against HEAD a56187a.",
  "posed": {
+  "_about": "poses in Animation's packs at HEAD a56187a (data/anim/waves and data/anim/poses.json), all parked or behind flags",
   "shared": {
    "poses.json": 103,
    "step3": 32,
@@ -11,41 +12,58 @@
    "intro1": 11,
    "laststand1": 15
   },
-  "antihero": {
+  "rival": {
    "wave1": 120,
-   "wave2": 62
+   "wave2": 62,
+   "rival1": 20,
+   "rival2": 9
   },
-  "protagonist": {}
+  "protagonist": {
+   "protag1": 126,
+   "protag2": 54,
+   "protag3": 8,
+   "protag4": 8
+  }
  },
- "antihero": {
+ "rival": {
   "ships": [
    {
     "piece": "his 34 strikes (wave 1)",
     "status": "posed",
     "sketches": 1,
-    "_note": "the body ram, redesigned"
+    "_note": "the body ram, redesigned",
+    "pack": "wave1 (the body ram re-posed in rival2)"
    },
    {
     "piece": "his 11 straight entries (wave 2)",
     "status": "posed",
-    "sketches": 0
+    "sketches": 0,
+    "pack": "wave2"
    },
    {
     "piece": "the barrage: six hands, the charged brace, the kiting turn (wave 6)",
-    "sketches": 9
+    "sketches": 9,
+    "status": "posed",
+    "pack": "rival1 (six hands, the channel, the kiting turn)"
    },
    {
     "piece": "energy kinds: rain, splitting shot",
     "sketches": 1,
-    "_note": "the rain's upward throw"
+    "_note": "the rain's upward throw",
+    "status": "posed",
+    "pack": "rival1 (the rain's throw)"
    },
    {
     "piece": "On the Chin",
-    "sketches": 6
+    "sketches": 6,
+    "status": "posed",
+    "pack": "rival1 (six poses)"
    },
    {
     "piece": "Blow for Blow (ships with the alchemy framework)",
-    "sketches": 3
+    "sketches": 3,
+    "status": "posed",
+    "pack": "rival1 (the brace); rival2 (the body hook, the rib shot)"
    },
    {
     "piece": "his base finisher, by hand",
@@ -54,7 +72,9 @@
      "fin.walk",
      "fin.stop",
      "fin.held"
-    ]
+    ],
+    "status": "posed",
+    "pack": "rival1"
    }
   ],
   "later": [
@@ -75,7 +95,18 @@
     "order": 2,
     "why": "his barrage in one press: five shards from one charged shot punish a late dodge"
    }
-  ]
+  ],
+  "glasses": {
+   "worn": true,
+   "rules": "docs/legal/glasses-rules.md",
+   "dependsOn": "nothing: no move, gate, reach or outcome reads them, and no piece touches them",
+   "glare": "render only, on cues that exist: the taunt, On the Chin's plant, a signature's wind-up, a Pride threshold, the seal break (a cracked lens). No beat is added for it",
+   "keptClear": [
+    "no piece pushes the glasses at the bridge or puts two fingers to the temple",
+    "no stance folds or steeples the hands before the face",
+    "the headbutt leads with the brow: glasses knocked askew or off by a hit are Legal's GO and Art's to draw"
+   ]
+  }
  },
  "protagonist": {
   "ownStrikes": [
@@ -169,23 +200,33 @@
   "ships": [
    {
     "piece": "8 own strikes",
-    "sketches": 8
+    "sketches": 8,
+    "status": "posed",
+    "pack": "protag1"
    },
    {
     "piece": "strike deltas that change silhouette",
-    "sketches": 12
+    "sketches": 12,
+    "status": "posed",
+    "pack": "protag1"
    },
    {
     "piece": "2 own entries and entry deltas",
-    "sketches": 8
+    "sketches": 8,
+    "status": "posed",
+    "pack": "protag2"
    },
    {
     "piece": "two hands of his own and his charged brace",
-    "sketches": 4
+    "sketches": 4,
+    "status": "posed",
+    "pack": "protag3"
    },
    {
     "piece": "energy kind: curving shot",
-    "sketches": 1
+    "sketches": 1,
+    "status": "posed",
+    "pack": "protag3"
    },
    {
     "piece": "his finisher, the flight version",
@@ -195,7 +236,9 @@
      "fin.gather",
      "fin.blast",
      "fin.after"
-    ]
+    ],
+    "status": "posed",
+    "pack": "protag4"
    }
   ],
   "later": [
@@ -280,394 +323,155 @@
   ]
  },
  "totals": {
-  "antihero": 23,
+  "rival": 23,
   "protagonist": 37,
   "both": 60
  },
  "finishers": {
-  "_about": "in the live finishers' form (data/combat/finishers.json): beats to the contest, then landed and survived; ticks from the finisher's start; the contest resolves 66 ticks after it opens, as live",
-  "antihero": {
-   "id": "antihero.verdict",
-   "kind": "finish by hand",
-   "beats": [
-    {
-     "tick": 0,
-     "op": "finisher",
-     "args": {
-      "w": "W"
-     }
-    },
-    {
-     "tick": 0,
-     "op": "cue",
-     "args": {
-      "cue": "finisher_tell",
-      "who": "W"
-     }
-    },
-    {
-     "tick": 0,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 300,
-      "dur": {
-       "ticks": 12
-      },
-      "side": "own"
-     }
-    },
-    {
-     "tick": 12,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "blast",
-      "o": {
-       "class": "blast",
-       "shape": "shard",
-       "count": "pride"
-      }
-     }
-    },
-    {
-     "tick": 30,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "blast",
-      "o": {
-       "class": "blast",
-       "shape": "shard",
-       "count": "pride"
-      }
-     }
-    },
-    {
-     "tick": 48,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "blast",
-      "o": {
-       "class": "blast",
-       "shape": "shard",
-       "count": "pride"
-      }
-     }
-    },
-    {
-     "tick": 66,
-     "op": "cue",
-     "args": {
-      "cue": "gives_way",
-      "who": "L"
-     }
-    },
-    {
-     "tick": 66,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 58,
-      "dur": {
-       "ticks": 40
-      },
-      "side": "own",
-      "gait": "walk"
-     }
-    },
-    {
-     "tick": 106,
-     "op": "contestOpen"
-    },
-    {
-     "tick": 172,
-     "op": "contest",
-     "args": {
-      "w": "W"
-     }
-    }
-   ],
-   "outcomes": {
-    "landed": [
-     {
-      "tick": 0,
-      "op": "cue",
-      "args": {
-       "cue": "last_look",
-       "who": "W",
-       "cam": "push_in"
-      }
-     },
-     {
-      "tick": 20,
-      "op": "finalBlow",
-      "args": {
-       "w": "W",
-       "slot": "ender",
-       "limb": "hand",
-       "launch": {
-        "mode": "planner_long"
-       }
-      }
-     },
-     {
-      "tick": 32,
-      "op": "cue",
-      "args": {
-       "cue": "held",
-       "who": "W"
-      }
-     }
-    ],
-    "survived": "as the live finishers: the hold breaks and they separate"
+  "_about": "Two rows in the live finishers' form (data/combat/finishers.json, combat.finishers/1), ready to sit in its 'finishers' list, with the select block that goes with them. Checked on a scratch copy of HEAD a56187a against tools/schemas/combat-finishers.schema.json. Durations are seconds in multiples of 3 ticks, as the live rows; the contest resolves 66 ticks after it opens",
+  "select": {
+   "byFighter": {
+    "PROTAGONIST": "protagonist",
+    "RIVAL": "rival"
    },
-   "ticksToLastBlow": 192,
-   "sketches": [
-    "fin.walk",
-    "fin.stop",
-    "fin.held"
-   ]
+   "_note": "the keys are roster ids (upper case by the schema's pattern): stand-ins for the folder names Simulation picks at the split"
   },
-  "protagonist": {
-   "id": "protagonist.flight",
-   "kind": "energy finisher",
-   "flurry": {
-    "strikes": [
-     3,
-     5
-    ],
-    "byHeat": {
-     "Heated": 3,
-     "Simmering": 4,
-     "Boiling": 5
+  "rows": [
+   {
+    "id": "rival",
+    "kind": "melee",
+    "fighter": "RIVAL",
+    "profile": "authored",
+    "name": {
+     "text": "The Verdict",
+     "placeholder": true,
+     "source": "data/combat/finishers.json shapes.antihero"
     },
-    "_byHeat": "proposal for Game Design",
-    "flightTicks": 18,
-    "path": "spiral, round the loser (wave 3's definition)",
-    "pool": [
+    "barks": {
+     "bark_landed": "finisher_landed",
+     "bark_survived": "finisher_survived"
+    },
+    "timeUnit": "tick",
+    "character": "The rival (feeds on collateral; Pride). He takes his distance, puts three volleys into the loser until he gives way, walks in unhurried and ends it by hand. No beam.",
+    "beats": [
+     {"tick": 0, "op": "finisher", "args": {"w": "W"}},
+     {"tick": 0, "op": "cue", "args": {"cue": "finisher_open", "who": "W", "cam": "freeze_low"}},
+     {"tick": 0, "op": "finRush", "args": {"w": "W", "off": 300, "dur": 0.2, "side": "own"}},
+     {"tick": 12, "op": "cue", "args": {"cue": "barrage", "who": "W", "volley": {"dmg": 25, "shape": "shard", "count": "pride"}}},
+     {"tick": 30, "op": "cue", "args": {"cue": "barrage", "who": "W", "volley": {"dmg": 25, "shape": "shard", "count": "pride"}}},
+     {"tick": 48, "op": "cue", "args": {"cue": "barrage", "who": "W", "volley": {"dmg": 25, "shape": "shard", "count": "pride"}}},
+     {"tick": 66, "op": "cue", "args": {"cue": "gives_way", "who": "L"}},
+     {"tick": 66, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.65, "side": "own", "gait": "walk"}},
+     {"tick": 106, "op": "contestOpen", "args": {"w": "W", "cue": "struggle", "struggle": "contest.struggle"}},
+     {"tick": 172, "op": "contest", "args": {"w": "W", "mode": "branch"}}
+    ],
+    "outcomes": {
+     "landed": [
+      {"tick": 0, "op": "cue", "args": {"cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed"}},
+      {"tick": 14, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.1, "side": "own"}},
+      {"tick": 20, "op": "finalBlow", "args": {"w": "W", "dmg": 60, "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 22}, "launch": {"mode": "planner_long", "force": 3000}, "slot": "ender", "limb": "hand"}}
+     ],
+     "survived": [
+      {"tick": 0, "op": "cue", "args": {"cue": "breaks_hold", "who": "L"}},
+      {"tick": 3, "op": "separate", "args": {"w": "W", "speed": 900}},
+      {"tick": 24, "op": "cue", "args": {"cue": "holds_on", "who": "L", "bark": "finisher_survived"}},
+      {"tick": 45, "op": "nop"}
+     ]
+    },
+    "bends": {
+     "_status": "documented, not active",
+     "pride": "the volley count rises with Pride",
+     "apex": "the walk becomes a long stillness and one blow",
+     "held": "after the blow he lowers the arm and turns half away: the winner's stand takes over (fin.held)"
+    },
+    "_runsToday": "every beat is a live op, so the row validates and plays as it stands. The three barrage beats are render cues with no damage until Encounter has a finisher volley (the volley arg is its input: 25 a volley, 75 before the contest); a strike beat cannot stand in, because a damaging strike places the striker at contact",
+    "_ticksToLastBlow": 192,
+    "_poses": [
+     "fin.walk",
+     "fin.stop",
+     "fin.held"
+    ]
+   },
+   {
+    "id": "protagonist",
+    "kind": "beam",
+    "fighter": "PROTAGONIST",
+    "profile": "authored",
+    "name": {
+     "text": "Everything",
+     "placeholder": true,
+     "source": "data/combat/finishers.json shapes.protagonist"
+    },
+    "barks": {
+     "bark_landed": "finisher_landed",
+     "bark_survived": "finisher_survived"
+    },
+    "timeUnit": "tick",
+    "character": "The Protagonist (pressured by collateral). He catches the loser, flies round him four times with a different blow from a new side each time, rises, and ends it with a one-hand blast at point-blank range, sent skyward and away from the people below.",
+    "beats": [
+     {"tick": 0, "op": "finisher", "args": {"w": "W"}},
+     {"tick": 0, "op": "cue", "args": {"cue": "finisher_open", "who": "W", "cam": "freeze_zoom"}},
+     {"tick": 0, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.35, "side": "own"}},
+     {"tick": 21, "op": "cue", "args": {"cue": "catch", "who": "W", "cam": "tight"}},
+     {"tick": 21, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.3, "side": "cross", "path": "spiral"}},
+     {"tick": 39, "op": "strike", "args": {"a": "W", "d": "L", "dmg": 25, "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.12}, "slot": "flurry"}},
+     {"tick": 39, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.3, "side": "cross", "path": "spiral"}},
+     {"tick": 57, "op": "strike", "args": {"a": "W", "d": "L", "dmg": 25, "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.12}, "slot": "flurry"}},
+     {"tick": 57, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.3, "side": "cross", "path": "spiral"}},
+     {"tick": 75, "op": "strike", "args": {"a": "W", "d": "L", "dmg": 25, "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.12}, "slot": "flurry"}},
+     {"tick": 75, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.3, "side": "cross", "path": "spiral"}},
+     {"tick": 93, "op": "strike", "args": {"a": "W", "d": "L", "dmg": 25, "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.16, "shake": 12}, "slot": "flurry"}},
+     {"tick": 93, "op": "cue", "args": {"cue": "ascend_charge", "who": "W", "cam": "wide_up"}},
+     {"tick": 105, "op": "contestOpen", "args": {"w": "W", "cue": "struggle", "struggle": "contest.struggle"}},
+     {"tick": 171, "op": "contest", "args": {"w": "W", "mode": "branch"}}
+    ],
+    "outcomes": {
+     "landed": [
+      {"tick": 0, "op": "cue", "args": {"cue": "last_look", "who": "W", "cam": "push_in", "bark": "finisher_landed"}},
+      {"tick": 14, "op": "finRush", "args": {"w": "W", "off": 58, "dur": 0.1, "side": "own"}},
+      {"tick": 20, "op": "finalBlow", "args": {"w": "W", "dmg": 60, "o": {"noParry": true, "ignoreStance": true, "big": true, "stop": 0.35, "shake": 20}, "launch": {"mode": "fixed", "ux": 0.15, "uy": 1.0, "force": 2800, "faceRelative": true}, "slot": "blast", "shape": "charged"}}
+     ],
+     "survived": [
+      {"tick": 0, "op": "cue", "args": {"cue": "breaks_hold", "who": "L"}},
+      {"tick": 3, "op": "separate", "args": {"w": "W", "speed": 900}},
+      {"tick": 24, "op": "cue", "args": {"cue": "holds_on", "who": "L", "bark": "finisher_survived"}},
+      {"tick": 45, "op": "nop"}
+     ]
+    },
+    "bends": {
+     "_status": "documented, not active",
+     "heat": "three flights when Heated, four when Simmering, five when Boiling (a proposal for Game Design)",
+     "populationBelow": "always skyward; no ground carve",
+     "curvedFlight": "each flight is wave 3's spiral round the loser once curved flight exists; a straight crossing until then"
+    },
+    "_runsToday": "every beat is a live op, so the row validates and plays as it stands: four straight crossings (side cross) with a blow at the end of each. The damage before the contest is 100 and the last blow 60, as the live kai finisher (30, 30, 40 and 60)",
+    "_ticksToBlast": 191,
+    "_flurryPool": [
      "strike.palm_push",
      "strike.crescent_kick",
      "strike.spinning_back_kick",
      "strike.rising_palm",
      "strike.hammer_fist"
     ],
-    "rule": "a different strike and a new side each time; never through the loser"
-   },
-   "beats": [
-    {
-     "tick": 0,
-     "op": "finisher",
-     "args": {
-      "w": "W"
-     }
-    },
-    {
-     "tick": 0,
-     "op": "cue",
-     "args": {
-      "cue": "finisher_tell",
-      "who": "W"
-     }
-    },
-    {
-     "tick": 0,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 58,
-      "dur": {
-       "ticks": 20
-      },
-      "side": "own"
-     }
-    },
-    {
-     "tick": 20,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 58,
-      "dur": {
-       "ticks": 18
-      },
-      "path": "spiral",
-      "side": "cross"
-     }
-    },
-    {
-     "tick": 38,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "flurry",
-      "o": {
-       "class": "none",
-       "big": true
-      }
-     }
-    },
-    {
-     "tick": 38,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 58,
-      "dur": {
-       "ticks": 18
-      },
-      "path": "spiral",
-      "side": "cross"
-     }
-    },
-    {
-     "tick": 56,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "flurry",
-      "o": {
-       "class": "none",
-       "big": true
-      }
-     }
-    },
-    {
-     "tick": 56,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 58,
-      "dur": {
-       "ticks": 18
-      },
-      "path": "spiral",
-      "side": "cross"
-     }
-    },
-    {
-     "tick": 74,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "flurry",
-      "o": {
-       "class": "none",
-       "big": true
-      }
-     }
-    },
-    {
-     "tick": 74,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 58,
-      "dur": {
-       "ticks": 18
-      },
-      "path": "spiral",
-      "side": "cross"
-     }
-    },
-    {
-     "tick": 92,
-     "op": "strike",
-     "args": {
-      "a": "W",
-      "d": "L",
-      "slot": "flurry",
-      "o": {
-       "class": "none",
-       "big": true
-      }
-     }
-    },
-    {
-     "tick": 92,
-     "op": "finRush",
-     "args": {
-      "w": "W",
-      "off": 120,
-      "dur": {
-       "ticks": 12
-      },
-      "rise": true
-     }
-    },
-    {
-     "tick": 104,
-     "op": "cue",
-     "args": {
-      "cue": "gather",
-      "who": "W"
-     }
-    },
-    {
-     "tick": 104,
-     "op": "contestOpen"
-    },
-    {
-     "tick": 170,
-     "op": "contest",
-     "args": {
-      "w": "W"
-     }
-    }
-   ],
-   "outcomes": {
-    "landed": [
-     {
-      "tick": 0,
-      "op": "cue",
-      "args": {
-       "cue": "last_look",
-       "who": "W",
-       "cam": "push_in"
-      }
-     },
-     {
-      "tick": 20,
-      "op": "finalBlow",
-      "args": {
-       "w": "W",
-       "slot": "blast",
-       "o": {
-        "class": "blast",
-        "shape": "charged"
-       },
-       "launch": {
-        "mode": "planner_long"
-       }
-      }
-     },
-     {
-      "tick": 32,
-      "op": "cue",
-      "args": {
-       "cue": "held",
-       "who": "W"
-      }
-     }
+    "_poses": [
+     "fin.turn",
+     "fin.gather",
+     "fin.blast",
+     "fin.after"
     ],
-    "survived": "as the live finishers"
-   },
-   "ticksToBlast": 190,
-   "needs": "curved flight; until then each flight is two straight legs round the loser",
-   "sketches": [
-    "fin.turn",
-    "fin.gather",
-    "fin.blast",
-    "fin.after"
-   ],
-   "_legal": "drawn the whole way, no vanish, no afterimage that hides him; one-hand blast, never a two-hand push from the chest, a sphere in a palm or hands at a hip; a local column, no pillar, no darkening sky, no mushroom cloud, no planet-scale sphere, no shouted name with it; Orb's scale 7 of 10; no roar"
-  }
+    "_legal": "drawn the whole way, no vanish, no afterimage that hides him; one-hand blast, never a two-hand push from the chest, a sphere in a palm or hands at a hip; a local column, no pillar, no darkening sky, no mushroom cloud, no planet-scale sphere, no shouted name with it; Orb's scale 7 of 10; no roar"
+   }
+  ],
+  "newArgs": {
+   "_about": "read by nobody today and ignored by the live ops; each is a hint for a later slice",
+   "cue.volley": "the rival's barrage beats: {dmg, shape, count} for Encounter's finisher volley",
+   "finRush.gait": "walk: Animation's walk-in instead of a dash",
+   "finRush.path": "spiral: wave 3's curved flight",
+   "strike.slot": "flurry: the strike piece is drawn from _flurryPool, a different one and a new side each time",
+   "finalBlow.slot, limb, shape": "the last blow's piece: an ender by hand, or a charged blast from one hand"
+  },
+  "newCues": [
+   "gives_way"
+  ]
  }
 }

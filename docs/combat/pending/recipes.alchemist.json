@@ -1,14 +1,14 @@
 {
  "schema": "combat.recipes/1",
  "_target": "data/combat/recipes.json",
- "_about": "PARKED: ready to become data/combat/recipes.json, but not moved. The pieces each of Game Design's recipes calls (docs/design/agency-pass.md section 2), per fighter. The rules and numbers quoted are Game Design's; the director's own numbers (the window, the flow's thresholds, the multipliers) belong in Encounter's data/director/alchemy.json.",
+ "_about": "PARKED: ready to become data/combat/recipes.json as it stands (drop _target), but not moved. The pieces each of Game Design's recipes calls (docs/design/agency-pass.md section 2), per fighter. Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. The rules and numbers quoted are Game Design's; the director's own numbers (the window, the flow's thresholds, the multipliers) belong in Encounter's data/director/alchemy.json. Checked against HEAD a56187a: every posed id is a strike of a wave manifest, and every blur step fills for both fighters.",
  "_status": {
   "live": "plays in live matches today. Nothing in these pools does yet: KAI and VORR still draw on the placeholder key sets, and go-live step 1 is a flag, off",
-  "posed": "posed in one of Animation's packs and parked: it plays when its fighter lands (wave 1 and rival2 for the Anti-hero, protag1 for the Protagonist)",
-  "waiting": "not posed yet"
+  "posed": "posed in one of Animation's packs and parked: it plays when its fighter lands (wave 1 and rival2 for the rival, protag1 for the Protagonist). The director may draw on posed and live pieces alike",
+  "waiting": "not posed yet: the director skips it"
  },
  "_counts": {
-  "antihero": {
+  "rival": {
    "pieces": 40,
    "posed": 36,
    "waiting": [
@@ -240,10 +240,29 @@
    "knock.bump",
    "knock.drift"
   ],
-  "_endings": "parked in templates.brawl.json; they land with Encounter's knock-back vector"
+  "_endings": "the looks are parked in templates.brawl.json. The knock-back itself is live: data/director/launch.json knockBack and the director's knockBack op, whose event kinds are slideShort, slideLong, bump and drift"
+ },
+ "showcase": {
+  "_about": "The flow's top ending (flow.at5): a showcase ender replaces the plain ender when a row's gates pass; with no row open, the launch keeps its panel and its extra wear on the plain ender. A row is open when its strike is the string's ender, the launch goes its way (sends) and, where given, there is clearAboveBh of open air above the pair. Rows are per fighter; waiting rows are skipped (their held moments are wave 7's sketches)",
+  "rival": [
+   {
+    "id": "showcase.overhead_hammer",
+    "strike": "strike.hammer",
+    "sends": "down",
+    "status": "waiting"
+   },
+   {
+    "id": "showcase.rising_spear",
+    "strike": "strike.spear_hand",
+    "sends": "up",
+    "clearAboveBh": 3,
+    "status": "waiting"
+   }
+  ],
+  "protagonist": []
  },
  "pools": {
-  "antihero": {
+  "rival": {
    "blur.base": [
     {
      "id": "strike.jab",

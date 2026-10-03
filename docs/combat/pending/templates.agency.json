@@ -1,6 +1,6 @@
 {
  "schema": "combat-agency/0-draft",
- "_about": "PARKED. The traded-blows set piece and the two charges at range, with the meeting in the middle. Not loaded, not hashed. Times in ticks. Rules quoted are Game Design's (docs/design/agency-pass.md sections 1 and 2); the staging follows Legal's twelve rules (docs/legal/agency-pass-screen.md). Our own staging throughout.",
+ "_about": "PARKED. The traded-blows set piece and the two charges at range, with the meeting in the middle. Not loaded, not hashed. Times in ticks. Rules quoted are Game Design's (docs/design/agency-pass.md sections 1 and 2); the staging follows Legal's twelve rules (docs/legal/agency-pass-screen.md). Our own staging throughout. Shared by both fighters (Animation's agency1 set); where a pose is the rival's own it says so. Checked against HEAD a56187a.",
  "blowForBlow": {
   "label": "Blow for Blow: an in-house label only, never a title, tag or logo; Narrative picks the player-facing name",
   "rules": {
@@ -112,7 +112,8 @@
    {
     "id": "bfb.brace",
     "look": "His own brace: both forearm plates drawn tight against his ribs, the lead shoulder rolled forward and the chin behind it, the spine upright. He gives ground on his heels and does not fold.",
-    "limits": "elbows bent inside 160 degrees; the rear thigh at most 45 degrees behind the hip; no arm straight back"
+    "limits": "elbows bent inside 160 degrees; the rear thigh at most 45 degrees behind the hip; no arm straight back",
+    "_fighter": "the rival's brace (rival1: rv.hold.bfb_brace); the Protagonist takes the blows in the shared computed reaction until his own brace is drawn"
    },
    {
     "id": "strike.body_hook",
@@ -161,9 +162,10 @@
  "ranged": {
   "_source": "Game Design, agency-pass.md section 1 (Orb's pick). A strike never exists at range",
   "bands": {
-   "close": "within 3 bh: strikes at once",
-   "mid": "3 to 12 bh: a short lunge of 20 ticks at most, then the wind-up; the stick picks the entry",
-   "far": "beyond 12 bh: tap to taunt, hold to charge"
+   "_live": "the band edges and the lunge are the director's: data/director/interrupts.json bands (closeBh 3, midBh 12.5, engageBh 2.5, lunge maxTicks 20). Not repeated here",
+   "close": "within closeBh: strikes at once",
+   "mid": "to midBh: a short lunge, then the wind-up; the stick picks the entry",
+   "far": "beyond midBh: tap to taunt, hold to charge. Today a far press flies in on a tap (bands.far), until the taunt and the held charge are built"
   },
   "midLunge": {
    "toward": [
@@ -189,7 +191,8 @@
     "taunt.dust_plate",
     "taunt.stillness"
    ],
-   "_note": "his taunt gestures at three quarters of their close length, played while he keeps flying; no beckoning"
+   "_note": "his taunt gestures at three quarters of their close length, played while he keeps flying; no beckoning",
+   "_fighter": "the pieces are the rival's taunts; the Protagonist's are not designed, so his far tap stays the fly-in"
   },
   "lightCharge": {
    "rules": {
@@ -236,7 +239,8 @@
     "committed": "only a dodge-cancel (15 ki) stops it",
     "blasts": "light blasts and volleys do half damage and do not stop him; a charged shot or a beam does",
     "arrival": "a charged heavy; landing clean, it earns a launch",
-    "ki": 4
+    "ki": 4,
+    "_live": "the shrug is live: data/director/interrupts.json blast.charge (shrugPower 1, shrugMul 0.5)"
    },
    "gather": "24 ticks: the charge pose, the forearm plates lighting",
    "flightPose": {
@@ -272,5 +276,6 @@
    ]
   },
   "legal": "the charges follow the dash rule: not both arms trailed straight back, not one fist punched ahead, and he is drawn the whole way with no vanish"
- }
+ },
+ "_target": "data/combat/agency.json (a new file, combat.agency/1), with Encounter's A6 and A7 and the far charges: after this update's four slices"
 }

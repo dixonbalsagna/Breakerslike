@@ -195,6 +195,7 @@ Nothing is live because KAI and VORR still draw on the placeholder key sets, and
 | `blurPatterns` | name to five `[limb, target]` pairs. Limb: hand, foot, elbow, knee, shoulder, head or own. Target: one of Animation's sockets |
 | `patternRule` | a string |
 | `lastPress` | `light` and `heavy`, each a list of ending ids |
-| `pools` | fighter to pool name to a list of `{id, status}`; `status` is live, posed or waiting |
+| `pools` | fighter to pool name to a list of `{id, status}`; `status` is live, posed or waiting. The fighter keys are the working ids `rival` and `protagonist` (2026-10-03; the first was `antihero`) |
+| `showcase` | new on 2026-10-03, optional: fighter to a list of `{id, strike, sends, clearAboveBh, status}`. The flow's top ending as data, for Encounter's slice 11: a row is open when its strike is the string's ender, the launch goes its way and, where given, that much air is clear above. The rival has two rows (the overhead hammer down, the rising spear up), both waiting on wave 7's sketches; the Protagonist has none yet |
 
 **Cross-checks for Tools:** the styles' `heaviesInFive` cover 0 to 5 with no overlap; every pool a style names exists for every fighter; every pool id is one of that fighter's pieces; every blur step can be filled from that fighter's lights; the `lastPress` ids exist in the templates once the endings land.

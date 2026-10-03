@@ -2,6 +2,8 @@
 
 Owner: Combat and Choreography. Date: 2026-10-02. Status: parked data. Nothing here is loaded or hashed, and no live data changed. The data is `templates.brawl.json` in this folder; the tags are in `moveset.antihero.m0.json`. Plan: `../alchemist-content.md` sections 3 and 4.
 
+**Against HEAD `a56187a` (2026-10-03).** The knock-back has landed in the director: its numbers are in `data/director/launch.json` (`knockBack`), the `knockBack` op (args `w`) and the `stagger` op (args `w`, `ticks`) are in `sim/director/exchange.gd`, and the `knockback` event names the four kinds. The data file is updated to match: the four knock endings are one live beat each and keep their looks, and the slide and drift ticks are the director's (18 and 20; the long slide is the skid). The level endings, the trade beats and the double slide are still new. Section 2 below stays as the description of the look. The file's target is a new `data/combat/brawl.json` (`apply-order.md`).
+
 **Why now.** Orb: "every brawl seems to end in a launch", and trades should be flashier. These pieces hold whatever questionnaire 14 answers. **Which one plays when is left out on purpose:** that is Game Design's recipe table. The recipe mapping, the charge, mash and the steered juggle wait for the questionnaire.
 
 ## 1. The two tags, on every existing piece
@@ -82,6 +84,6 @@ Neither needs a pose. The second needs the reaction-strength input Animation off
 | **World** | the slide on the feet as a state, with its trench by tier; the bump against an obstacle |
 | **Simulation** | the `knockback` event |
 | **Animation** | 5 sketches: the forearm check, the shin check, the light-clash recoil, the slide on the feet (high and low). All inside `docs/animation/joint-limits.md`: the slide's width comes from the front leg, since a thigh goes at most 45 degrees back |
-| **Tools** | a schema when this lands; 11 tempo names (`linkLoad` 6, `tradeHalf` 7, `checkHold` 4, `recoil` 6, `bind` 12, `shove` 6, `breakOff` 9, `advantage` 6, `slideShort` 18, `slideLong` 30, `drift` 20) |
+| **Tools** | a schema when this lands; 8 tempo names (`linkLoad` 6, `tradeHalf` 7, `checkHold` 4, `recoil` 6, `bind` 12, `shove` 6, `breakOff` 9, `advantage` 6); the slide and the drift are the director's numbers now |
 | **Legal** | the slide on the feet is not a landing on one knee and one fist |
 | **QA** | exchanges that end level, in a knock-back and in a launch, counted apart |
