@@ -85,7 +85,7 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-063 | Launch pair: Protagonist strikes, entries, identity | Combat | Low | GO; air roll never a spinning ball | Closed |
 | RL-064 | Launch pair: six On the Chin poses | Combat | Low | GO; not a flat cross, no head thrown back | Closed |
 | RL-065 | Launch pair: energy kinds per fighter | Combat | Low | GO | Closed |
-| RL-066 | Anti-hero glasses and glare (rules in advance) | Art, VFX | Low to Medium | GO on the rules in glasses-rules.md | Open until Art shows the frames |
+| RL-066 | Anti-hero glasses and glare (rules in advance) | Art, VFX | Low to Medium | GO on the rules; frames screened 2026-10-02: five GO, chamfer plates change or drop | Open until frame 3 is changed or dropped |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 

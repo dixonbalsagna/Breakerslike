@@ -34,3 +34,24 @@ Avoid the stock lines that go with the trope: "just as planned", "everything is 
 - If it is white-ish and meets a shouted form name or a break flash, it counts as mark 7.
 - It may sit beside **one** other mark, never two. In practice: no glare during a crouch-and-scream charge, a rubble ring or lightning.
 - A cracked lens or glasses knocked off by a hit are fine and count as no mark.
+
+## Screen of Art's frames (2026-10-02)
+
+I rendered and looked at `art/concepts/refine/anti-hero-glasses.svg` (six frames, the glare and glint, the gesture, the damage).
+
+| Frame | Verdict |
+|---|---|
+| 1 Cut hex | **GO** |
+| 2 Blade lenses | **GO** (the best fit for his blade language) |
+| 3 Chamfer plates | **CHANGE** or drop |
+| 4 Shard | **GO** |
+| 5 Slash cut | **GO** |
+| 6 Kite | **GO** |
+| Glare (one hard-edged pale-violet wedge, 0.4 s) and the sweeping glint | **GO** |
+| Gesture (nudge at the temple arm, back of the forearm plate) | **GO**, with one condition |
+| Battle damage, glasses knocked off | **GO** |
+
+- **Chamfer plates (3):** wide, near-rectangular lenses with clipped corners are the closest to a plain tinted rectangle, which the rules keep out. Keep it only if the chamfers are deep enough to read as plates and not a rectangle at 24 px. Otherwise drop it. The other five are clear.
+- **Glare:** fine as drawn. A pale violet wedge, a short hold, eyes hidden, no disc and no star. Keep the violet visible in colour at 72 px. In the 12 px greyscale band it must not read as pure white.
+- **Gesture:** the nudge at the temple arm and the back of the forearm plate follow the rules (no bridge finger, no folded hands). One condition: at the temple use an open hand, a knuckle or the back of the hand. Never two extended fingers to the forehead or temple (that is the franchise's teleport pose), and not a clenched-fist salute.
+- **Where the glare fires:** the staredown glint, the taunt, On the Chin's entry, a glint at the start of a signature's wind-up only, Pride thresholds, and the seal break with the cracked lens are all inside the stacking rule, since none is at a transformation break or with a shouted form name.
