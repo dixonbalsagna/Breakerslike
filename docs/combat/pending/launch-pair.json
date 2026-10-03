@@ -44,9 +44,17 @@
     "sketches": 6
    },
    {
-    "piece": "Blow for Blow, if the framework's power style ships",
+    "piece": "Blow for Blow (ships with the alchemy framework)",
+    "sketches": 3
+   },
+   {
+    "piece": "his base finisher, by hand",
     "sketches": 3,
-    "optional": true
+    "poses": [
+     "fin.walk",
+     "fin.stop",
+     "fin.held"
+    ]
    }
   ],
   "later": [
@@ -149,8 +157,14 @@
    }
   ],
   "ownEntries": [
-   "entry.air_roll",
-   "entry.cartwheel_step"
+   {
+    "id": "entry.air_roll",
+    "look": "a tumble that opens into the blow, limbs extended, at most one revolution, never a tight spinning ball (Legal)"
+   },
+   {
+    "id": "entry.cartwheel_step",
+    "look": "a cartwheel step on the ground into the blow"
+   }
   ],
   "ships": [
    {
@@ -172,6 +186,16 @@
    {
     "piece": "energy kind: curving shot",
     "sketches": 1
+   },
+   {
+    "piece": "his finisher, the flight version",
+    "sketches": 4,
+    "poses": [
+     "fin.turn",
+     "fin.gather",
+     "fin.blast",
+     "fin.after"
+    ]
    }
   ],
   "later": [
@@ -193,8 +217,7 @@
    }
   ],
   "openForOrb": [
-   "teleports: he is the natural owner; nothing here uses one",
-   "his finisher shape has teleport strikes and needs a flight version while teleports are on hold"
+   "teleports: he is the natural owner; nothing here uses one; a teleported flurry can be a finisher variant later"
   ]
  },
  "onTheChin": {
@@ -203,7 +226,8 @@
    {
     "beat": "plant",
     "ticks": 12,
-    "pose": "chin.plant"
+    "pose": "chin.plant",
+    "look": "arms open a little forward and slightly below shoulder height, not a flat cross; chin level; eyes open"
    },
    {
     "beat": "stance",
@@ -248,15 +272,402 @@
   ],
   "poses": 6,
   "limits": [
-   "arms out to the sides a little forward of the body line, never behind it",
+   "arms a little forward of the body line and slightly below shoulder height: never a flat cross, never behind the body",
+   "no head thrown back, no closed eyes",
    "the rear thigh at most 45 degrees back",
    "no scream, no aura",
    "the arms-open stance is his alone"
   ]
  },
  "totals": {
-  "antihero": 17,
-  "antiheroWithBlowForBlow": 20,
-  "protagonist": 33
+  "antihero": 23,
+  "protagonist": 37,
+  "both": 60
+ },
+ "finishers": {
+  "_about": "in the live finishers' form (data/combat/finishers.json): beats to the contest, then landed and survived; ticks from the finisher's start; the contest resolves 66 ticks after it opens, as live",
+  "antihero": {
+   "id": "antihero.verdict",
+   "kind": "finish by hand",
+   "beats": [
+    {
+     "tick": 0,
+     "op": "finisher",
+     "args": {
+      "w": "W"
+     }
+    },
+    {
+     "tick": 0,
+     "op": "cue",
+     "args": {
+      "cue": "finisher_tell",
+      "who": "W"
+     }
+    },
+    {
+     "tick": 0,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 300,
+      "dur": {
+       "ticks": 12
+      },
+      "side": "own"
+     }
+    },
+    {
+     "tick": 12,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "blast",
+      "o": {
+       "class": "blast",
+       "shape": "shard",
+       "count": "pride"
+      }
+     }
+    },
+    {
+     "tick": 30,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "blast",
+      "o": {
+       "class": "blast",
+       "shape": "shard",
+       "count": "pride"
+      }
+     }
+    },
+    {
+     "tick": 48,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "blast",
+      "o": {
+       "class": "blast",
+       "shape": "shard",
+       "count": "pride"
+      }
+     }
+    },
+    {
+     "tick": 66,
+     "op": "cue",
+     "args": {
+      "cue": "gives_way",
+      "who": "L"
+     }
+    },
+    {
+     "tick": 66,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 58,
+      "dur": {
+       "ticks": 40
+      },
+      "side": "own",
+      "gait": "walk"
+     }
+    },
+    {
+     "tick": 106,
+     "op": "contestOpen"
+    },
+    {
+     "tick": 172,
+     "op": "contest",
+     "args": {
+      "w": "W"
+     }
+    }
+   ],
+   "outcomes": {
+    "landed": [
+     {
+      "tick": 0,
+      "op": "cue",
+      "args": {
+       "cue": "last_look",
+       "who": "W",
+       "cam": "push_in"
+      }
+     },
+     {
+      "tick": 20,
+      "op": "finalBlow",
+      "args": {
+       "w": "W",
+       "slot": "ender",
+       "limb": "hand",
+       "launch": {
+        "mode": "planner_long"
+       }
+      }
+     },
+     {
+      "tick": 32,
+      "op": "cue",
+      "args": {
+       "cue": "held",
+       "who": "W"
+      }
+     }
+    ],
+    "survived": "as the live finishers: the hold breaks and they separate"
+   },
+   "ticksToLastBlow": 192,
+   "sketches": [
+    "fin.walk",
+    "fin.stop",
+    "fin.held"
+   ]
+  },
+  "protagonist": {
+   "id": "protagonist.flight",
+   "kind": "energy finisher",
+   "flurry": {
+    "strikes": [
+     3,
+     5
+    ],
+    "byHeat": {
+     "Heated": 3,
+     "Simmering": 4,
+     "Boiling": 5
+    },
+    "_byHeat": "proposal for Game Design",
+    "flightTicks": 18,
+    "path": "spiral, round the loser (wave 3's definition)",
+    "pool": [
+     "strike.palm_push",
+     "strike.crescent_kick",
+     "strike.spinning_back_kick",
+     "strike.rising_palm",
+     "strike.hammer_fist"
+    ],
+    "rule": "a different strike and a new side each time; never through the loser"
+   },
+   "beats": [
+    {
+     "tick": 0,
+     "op": "finisher",
+     "args": {
+      "w": "W"
+     }
+    },
+    {
+     "tick": 0,
+     "op": "cue",
+     "args": {
+      "cue": "finisher_tell",
+      "who": "W"
+     }
+    },
+    {
+     "tick": 0,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 58,
+      "dur": {
+       "ticks": 20
+      },
+      "side": "own"
+     }
+    },
+    {
+     "tick": 20,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 58,
+      "dur": {
+       "ticks": 18
+      },
+      "path": "spiral",
+      "side": "cross"
+     }
+    },
+    {
+     "tick": 38,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "flurry",
+      "o": {
+       "class": "none",
+       "big": true
+      }
+     }
+    },
+    {
+     "tick": 38,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 58,
+      "dur": {
+       "ticks": 18
+      },
+      "path": "spiral",
+      "side": "cross"
+     }
+    },
+    {
+     "tick": 56,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "flurry",
+      "o": {
+       "class": "none",
+       "big": true
+      }
+     }
+    },
+    {
+     "tick": 56,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 58,
+      "dur": {
+       "ticks": 18
+      },
+      "path": "spiral",
+      "side": "cross"
+     }
+    },
+    {
+     "tick": 74,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "flurry",
+      "o": {
+       "class": "none",
+       "big": true
+      }
+     }
+    },
+    {
+     "tick": 74,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 58,
+      "dur": {
+       "ticks": 18
+      },
+      "path": "spiral",
+      "side": "cross"
+     }
+    },
+    {
+     "tick": 92,
+     "op": "strike",
+     "args": {
+      "a": "W",
+      "d": "L",
+      "slot": "flurry",
+      "o": {
+       "class": "none",
+       "big": true
+      }
+     }
+    },
+    {
+     "tick": 92,
+     "op": "finRush",
+     "args": {
+      "w": "W",
+      "off": 120,
+      "dur": {
+       "ticks": 12
+      },
+      "rise": true
+     }
+    },
+    {
+     "tick": 104,
+     "op": "cue",
+     "args": {
+      "cue": "gather",
+      "who": "W"
+     }
+    },
+    {
+     "tick": 104,
+     "op": "contestOpen"
+    },
+    {
+     "tick": 170,
+     "op": "contest",
+     "args": {
+      "w": "W"
+     }
+    }
+   ],
+   "outcomes": {
+    "landed": [
+     {
+      "tick": 0,
+      "op": "cue",
+      "args": {
+       "cue": "last_look",
+       "who": "W",
+       "cam": "push_in"
+      }
+     },
+     {
+      "tick": 20,
+      "op": "finalBlow",
+      "args": {
+       "w": "W",
+       "slot": "blast",
+       "o": {
+        "class": "blast",
+        "shape": "charged"
+       },
+       "launch": {
+        "mode": "planner_long"
+       }
+      }
+     },
+     {
+      "tick": 32,
+      "op": "cue",
+      "args": {
+       "cue": "held",
+       "who": "W"
+      }
+     }
+    ],
+    "survived": "as the live finishers"
+   },
+   "ticksToBlast": 190,
+   "needs": "curved flight; until then each flight is two straight legs round the loser",
+   "sketches": [
+    "fin.turn",
+    "fin.gather",
+    "fin.blast",
+    "fin.after"
+   ],
+   "_legal": "drawn the whole way, no vanish, no afterimage that hides him; one-hand blast, never a two-hand push from the chest, a sphere in a palm or hands at a hip; a local column, no pillar, no darkening sky, no mushroom cloud, no planet-scale sphere, no shouted name with it; Orb's scale 7 of 10; no roar"
+  }
  }
 }

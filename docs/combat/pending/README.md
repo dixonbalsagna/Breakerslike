@@ -80,7 +80,7 @@ Merged, ready-to-apply copies of the three combat data files, prepared on 2026-1
 
 ## The launch pair (parked; Game Design sets the scope)
 
-`launch-pair.json`, with `../launch-pair-movesets.md`: what the Anti-hero and the Protagonist ship with in the next update (17 or 20 sketches for him, 33 for the Protagonist), each fighter's energy kinds, and On the Chin's beats.
+`launch-pair.json`, with `../launch-pair-movesets.md`: what the Anti-hero and the Protagonist ship with in the next update (23 sketches for him, 37 for the Protagonist), each fighter's energy kinds, On the Chin's beats, and one finisher each in the live finishers' form.
 
 ## Start here: `waves-index.md`
 
