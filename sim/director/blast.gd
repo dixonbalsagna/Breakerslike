@@ -76,6 +76,8 @@ static func press(S: SimState, A, weight: int) -> bool:
 		req |= (int(c.light.aiVolley) - 1) << 1   # the AI's light is a volley
 	DirInterrupt.si(A, DirInterrupt.BLAST_LEFT, int(w.windupTicks))
 	DirInterrupt.si(A, DirInterrupt.BLAST_REQ, req)
+	if weight == SimAct.HEAVY:
+		DirAlchemy.flash(A, SimAct.HEAVY, S.tick + int(c.heavy.chargeTicks) - 1)   # the planned flash of the full charge: a release is graded against it
 	SimFx.cue(S, A, "blast_charge" if weight == SimAct.HEAVY else "blast_windup", "", "")
 	return true
 

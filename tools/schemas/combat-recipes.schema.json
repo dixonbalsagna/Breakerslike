@@ -1,0 +1,449 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/combat-recipes",
+  "title": "combat.recipes/1",
+  "description": "data/combat/recipes.json: the alchemist recipes (docs/combat/alchemist-recipes.md section 5; docs/director/alchemy-plan.md): the three styles (blur, combo, power) with the read that picks the base or timed version and the pools they draw from, the flow and direction rules, the blur patterns, the last-press endings, and per fighter the pools of pieces with their status. The director's own numbers are not here (Encounter's data/director/alchemy.json). Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (the styles' heaviesInFive cover 0 to 5 with no overlap; every pool a style names exists for every fighter; every pool id is a strike of a wave manifest unless it is waiting, and no waiting id is in one; a blur step can be filled by a piece of the fighter's blur pools) are checked by tools/lib/xref-fight.js (recipes-*).",
+  "type": "object",
+  "required": [
+    "schema",
+    "styles",
+    "flow",
+    "direction",
+    "blurPatterns",
+    "patternRule",
+    "lastPress",
+    "pools"
+  ],
+  "properties": {
+    "schema": {
+      "const": "combat.recipes/1"
+    },
+    "styles": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "heaviesInFive",
+          "base",
+          "timed"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "blur",
+              "combo",
+              "power"
+            ]
+          },
+          "heaviesInFive": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "description": "The least and most heavies in a string of five this style takes."
+          },
+          "base": {
+            "type": "object",
+            "required": [
+              "read"
+            ],
+            "description": "The base version: the read that picks it and the pools it draws from.",
+            "properties": {
+              "read": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "towardPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "linkPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "accentPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lastPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ender": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "timed": {
+            "type": "object",
+            "required": [
+              "read"
+            ],
+            "description": "The timed version.",
+            "properties": {
+              "read": {
+                "type": "string",
+                "minLength": 1
+              },
+              "plays": {
+                "type": "string",
+                "minLength": 1
+              },
+              "endsIn": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "towardPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "linkPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "accentPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lastPool": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ender": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "direction": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "blurPatterns": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 5,
+        "maxItems": 5,
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "enum": [
+                "hand",
+                "foot",
+                "elbow",
+                "knee",
+                "shoulder",
+                "head",
+                "own"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z_]*$"
+            }
+          ],
+          "items": false,
+          "description": "[limb, target]: the limb (hand, foot, elbow, knee, shoulder, head or own) and a socket of data/anim/sockets.json."
+        },
+        "description": "Five steps."
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "patternRule": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lastPress": {
+      "type": "object",
+      "required": [
+        "light",
+        "heavy"
+      ],
+      "properties": {
+        "light": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+          },
+          "description": "Ending ids after a light last press."
+        },
+        "heavy": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+          },
+          "description": "Ending ids after a heavy last press."
+        }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "showcase": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "description": "Optional. Fighter to the showcase enders the flow's top ending can play: a row is open when its strike is the string's ender, the launch goes its way (sends) and, where given, clearAboveBh of open air is above the pair.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "strike",
+            "sends",
+            "status"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+            },
+            "strike": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+            },
+            "sends": {
+              "enum": [
+                "across",
+                "up",
+                "down",
+                "turned",
+                "behind"
+              ],
+              "description": "Where the launch must go for the row to open."
+            },
+            "clearAboveBh": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Open air above the pair, in body heights."
+            },
+            "status": {
+              "enum": [
+                "live",
+                "posed",
+                "waiting"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "pools": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "description": "Fighter to pool name to a list of {id, status}.",
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "propertyNames": {
+          "pattern": "^(_.*|[a-z][a-z0-9_]*([.][a-z0-9_]+)*)$"
+        },
+        "additionalProperties": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*([.][a-z0-9_]+)*$"
+              },
+              "status": {
+                "enum": [
+                  "live",
+                  "posed",
+                  "waiting"
+                ],
+                "description": "live: plays in live matches today; posed: posed in one of Animation's packs and parked; waiting: not posed yet."
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

@@ -3,8 +3,8 @@
 // fighter's style. Applies on top of slice 9. node apply.cjs <repo root>. Idempotent.
 // alchemy.gd and recipe.gd beside this script become sim/director/alchemy.gd (replaced) and sim/director/recipe.gd (new);
 // alchemy.json becomes data/director/alchemy.json (new).
-// Needs Combat's data/combat/recipes.json (Tools' docs/tools/pending/apply-recipes.cjs puts it there); without it the
-// slice runs with no pieces.
+// It also places Combat's parked recipes as data/combat/recipes.json (the EP's grant for that one file); Tools'
+// docs/tools/pending/apply-recipes.cjs and apply-slice10.cjs add the schemas. Without the file the slice runs with no pieces.
 const fs = require("fs"), path = require("path");
 const root = process.argv[2];
 if (!root) throw new Error("usage: node apply.cjs <repo root>");
@@ -31,6 +31,19 @@ function edit(rel, pairs) {
 for (const [src, dst] of [["alchemy.gd", "sim/director/alchemy.gd"], ["recipe.gd", "sim/director/recipe.gd"], ["alchemy.json", "data/director/alchemy.json"]]) {
   fs.copyFileSync(path.join(__dirname, src), path.join(root, dst));
   console.log(dst + ": written");
+}
+
+// ---------------------------------------------------------------- Combat's recipes become live data (the EP's grant: this one file)
+{
+  const src = path.join(root, "docs/combat/pending/recipes.alchemist.json");
+  const dst = path.join(root, "data/combat/recipes.json");
+  let t = fs.readFileSync(src, "utf8");
+  const line = /^[ \t]*"_target":[^\n]*\n/m;
+  if (!line.test(t)) throw new Error("recipes: no _target line in the parked draft");
+  t = t.replace(line, "");   // Combat: it becomes data/combat/recipes.json as it stands, without _target
+  JSON.parse(t);
+  fs.writeFileSync(dst, t);
+  console.log("data/combat/recipes.json: written from Combat's parked draft");
 }
 
 // ---------------------------------------------------------------- every planned strike is given its piece

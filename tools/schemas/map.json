@@ -19,6 +19,10 @@
       "schema": "combat-styles.schema.json"
     },
     {
+      "match": "data/combat/recipes.json",
+      "schema": "combat-recipes.schema.json"
+    },
+    {
       "match": "data/art/flashes.json",
       "schema": "art-flashes.schema.json"
     },
@@ -313,6 +317,10 @@
     {
       "match": "data/director/launch.json",
       "schema": "director-launch.schema.json"
+    },
+    {
+      "match": "data/director/alchemy.json",
+      "schema": "director-alchemy.schema.json"
     },
     {
       "match": "data/biomes/settlements.json",

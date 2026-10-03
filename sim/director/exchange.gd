@@ -265,6 +265,7 @@ static func _start(S: SimState, A, kind: String) -> int:
 	planStale = 0
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "sig" if kind == "sig" else "melee")
+	DirRecipe.dress(S, ex)   # the alchemist: each strike of the plan takes a piece from the pool its fighter's style calls
 	var stanceLabel: String = DirData.defLabel if DirData.defLabel != "" else ("CHARGING" if dState == "charging" else STN[int(D.stance)])   # step 2b: NEUTRAL too
 	SimEvents.feed(S, A.name + " " + kind.to_upper() + " vs " + stanceLabel, ex.tag + ("  (ambush)" if A.ambush else ""))
 	SimFx.attack(S, A, D, kind, stanceLabel, ex.tag, A.ambush)
@@ -424,6 +425,7 @@ static func chain(S: SimState, ex) -> void:
 	DirData.planChain(ex)
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "chain")
+	DirRecipe.dress(S, ex)   # the link's strikes take their pieces
 	DirInterrupt.onChainLink(S, ex)   # step 3: the defender's burst at its link (the AI, the Simple layout's autoBurst)
 
 
@@ -452,6 +454,7 @@ static func _blurEnder(S: SimState, ex) -> void:
 	DirData.planChain(ex)
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "chain")
+	DirRecipe.dress(S, ex, true)   # the blur's own ender takes its piece
 
 
 static func endEx(S: SimState, ex) -> void:

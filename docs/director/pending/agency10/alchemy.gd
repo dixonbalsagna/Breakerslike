@@ -3,7 +3,8 @@ class_name DirAlchemy
 ## press of each fighter is kept with what it carried: weight, family, direction, tilt, when it was let go, its beat (the
 ## distance to the nearest blow contact of the running exchange) and its charge's flash. Controls' classifier
 ## (SimPressRead) reads the log: holding, tapping in time, mashing or tapping; perfect, good or off; a steady mash; a
-## release on the flash. The director's own rhythm tag on each press (held, mashed, timed) is set from that read.
+## release on the flash. That read is recorded with each press (READ). The rhythm tag on each press (held, mashed,
+## timed) and the flow still follow the director's own rules; they move onto the read with the timing upgrades (A3).
 ##
 ## The log lives in the director's per-fighter integers (f.act.dirI), after DirInterrupt's: a ring of the last RING
 ## presses (packed presses, their ticks, their release ticks, beats and flashes), the count of presses, the last live
@@ -17,6 +18,8 @@ const WINDOW: int = 5                        # the alchemist's window: the last 
 const LIFE: int = 90                         # ticks a press stays in the window
 const TILT_DEAD: float = 0.3                 # the stick inside this is no tilt
 const BEAT_REACH: int = 12                   # a blow's contact counts as a press's beat this many ticks ahead or behind
+const MASH_TICKS: int = 20                   # three presses inside this many ticks are a mash (the tag; see log)
+const TIMED_TICKS: int = 4                   # a press within this many ticks of one of his own blows landing is timed (the tag)
 const P0: int = DirInterrupt.N               # the ring of packed presses ...
 const T0: int = P0 + RING                    # ... the ticks they arrived on ...
 const COUNT: int = P0 + 2 * RING             # ... and how many presses he has made
@@ -49,6 +52,19 @@ static func _size(f) -> void:
 		f.act.dirI.resize(SIZE)
 
 
+## True when one of f's own blows lands within TIMED_TICKS of now (the beat list knows every contact tick).
+static func _timed(S: SimState, f) -> bool:
+	var ex = S.dirS.ex
+	if ex == null or (f != ex.A and f != ex.D):
+		return false
+	var role: String = "A" if f == ex.A else "D"
+	for b in ex.beats:
+		if (b.op == "strike" and b.args.a == role) or (b.op == "chainStrike" and role == "A"):
+			if absf(b.t - ex.t) * DirData.TICKS_PER_SEC <= float(TIMED_TICKS) + 0.5:
+				return true
+	return false
+
+
 ## The freeze a press or a release that arrives now was made in: the frozen ticks since the last live tick.
 static func _freeze(S: SimState, f) -> int:
 	var last: int = f.act.dirI[LIVE_AT]
@@ -74,6 +90,11 @@ static func _blows(S: SimState, f, at: int) -> Array:
 		if h != DirInterrupt.NEVER and at - h >= 0 and at - h <= BEAT_REACH:
 			out.append(h)
 	return out
+
+
+## The tick press number k (counted from his first) was made on: the tick it arrived, less the freeze it was made in.
+static func _down(f, k: int) -> int:
+	return f.act.dirI[T0 + k % RING] - ((f.act.dirI[P0 + k % RING] >> FREEZE_SHIFT) & 15)
 
 
 ## A press: weight (SimAct.LIGHT or HEAVY; a signature is not an ingredient), family (0 physical, 1 energy), and the stick.
@@ -104,13 +125,17 @@ static func log(S: SimState, f, weight: int, family: int) -> void:
 	f.act.dirI[COUNT] = n + 1
 	# Controls' read of the log, with this press in it.
 	var c: Dictionary = read(S, f)
-	var timed: bool = (beat != SimPressRead.NO_BEAT and SimPressRead.grade_of(beat) == "perfect") or (String(c.style) == "mash" and c.steady)
+	# The tags and the flow keep the director's own rules in this slice: timed is one of his own blows landing within
+	# TIMED_TICKS of the press, and mashed is three presses inside MASH_TICKS. Controls' read is recorded beside them
+	# (READ) and takes the tags over with the timing upgrades (alchemy-plan.md A3).
+	var timed: bool = _timed(S, f)
+	var mashing: bool = n >= 2 and S.tick - f.act.dirI[T0 + (n - 2) % RING] <= MASH_TICKS
 	f.act.dirI[READ] = maxi(0, STYLES.find(String(c.style))) | (maxi(0, TIMINGS.find(String(c.timing))) << 3) | ((1 if c.steady else 0) << 5) | (mini(int(c.streak), 7) << 6)
 	# The flow count (agency-pass.md section 2): a timed press adds 1, up to FLOW_MAX; a press off the beat sets it back
 	# to 0 (and so do FLOW_LIFE ticks without a press: tick).
 	if DirInterrupt.on():
 		SimAct.setFlow(S, f, mini(FLOW_MAX, f.act.flow + 1) if timed else 0)
-	var rhythm: int = TIMED if timed else (MASHED if String(c.style) == "mash" else PLAIN)
+	var rhythm: int = TIMED if timed else (MASHED if mashing else PLAIN)
 	# Launch intent: a human's is his stick (any direction past the dead zone). The AI's stick is its flight path, so its
 	# intent is a number: the chance its heavy is thrown to launch (ai.json launchIntent), one draw per heavy press.
 	var intent: bool = tilt != 0

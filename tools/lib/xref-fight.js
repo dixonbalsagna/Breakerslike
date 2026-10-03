@@ -1122,6 +1122,93 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(shotsPl) && isObj(shotsPl.kinds) && isObj(plv.kinds)) for (const k of Object.keys(shotsPl.kinds)) if (!k.startsWith('_') && !(k in plv.kinds)) err(PL, '/kinds', 'pairlive-kind', `shot kind "${k}" of data/fight/shots.json has no energy role in kinds`, 'warning');
   }
 
+  // ---- combat recipes: the styles cover the heavies, the pools exist, the pieces are real, the blur steps can be filled ----
+  const rec = get('data/combat/recipes.json');
+  if (isObj(rec)) {
+    const RC = 'data/combat/recipes.json';
+    const styles = Array.isArray(rec.styles) ? rec.styles : [];
+    const cover = new Array(6).fill(0);
+    styles.forEach((s, i) => {
+      if (!isObj(s) || !Array.isArray(s.heaviesInFive) || s.heaviesInFive.length !== 2) return;
+      const [lo, hi] = s.heaviesInFive;
+      if (!Number.isInteger(lo) || !Number.isInteger(hi)) return;
+      if (lo > hi) err(RC, `/styles/${i}/heaviesInFive`, 'recipes-heavies', `heaviesInFive runs from ${lo} down to ${hi}`);
+      else for (let k = lo; k <= hi && k <= 5; k++) if (k >= 0) cover[k]++;
+    });
+    if (styles.length && styles.every((s) => isObj(s) && Array.isArray(s.heaviesInFive))) for (let k = 0; k <= 5; k++) { if (cover[k] === 0) err(RC, '/styles', 'recipes-heavies', `no style takes a string of five with ${k} heavies`); else if (cover[k] > 1) err(RC, '/styles', 'recipes-heavies', `${cover[k]} styles take a string of five with ${k} heavies`); }
+    // the pieces: every strike of every wave manifest, by its Combat id
+    const pieces = new Map();
+    for (const rel of docsFor(/^data\/anim\/waves\/[^/]+\.manifest\.json$/)) { const md = get(rel); if (isObj(md) && Array.isArray(md.strikes)) for (const s of md.strikes) if (isObj(s) && typeof s.combat === 'string') { if (!pieces.has(s.combat)) pieces.set(s.combat, []); pieces.get(s.combat).push(s); } }
+    const pools = isObj(rec.pools) ? rec.pools : {};
+    const fighters = Object.keys(pools).filter((k) => !k.startsWith('_'));
+    const named = new Set(); styles.forEach((s) => { if (isObj(s)) for (const v of ['base', 'timed']) if (isObj(s[v])) for (const k of ['pool', 'towardPool', 'linkPool', 'accentPool', 'lastPool', 'ender']) if (typeof s[v][k] === 'string') named.add(s[v][k]); });
+    for (const fid of fighters) {
+      const fp = pools[fid];
+      if (!isObj(fp)) continue;
+      for (const n of named) if (!(n in fp)) err(RC, `/pools/${esc(fid)}`, 'recipes-pool', `fighter "${fid}" has no pool "${n}", which a style names`);
+      for (const [pn, list] of Object.entries(fp)) {
+        if (pn.startsWith('_') || !Array.isArray(list)) continue;
+        const seen = new Set();
+        list.forEach((e, i) => {
+          if (!isObj(e) || typeof e.id !== 'string') return;
+          const at = `/pools/${esc(fid)}/${esc(pn)}/${i}`;
+          if (seen.has(e.id)) err(RC, `${at}/id`, 'recipes-piece', `"${e.id}" is in pool "${pn}" twice`); else seen.add(e.id);
+          if (pieces.size && e.status === 'posed' && !pieces.has(e.id)) err(RC, `${at}/id`, 'recipes-piece', `"${e.id}" is posed but is no strike of any wave manifest`);
+          if (pieces.size && e.status === 'waiting' && pieces.has(e.id)) err(RC, `${at}/status`, 'recipes-piece', `"${e.id}" is posed in a wave manifest, so it is not waiting`, 'warning');
+        });
+      }
+    }
+    // the showcase rows: the fighter has pools, the strike is one of its pieces, no id twice
+    const sc = isObj(rec.showcase) ? rec.showcase : {};
+    const scIds = new Set();
+    for (const [fid, rows] of Object.entries(sc)) {
+      if (fid.startsWith('_') || !Array.isArray(rows)) continue;
+      if (!fighters.includes(fid)) { err(RC, `/showcase/${esc(fid)}`, 'recipes-showcase', `showcase rows for "${fid}", who has no pools`); continue; }
+      const mine = new Map(); for (const list of Object.values(pools[fid])) if (Array.isArray(list)) for (const e of list) if (isObj(e) && typeof e.id === 'string') mine.set(e.id, e);
+      rows.forEach((r, i) => {
+        if (!isObj(r)) return;
+        const at = `/showcase/${esc(fid)}/${i}`;
+        if (typeof r.id === 'string') { if (scIds.has(r.id)) err(RC, `${at}/id`, 'recipes-showcase', `showcase id "${r.id}" is used twice`); else scIds.add(r.id); }
+        if (typeof r.strike === 'string' && !mine.has(r.strike)) err(RC, `${at}/strike`, 'recipes-showcase', `strike "${r.strike}" is in none of ${fid}'s pools`);
+        else if (typeof r.strike === 'string' && r.status !== 'waiting' && mine.get(r.strike).status === 'waiting') err(RC, `${at}/status`, 'recipes-showcase', `the row is ${r.status} but its strike "${r.strike}" is waiting in ${fid}'s pools`, 'warning');
+      });
+    }
+    // a blur step [limb, target] can be filled by a posed piece of the fighter's blur pools
+    const sockE = get('data/anim/sockets.json');
+    const regsE = isObj(sockE) && isObj(sockE.regions) ? Object.keys(sockE.regions).filter((k) => !k.startsWith('_')) : [];
+    const bp = isObj(rec.blurPatterns) ? rec.blurPatterns : {};
+    for (const [pname, steps] of Object.entries(bp)) {
+      if (pname.startsWith('_') || !Array.isArray(steps)) continue;
+      steps.forEach((st, si) => {
+        if (!Array.isArray(st) || st.length !== 2) return;
+        if (regsE.length && typeof st[1] === 'string' && !regsE.includes(st[1])) err(RC, `/blurPatterns/${esc(pname)}/${si}/1`, 'recipes-blur', `target "${st[1]}" is not a region in sockets.json (${regsE.join(', ')})`);
+        for (const fid of fighters) {
+          const fp = pools[fid];
+          const cand = [].concat(isObj(fp) && Array.isArray(fp['blur.base']) ? fp['blur.base'] : [], isObj(fp) && Array.isArray(fp['blur.toward']) ? fp['blur.toward'] : []).filter((e) => isObj(e) && e.status !== 'waiting');
+          const ok = cand.some((e) => (pieces.get(e.id) || []).some((s) => (st[0] === 'own' || String(s.limb).replace(/_[lr]$/, '') === st[0]) && s.target === st[1]));
+          if (pieces.size && cand.length && !ok) err(RC, `/blurPatterns/${esc(pname)}/${si}`, 'recipes-blur', `step ${si + 1} [${st[0]}, ${st[1]}] has no light of fighter "${fid}" in blur.base or blur.toward to fill it`);
+        }
+      });
+    }
+  }
+
+  // ---- director alchemy: the fighters are roster ids and draw on pools of the recipes ----
+  const alch = get('data/director/alchemy.json');
+  if (isObj(alch) && isObj(alch.recipes) && isObj(alch.recipes.fighters)) {
+    const AL = 'data/director/alchemy.json';
+    const rosterAl = get('data/fighters/roster.json');
+    const rosterAlIds = Array.isArray(rosterAl) ? rosterAl : isObj(rosterAl) && Array.isArray(rosterAl.order) ? rosterAl.order : null;
+    const recAl = get('data/combat/recipes.json');
+    const poolKeys = isObj(recAl) && isObj(recAl.pools) ? Object.keys(recAl.pools).filter((k) => !k.startsWith('_')) : null;
+    const map = alch.recipes.fighters;
+    for (const [rid, pool] of Object.entries(map)) {
+      if (rid.startsWith('_')) continue;
+      if (rosterAlIds && !rosterAlIds.includes(rid)) err(AL, `/recipes/fighters/${esc(rid)}`, 'alchemy-fighter', `"${rid}" is not in the roster (${rosterAlIds.join(', ')})`);
+      if (poolKeys && typeof pool === 'string' && !poolKeys.includes(pool)) err(AL, `/recipes/fighters/${esc(rid)}`, 'alchemy-pool', `"${rid}" draws on pool "${pool}", which is not a key of data/combat/recipes.json pools (${poolKeys.join(', ')})`);
+    }
+    if (rosterAlIds && poolKeys) for (const rid of rosterAlIds) if (typeof rid === 'string' && !(rid in map) && !poolKeys.includes(rid.toLowerCase())) err(AL, '/recipes/fighters', 'alchemy-pool', `roster id "${rid}" has no entry here and no pool "${rid.toLowerCase()}" in data/combat/recipes.json, so he gets no pieces`, 'warning');
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

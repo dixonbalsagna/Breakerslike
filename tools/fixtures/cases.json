@@ -46490,6 +46490,1331 @@
         }
       ],
       "expect": null
+    },
+    {
+      "id": "combat-recipes-live-valid",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/schema": "combat.recipes/1"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-key-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/pools"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "combat-recipes-schema-version",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/schema": "combat.recipes/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "combat-recipes-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "combat-recipes-underscore-key-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-styles-length",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/styles"
+      }
+    },
+    {
+      "id": "combat-recipes-style-id-enum",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/0/id": "burst"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/styles/0/id"
+      }
+    },
+    {
+      "id": "combat-recipes-style-key-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/styles/0/timed"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/styles/0"
+      }
+    },
+    {
+      "id": "combat-recipes-style-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/0/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/styles/0/extra"
+      }
+    },
+    {
+      "id": "combat-recipes-heavies-length",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/1/heaviesInFive": [
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/styles/1/heaviesInFive"
+      }
+    },
+    {
+      "id": "combat-recipes-heavies-range",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/1/heaviesInFive": [
+              1,
+              6
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/styles/1/heaviesInFive/1"
+      }
+    },
+    {
+      "id": "combat-recipes-heavies-integer",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/1/heaviesInFive": [
+              1,
+              2.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/styles/1/heaviesInFive/1"
+      }
+    },
+    {
+      "id": "combat-recipes-heavies-inverted",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/1/heaviesInFive": [
+              3,
+              1
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-heavies",
+        "pointer": "/styles/1/heaviesInFive"
+      }
+    },
+    {
+      "id": "combat-recipes-heavies-gap",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/1/heaviesInFive": [
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-heavies",
+        "pointer": "/styles"
+      }
+    },
+    {
+      "id": "combat-recipes-heavies-overlap",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/2/heaviesInFive": [
+              3,
+              5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-heavies",
+        "pointer": "/styles"
+      }
+    },
+    {
+      "id": "combat-recipes-version-read-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/styles/0/base/read"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/styles/0/base"
+      }
+    },
+    {
+      "id": "combat-recipes-version-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/0/base/mix": "x"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/styles/0/base/mix"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-name-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/0/base/pool": "Blur Base"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "anyOf",
+        "pointer": "/styles/0/base/pool"
+      }
+    },
+    {
+      "id": "combat-recipes-ender-null-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/0/base/ender": null
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-pool-not-for-fighter",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/styles/1/base/linkPool": "combo.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pool",
+        "pointer": "/pools/rival"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-optional-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/showcase"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-showcase-fighter-type",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival": "hammer"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/showcase/rival"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-empty-list-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival": []
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-showcase-row-key-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/showcase/rival/0/sends"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/showcase/rival/0"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-row-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/weight": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/showcase/rival/0/weight"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-sends-enum",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/sends": "sideways"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/showcase/rival/0/sends"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-status-enum",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/status": "ready"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/showcase/rival/0/status"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-id-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/id": "Overhead Hammer"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/showcase/rival/0/id"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-clear-zero",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/1/clearAboveBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/showcase/rival/1/clearAboveBh"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-clear-optional-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/showcase/rival/1/clearAboveBh"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-showcase-note-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-showcase-id-twice",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/1/id": "showcase.overhead_hammer"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-showcase",
+        "pointer": "/showcase/rival/1/id"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-fighter-without-pools",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/nobody": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-showcase",
+        "pointer": "/showcase/nobody"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-strike-not-a-piece",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/strike": "strike.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-showcase",
+        "pointer": "/showcase/rival/0/strike"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-posed-row-on-waiting-strike-warns",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/strike": "strike.tail_jab",
+            "/showcase/rival/0/status": "posed"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-showcase",
+        "pointer": "/showcase/rival/0/status"
+      }
+    },
+    {
+      "id": "combat-recipes-showcase-waiting-row-on-waiting-strike-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/strike": "strike.tail_jab"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-flow-value-type",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/flow/under3": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/flow/under3"
+      }
+    },
+    {
+      "id": "combat-recipes-flow-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/flow": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/flow"
+      }
+    },
+    {
+      "id": "combat-recipes-direction-value-type",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/direction/toward": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/direction/toward"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-length",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder": [
+              [
+                "hand",
+                "gut"
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/blurPatterns/ladder"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-limb-enum",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder/0/0": "tail"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/blurPatterns/ladder/0/0"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-step-length",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder/0": [
+              "hand"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/blurPatterns/ladder/0"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-target-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder/0/1": "Gut"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/blurPatterns/ladder/0/1"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-target-not-a-socket",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder/0/1": "tail"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-blur",
+        "pointer": "/blurPatterns/ladder/0/1"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-own-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder/0/0": "own"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-pattern-name-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/Bad Name": [
+              [
+                "hand",
+                "gut"
+              ],
+              [
+                "hand",
+                "gut"
+              ],
+              [
+                "hand",
+                "gut"
+              ],
+              [
+                "hand",
+                "gut"
+              ],
+              [
+                "hand",
+                "gut"
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/blurPatterns/Bad Name"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-step-unfillable",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder/0": [
+              "shoulder",
+              "jaw"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-blur",
+        "pointer": "/blurPatterns/ladder/0"
+      }
+    },
+    {
+      "id": "combat-recipes-pattern-rule-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternRule": ""
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minLength",
+        "pointer": "/patternRule"
+      }
+    },
+    {
+      "id": "combat-recipes-last-press-key-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/lastPress/heavy"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/lastPress"
+      }
+    },
+    {
+      "id": "combat-recipes-last-press-duplicate",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/lastPress/light": [
+              "level.shove_off",
+              "level.shove_off"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/lastPress/light/1"
+      }
+    },
+    {
+      "id": "combat-recipes-last-press-id-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/lastPress/light": [
+              "Level Shove"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/lastPress/light/0"
+      }
+    },
+    {
+      "id": "combat-recipes-pools-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/pools"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-status-enum",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/0/status": "ready"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/pools/protagonist/power/0/status"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-entry-key-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/0": {
+              "id": "strike.uppercut"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/pools/protagonist/power/0"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-entry-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/0/weight": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/pools/protagonist/power/0/weight"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/pools/protagonist/power"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-missing-for-fighter",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/pools/protagonist/power.last"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pool",
+        "pointer": "/pools/protagonist"
+      }
+    },
+    {
+      "id": "combat-recipes-pool-id-twice",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/1/id": "strike.uppercut"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-piece",
+        "pointer": "/pools/protagonist/power/1/id"
+      }
+    },
+    {
+      "id": "combat-recipes-posed-piece-not-a-strike",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/0/id": "strike.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-piece",
+        "pointer": "/pools/protagonist/power/0/id"
+      }
+    },
+    {
+      "id": "combat-recipes-waiting-piece-unknown-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/0": {
+              "id": "strike.nowhere",
+              "status": "waiting"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-waiting-piece-is-posed-warns",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pools/protagonist/power/0/status": "waiting"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-piece",
+        "pointer": "/pools/protagonist/power/0/status"
+      }
+    },
+    {
+      "id": "director-alchemy-live-valid",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/enabled": true
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-key-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/recipes"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-alchemy-schema-version",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/schema": "director.alchemy/2"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/schema"
+      }
+    },
+    {
+      "id": "director-alchemy-unknown-key",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/extra"
+      }
+    },
+    {
+      "id": "director-alchemy-underscore-key-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-recipes-key-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/recipes/enabled"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/recipes"
+      }
+    },
+    {
+      "id": "director-alchemy-recipes-fighters-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/recipes/fighters"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/recipes"
+      }
+    },
+    {
+      "id": "director-alchemy-recipes-unknown-key",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/recipes/extra"
+      }
+    },
+    {
+      "id": "director-alchemy-recipes-note-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-enabled-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/enabled": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/recipes/enabled"
+      }
+    },
+    {
+      "id": "director-alchemy-enabled-off-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/enabled": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-fighters-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters": [
+              "rival"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/recipes/fighters"
+      }
+    },
+    {
+      "id": "director-alchemy-fighters-empty",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/recipes/fighters"
+      }
+    },
+    {
+      "id": "director-alchemy-fighter-key-shape",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/hero": "rival"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/recipes/fighters/hero"
+      }
+    },
+    {
+      "id": "director-alchemy-fighter-value-shape",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/FIXTURE_HERO": "Rival"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/recipes/fighters/FIXTURE_HERO"
+      }
+    },
+    {
+      "id": "director-alchemy-fighter-value-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/FIXTURE_HERO": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/recipes/fighters/FIXTURE_HERO"
+      }
+    },
+    {
+      "id": "director-alchemy-fighters-note-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/_why": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-fighter-not-in-roster",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/NOBODY": "rival"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:alchemy-fighter",
+        "pointer": "/recipes/fighters/NOBODY"
+      }
+    },
+    {
+      "id": "director-alchemy-fighter-pool-unknown",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/FIXTURE_HERO": "nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:alchemy-pool",
+        "pointer": "/recipes/fighters/FIXTURE_HERO"
+      }
+    },
+    {
+      "id": "director-alchemy-fighters-share-a-pool-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/recipes/fighters/FIXTURE_HERO": "rival"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-roster-id-unlisted-warns",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/recipes/fighters/FIXTURE_VILLAIN"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:alchemy-pool",
+        "pointer": "/recipes/fighters"
+      }
     }
   ],
   "text": [

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/director-alchemy",
+  "title": "director.alchemy/1",
+  "description": "data/director/alchemy.json: the fight alchemist's switches (sim/director/alchemy.gd, recipe.gd; docs/director/alchemy-plan.md): whether strikes are given a piece, and which pool of data/combat/recipes.json each roster id draws on. The press log's own numbers are Controls' (data/input/timing.json) and the pieces are Combat's (data/combat/recipes.json). Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every fighters key is a roster id; every value is a key of the recipes pools; a roster id with no entry and no pool of its lower-case id is a warning) are checked by tools/lib/xref-fight.js (alchemy-*).",
+  "type": "object",
+  "required": [
+    "schema",
+    "recipes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "director.alchemy/1"
+    },
+    "recipes": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "fighters"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "true: every strike the director plans is given a piece (args.piece on its beat) from the pool its fighter's style calls; false: strikes carry no piece."
+        },
+        "fighters": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^(_.*|[A-Z][A-Z0-9_]*)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "The key of data/combat/recipes.json pools this roster id draws on."
+          },
+          "patternProperties": {
+            "^_": true
+          },
+          "description": "Roster id to the key of data/combat/recipes.json pools (a fighter not listed uses his id in lower case)."
+        }
+      },
+      "description": "The recipe layer.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

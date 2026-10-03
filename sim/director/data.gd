@@ -34,6 +34,7 @@ static func _ensure() -> void:
 	h.text(DirAI.skillText())   # data/director/ai.json (the AI's skill numbers)
 	h.text(DirLaunch.dataText())   # data/director/launch.json (the landing mix)
 	h.text(DirInterrupt.dataText())   # data/director/interrupts.json, and Controls' perfect-block timing
+	h.text(DirRecipe.dataText())   # data/director/alchemy.json and Combat's data/combat/recipes.json
 	_hash = h.hex()
 
 

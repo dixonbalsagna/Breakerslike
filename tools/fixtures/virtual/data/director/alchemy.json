@@ -1,0 +1,11 @@
+{
+  "schema": "director.alchemy/1",
+  "_about": "Validator fixture, not game data: the shape of the live file, keyed by the fixture roster.",
+  "recipes": {
+    "enabled": true,
+    "fighters": {
+      "FIXTURE_HERO": "protagonist",
+      "FIXTURE_VILLAIN": "rival"
+    }
+  }
+}
