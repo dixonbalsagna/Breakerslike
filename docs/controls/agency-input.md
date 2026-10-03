@@ -119,6 +119,34 @@ The hold, rhythm and mash style tests read only the latest 3 or 4 presses and ar
 - `SimAim.sector(mx, my)` and `of_intent(i)` classify one stick position; `step_x(s)` and `step_y(s)` give the unit step as integers.
 - A keyboard's keys and a stick read the same eight sectors, so neither device has an edge. The numbers (`deadZone` 0.35, `latchTicks` 12, `snapMax` 1) are an `aim` block in `timing.json`; `docs/controls/aim-schema.patch` adds it to Tools' schema (the validator rejects the block without it).
 
+## Note: the freeze rule and the beat-period metronome (2026-10-03, measured, no code changed)
+
+**The finding Encounter measured live:** a real-clock metronome every 12 ticks locks the perfect blur on 27% of five-blow strings, every 14 on 26%, every 10 on 9% (band: at most 20%), with no gain in wins. **The cause is partly the freeze rule and partly inherent.** The freeze rule: a press made in the hit-stop after a blow arrives on the first live tick and is graded at `S.tick - h`, which is the contact plus 1 tick, so **every press from the contact+1 to the end of the freeze (4 to 5 ticks) reads one tick late and counts as on the beat.** The blur's window is then about 8 to 9 ticks wide in real time (contact-2 to contact+h+1) instead of 5. Spacing between live contacts is a cadence of 7 to 10 plus the hit-stop, 11 to 15 ticks, so a metronome whose gap equals the spacing gets a wider window of luck.
+
+**What I measured** (synthetic, stated plainly): five-blow strings; cadences 7, 8, 9, 10 each with hit-stop 4, 5 and a seeded 4-or-5 per blow (twelve combinations, equally likely); every phase of the metronome equally likely; the blow's freeze is the h ticks after its contact and `S.tick` runs through it; a press in the freeze arrives on the first live tick; the press log is built as the director builds it (graded tick, beat to the nearest of the five contacts) and read by the committed `SimPressRead.classify`. **A lock** is `steady` at any press while the string runs. The three options:
+- **A, leave it** (today): a press in a freeze, or arriving on the first live tick after it, is graded at contact + 1.
+- **B, grade the press at its own tick:** a press in a freeze reads its true distance from the freeze's first tick, so only the first 2 ticks of a freeze count (`blurBeatHalf`). **Needs one new intent field**: how long the edge waited for the freeze (`waited`, 0 to 15, 4 bits at 43 to 46; the layout already counts its own ticks, about 30 lines in `layout.gd` and `touch.gd`, plus the pack, hash and `_freeze` in the director, which becomes `S.tick - waited`). Without it the director cannot know when in the freeze the press was made.
+- **C, only presses at or before the contact count for the blur:** a press in a freeze, or on the first live tick after it, is off the beat. Needs no field.
+
+| Share of five-blow strings that lock the perfect blur | A (today) | B (own tick) | C (before the contact only) | Band |
+| :--- | ---: | ---: | ---: | ---: |
+| Blind metronome every 8 ticks (the QA masher) | 0.0% | 0.0% | 0.0% | at most 20% |
+| Blind metronome every 10 ticks | 18.2% | 2.9% | 0.0% | at most 20% |
+| Blind metronome every 12 ticks | **45.5%** | 19.1% | 6.8% | at most 20% |
+| Blind metronome every 14 ticks | **37.3%** | 17.1% | 5.9% | at most 20% |
+| Script on every contact | 100% | 100% | 100% | at least 80% |
+| Person, jitter up to 1 tick of the contact | 100% | 100% | **25.7%** | at least 80% |
+| Person, jitter up to 2 ticks of the contact | 100% | 100% | **17.9%** | at least 80% |
+
+**Reading it.**
+1. **The synthetic A figures are higher than Encounter's live ones** (45.5, 37.3 and 18.2 against 27, 26 and 9) because a real string has more spread than my fixed-phase metronome; the ratio is about 0.6, so **B should land near 11%, 10% and 2% live** (an estimate, not measured). The direction and the cause match: the freeze rule roughly doubles the lock share.
+2. **B is the lever.** It costs a person nothing (a person within 2 ticks of the contact is untouched, 100%), takes the metronome at 12 and 14 from over the band to just under it synthetically (19.1 and 17.1) and well under it live, and is what "grade by distance from the freeze's first tick, capped at `blurBeatHalf`" means. It is also the honest reading: a press 4 ticks after the impact is 4 ticks late. The cost is the one intent field and a small director change.
+3. **C is wrong for people.** Excluding every press after the contact drops a person within 1 or 2 ticks to 26% and 18%, because half of an honest player's presses land just after the impact. Do not use it.
+4. **What B cannot remove.** Even with exact grading a metronome whose gap equals the string's contact spacing is on the beat for about 19% of phases (spacing 12 occurs for several cadence and hit-stop pairs). That is inherent in "pressing at the pace of the blows"; the cadence set (7 to 10) and the per-blow hit-stop vary the spacing so the right gap is right only for some strings. It is the skill the player is meant to have, minus the phase.
+5. **Leaving it (A) is defensible** if the win rate does not move: Encounter measured 40, 45 and 43 of 100 for the 12, 14 and 10 metronomes against 42 for the blind 8-tick masher, so the lock gives no edge. It then only costs a QA band. If Game Design wants the band met, B is the change.
+
+The probe is a scratch script (`freeze_probe.gd`, not in the repo); I can make it a test beside `press_read_test` on request.
+
 ## Recommendations at a glance
 
 | # | Item | Recommendation |
