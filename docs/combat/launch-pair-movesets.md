@@ -235,6 +235,6 @@ Animation's coverage pass (`docs/animation/launch-pair-coverage.md`) added one s
 - **Which plays:** the nod first in a stand-off; after that the director walks the gestures he may use, never the same one twice running.
 - **None of them beckons,** and none uses two fingers or a point (Legal).
 - **The close taunt** (`taunt.close`, 60 ticks, he can be hit): confirmed as the three in one, the bounce, the tap, then the chin lifted. In the air its first phase needs the ground: Animation picks how it starts there, inside the same 60 ticks.
-- **For Legal, through the EP:** a screen of the fist to palm, as a real-world martial courtesy drawn our own way.
+- **Legal (RL-067):** the three far taunts are cleared, the fist to palm included. One addition for the close taunt: no grin-and-wipe-the-nose beat, no thumb under the nose, no beckon.
 
 The data is in `pending/templates.agency.json`: the far taunt's pieces by fighter, the Protagonist's chest piece, and both braces.

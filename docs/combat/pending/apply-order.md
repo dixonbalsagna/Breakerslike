@@ -73,3 +73,19 @@ Animation's four packs are committed (pair1, protag5, protag6, rival3), and Tool
 - **The body hook is in the Protagonist's pools** (the blur's ender, power, the last power blow), as the rival's is: 43 pieces, all posed. The rival stays at 40 with 36 posed.
 - **One more borrowed row:** protag6's `ph.body_hook` carries 58 u and ticks 12, 6 and 12; Combat's row is 54 u and 10, 6 and 10 (`_manifestDrift`, now 12 rows across four manifests).
 - **Checked again on a scratch copy of `45a95b9`** with Tools' updated script: the recipes with `showcase` and the hook, and the two finisher rows, give 0 errors and 0 warnings, and the self-test passes 3037 of 3037.
+
+## 7. Where the ready finisher rows are (checked at `a077861`)
+
+Tools staged an older block and got 47 errors, so the path is spelled out here.
+
+- **The ready rows:** `docs/combat/pending/launch-pair.json`, JSON pointers `/finishers/rows/0` (id `rival`) and `/finishers/rows/1` (id `protagonist`). With them go `/finishers/select/byFighter` (merged into the live `/select/byFighter`) and `/finishers/newCues` (each name added to the live `/cues`).
+- **The superseded block:** `/finishers/antihero` and `/finishers/protagonist`, as the file stood at commit `3c83445`. It left the file at `34dc85f` and is not at HEAD. Its shapes are the ones in Tools' list: a `kind` in words, durations as tick objects, no `name` or `barks`, `survived` as a sentence, the cues `finisher_tell`, `gather` and `held`, and `o.shape` and `o.count`.
+- **On a scratch `git archive a077861`,** the rows appended to `/finishers` of `data/combat/finishers.json`:
+  - with the select keys and the cue: `132 files checked, 0 errors, 0 warnings`;
+  - without the cue added: one error, `/finishers/4/beats/6/args/cue [xref:cue] cue "gives_way" is not in the cue vocabulary (finishers.json "cues")`;
+  - the superseded block instead, converted naively: 56 errors of the same kinds as Tools' 47.
+- **What is new in the ready rows:**
+  - One cue name, `gives_way`. It is a vocabulary entry in `finishers.json` `cues`, Combat's data, and needs no schema change.
+  - Beat args that pass today because args are open: `volley` (`{dmg, shape, count}`, on the rival's three `barrage` cue beats), `gait` and `path` on `finRush`, `slot` on `strike` and `finalBlow`, `limb` and `shape` on `finalBlow`. Typing them is optional.
+  - Nothing in `o`, no new op, no new `kind`, no new launch mode.
+- **After the split:** the rows' `fighter` strings and the select keys are the stand-ins `RIVAL` and `PROTAGONIST`. Tools' `finisher-fighter` rule (`apply-split-keys.cjs`) will want Simulation's roster ids there, so they are swapped for those ids when the rows land at step 4.

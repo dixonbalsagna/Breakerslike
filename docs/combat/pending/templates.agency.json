@@ -218,7 +218,8 @@
     "rival": "taunt.close",
     "protagonist": "taunt.close",
     "ticks": 60,
-    "_note": "each fighter's own; he can be hit; the sim has no close-taunt event yet"
+    "_note": "each fighter's own; he can be hit; the sim has no close-taunt event yet",
+    "_legal": "RL-067: no grin-and-wipe-the-nose beat, no thumb under the nose, no beckon"
    }
   },
   "lightCharge": {
