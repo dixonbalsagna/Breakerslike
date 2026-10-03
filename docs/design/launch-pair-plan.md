@@ -50,7 +50,7 @@ Both get the shared base: the bolt, the volley, the charged shot and the mine (`
 | | The Protagonist | The Anti-hero |
 | :--- | :--- | :--- |
 | **His way with energy** | Precision. His spread builds 20% more slowly, so his measured bolts stay accurate a little longer | Volume. His shard spread grows with Pride: 3, 5, 7 and 9 pieces (`moveset-rules.md` §11) |
-| **His extra kinds** | The **splitting shot**, and later the curving shot | The **shard spread** and **rain**, and his barrage volley special |
+| **His extra kinds** (as amended in §8) | The **curving shot**, and later the ricochet shot | **Rain** and the **splitting shot**, with the shard spread and his barrage volley special |
 
 The three first kinds Game Design proposed (`agency-pass.md` §15.5) are split between them, so each fighter shows one at launch.
 
@@ -89,3 +89,39 @@ The three first kinds Game Design proposed (`agency-pass.md` §15.5) are split b
 | 7 | **QA's baseline for the pair,** then the balance pass | — |
 
 Steps 2 and 3 can run alongside each other. Step 4 needs step 1. Step 6 runs whenever Orb's material is ready.
+
+## 8. Reconciling with Combat's plan (`docs/combat/launch-pair-movesets.md`)
+
+Combat wrote its plan before this one landed. Four points are settled here.
+
+**1. Energy kinds: Combat's assignment is adopted.** It fits each fighter better than §4 did, so §4 is amended.
+
+| Fighter | Kinds | Why |
+| :--- | :--- | :--- |
+| **The Protagonist** | **The curving shot.** The ricochet shot comes later | A martial artist's precision. He sets the side with the stick and bends the shot round cover. It goes with his slower spread build-up |
+| **The Anti-hero** | **Rain** and **the splitting shot,** with his shard spread by Pride and his barrage volley special | Rain marks where the rival may not stand, which is his hierarchy made playable. The splitting shot is his barrage in one press |
+
+Legal's notes in Combat's plan hold for all three.
+
+**2. Blow for Blow ships with the alchemy framework.** It is the one moment that makes the timing grades visible between two people, and Orb asked for it by name. It costs 3 sketches. Legal's twelve staging rules apply (`agency-pass.md` §2).
+
+**3. The counts against the minimum in §3.**
+
+| | Combat's count | Against the minimum |
+| :--- | :--- | :--- |
+| **The Anti-hero** | 17 sketches, or 20 with Blow for Blow | Covers the strike pool, the endings, the energy kinds, the taunts and On the Chin. **Add his base finisher** (by hand) for launch. His form finishers can follow |
+| **The Protagonist** | 33 sketches: wave 1's 34 slots with 12 silhouette changes, 8 strikes of his own, 2 entries and the curving shot | Covers the strike pool, the endings and the energy kind. **Add his finisher** in the flight version (point 4) for launch |
+
+- **Signatures at launch:** each uses the shared signature poses with his own beam style, which is VFX's work and needs no new sketches. His form signatures follow his forms.
+- **The total** is about 53 sketches plus the two finishers. Combat sizes the finishers.
+
+**4. The Protagonist's finisher, without teleports.** Teleports stay on hold, so his finisher in `data/combat/finishers.json` flies.
+
+| Beat | The flight version |
+| :--- | :--- |
+| The catch | As written |
+| **The flurry** | 3 to 5 strikes, each arriving from a new side after a short spiral flight round the loser: the ping-pong's path (`control-rules.md` §11). Each flight takes 16 to 20 ticks. He is drawn the whole way: no vanishing and no afterimage that hides him. The sides come from the terrain and where the loser is, as the teleport angles did |
+| Rise and gather; the contest | As written |
+| The end | A point-blank, all-out energy blast, as written |
+
+If Orb later gives teleporting to him, the flurry can go back to the ripple-step version as a variant.
