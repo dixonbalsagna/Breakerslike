@@ -64,7 +64,12 @@ const BAR_2: int = 47      # ... each the tick it landed << 12 | its ticks of fl
 const BAR_3: int = 48
 const BAR_IMMUNE: int = 49 # S.tick until which a barrage cannot knock him back again
 const BAR_GUARD: int = 50  # S.tick until which the AI holds guard against a barrage that is building on it
-const N: int = 51
+const BEAM_AI: int = 51    # the AI defender's plan for the beam coming at it (DirBeamPlay.AI_*)
+const BEAM_FIRE: int = 52  # S.tick the beam aimed at him left
+const BEAM_TRAVEL: int = 53   # the ticks his own main beam takes to reach its target; 0 when it is not on its way under the plays
+const BEAM_REACH: int = 54 # ... and how far along it the target is, in whole units
+const BEAM_DODGED: int = 55   # 1 once he tapped dodge inside the window of the beam coming at him
+const N: int = 56
 const END_NONE: int = -1   # LAST_END before any launch beat or launch: the exchange has sent nobody anywhere
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
@@ -213,7 +218,7 @@ static func _windowBeat(S: SimState, ex, f):
 		for b in ex.beats:
 			if not b.done and b.op == "beamFire":
 				var left: float = (b.t - ex.t) * DirData.TICKS_PER_SEC
-				return b if left <= _window(f, "heavy", true) + 0.5 and not b.args.get("perfect", false) else null
+				return b if left <= _window(f, "beam" if DirBeamPlay.on() else "heavy", true) + 0.5 and not b.args.get("perfect", false) else null
 		return null
 	if not DirData.allows(ex, "perfect_block"):
 		return null

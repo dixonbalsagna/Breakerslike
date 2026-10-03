@@ -348,6 +348,10 @@ static func runBeat(S: SimState, ex, b) -> void:
 			DirBeam.opBeamEscape(S, ex, a)
 		"clashResolve":
 			DirBeam.opClashResolve(S, ex, a)
+		"beamReach":
+			DirBeamPlay.opReach(S, ex, a)
+		"beamArrive":
+			DirBeamPlay.opArrive(S, ex, a)
 		"finisher":
 			_opFinisher(S, ex, a)
 		"cue":
@@ -474,6 +478,7 @@ static func endEx(S: SimState, ex) -> void:
 		SimFx.exchangeEnd(S, ex.A, "launch" if le == DirInterrupt.END_LAUNCH else ("knockback" if le == DirInterrupt.END_KNOCK else "continue"))
 	S.dirS.ex = null
 	S.dirS.cool = cooldownAfter(ex)
+	DirBeamPlay.onEnd(S, ex)   # no pause after a walk through a beam
 	DirInterrupt.onEnd(S, ex)   # step 3: a fully blocked string leaves its attacker behind
 	DirBury.onEnd(S, ex)   # a defender taken in his crater is out of it, with his safety
 
@@ -514,6 +519,7 @@ static func dirUpdate(S: SimState, dt: float) -> void:
 		return
 	ex.t += dt
 	DirInterrupt.tick(S)   # step 3: this tick's inputs inside the exchange (perfect block, reversal, dodge-cancel, burst)
+	DirBeamPlay.lateTick(S, ex)   # a late answer to a beam on its way
 	DirMelee.contactTick(S, ex)   # contact: facing follows the opponent, and resting bodies never overlap
 	var i: int = 0
 	while i < ex.beats.size():

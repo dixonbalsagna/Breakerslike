@@ -43860,6 +43860,910 @@
         "rule": "required",
         "pointer": "/roles/protagonist/taunt_close_air"
       }
+    },
+    {
+      "id": "director-interrupts-window-beam-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/beam": 12
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-window-beam-optional",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/perfectBlock/windows/beam"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-window-beam-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/beam": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/perfectBlock/windows/beam"
+      }
+    },
+    {
+      "id": "director-interrupts-window-beam-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/beam": 12.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/perfectBlock/windows/beam"
+      }
+    },
+    {
+      "id": "director-interrupts-window-beam-within-one-armed",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/perfectBlock/windows/beam": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:interrupts-order",
+        "pointer": "/perfectBlock/oneArmedOff"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-plays-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-interrupts-beam-plays-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays/walk"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamPlays"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-plays-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/sneeze": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/beamPlays/sneeze"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-plays-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-beam-plays-enabled-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/enabled": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beamPlays/enabled"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-plays-disabled-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/enabled": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-beam-travel-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/travelTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/travelTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-travel-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/travelTicks": 20.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beamPlays/travelTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-after-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/afterTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/afterTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-after-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/afterTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-beam-dodge-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays/dodge/beforeTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamPlays/dodge"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-dodge-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/dodge/afterTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/dodge/afterTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-dodge-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/dodge/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/beamPlays/dodge/extra"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-late-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays/late/scoreAdd"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamPlays/late"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-late-ticks-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/late/ticks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/late/ticks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-late-score-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/late/scoreAdd": "low"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beamPlays/late/scoreAdd"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-late-score-positive-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/late/scoreAdd": 10
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-beam-walk-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays/walk/recoverTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamPlays/walk"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-walk-speed-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/walk/speed": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/beamPlays/walk/speed"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-walk-min-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/walk/minTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/walk/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-walk-max-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/walk/maxTicks": 54.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beamPlays/walk/maxTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-walk-recover-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/walk/recoverTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/walk/recoverTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-walk-min-above-max",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/walk/minTicks": 60
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:beamplays-order",
+        "pointer": "/beamPlays/walk/minTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-walk-min-equals-max-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/walk/minTicks": 54
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-beam-split-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays/split/powerMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamPlays/split"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-spread-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/spreadDeg": 120
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/beamPlays/split/spreadDeg"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-spread-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/spreadDeg": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/split/spreadDeg"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-length-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/lenBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/beamPlays/split/lenBh"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-width-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/widthMul": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/beamPlays/split/widthMul"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-width-above-one-warns",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/widthMul": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:beamplays-split",
+        "pointer": "/beamPlays/split/widthMul"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-power-above-one-warns",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/powerMul": 1.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:beamplays-split",
+        "pointer": "/beamPlays/split/powerMul"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-split-edges-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/split/widthMul": 1,
+            "/beamPlays/split/powerMul": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-beam-swat-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/beamPlays/swat/groundDeg"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamPlays/swat"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-swat-length-zero",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/swat/lenBh": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/beamPlays/swat/lenBh"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-swat-sky-range",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/swat/skyDeg": 100
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/beamPlays/swat/skyDeg"
+      }
+    },
+    {
+      "id": "director-interrupts-beam-swat-ground-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/beamPlays/swat/groundDeg": -5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamPlays/swat/groundDeg"
+      }
+    },
+    {
+      "id": "director-ai-beam-dodge-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/beamDodge"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-beam-wade-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/medium/beamWade"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/medium"
+      }
+    },
+    {
+      "id": "director-ai-beam-late-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/beamLate"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-beam-dodge-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/beamDodge": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/easy/beamDodge"
+      }
+    },
+    {
+      "id": "director-ai-beam-wade-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/beamWade": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/medium/beamWade"
+      }
+    },
+    {
+      "id": "director-ai-beam-late-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/beamLate": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/beamLate"
+      }
+    },
+    {
+      "id": "director-ai-beam-dodge-harder-level-lower-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/beamDodge": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/beamDodge"
+      }
+    },
+    {
+      "id": "director-ai-beam-late-harder-level-lower-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/beamLate": 0.01
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/medium/beamLate"
+      }
+    },
+    {
+      "id": "director-ai-beam-look-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/beamLook"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-beam-look-key-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/beamLook/swat"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/beamLook"
+      }
+    },
+    {
+      "id": "director-ai-beam-look-unknown-key",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamLook/dive": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/beamLook/dive"
+      }
+    },
+    {
+      "id": "director-ai-beam-look-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamLook/walk": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/beamLook/walk"
+      }
+    },
+    {
+      "id": "director-ai-beam-look-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamLook/split": "half"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/beamLook/split"
+      }
+    },
+    {
+      "id": "director-ai-beam-look-weights-above-one-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamLook/split": 3
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-beam-look-one-weight-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamLook": {
+              "split": 0,
+              "walk": 1,
+              "swat": 0
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-beam-look-all-zero",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/beamLook": {
+              "split": 0,
+              "walk": 0,
+              "swat": 0
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-beam-look",
+        "pointer": "/beamLook"
+      }
+    },
+    {
+      "id": "director-ai-beam-note-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_beam": "comment"
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

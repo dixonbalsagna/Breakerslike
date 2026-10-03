@@ -13,7 +13,8 @@
     "level",
     "levels",
     "reactTicks",
-    "answerTicks"
+    "answerTicks",
+    "beamLook"
   ],
   "properties": {
     "schema": {
@@ -139,7 +140,10 @@
             "blastShare",
             "buriedFollowUp",
             "buriedBurst",
-            "barrageGuard"
+            "barrageGuard",
+            "beamDodge",
+            "beamWade",
+            "beamLate"
           ],
           "properties": {
             "beamAnswer": {
@@ -271,6 +275,24 @@
             },
             "barrageGuard": {
               "description": "The chance the AI guards against a barrage of bolts.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamDodge": {
+              "description": "The chance its dodge is in time when it is dodging a beam.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamWade": {
+              "description": "The chance it holds toward when it guards a beam (the wade).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamLate": {
+              "description": "The chance of a late answer when it did not answer in the tell and can pay for one.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -304,7 +326,10 @@
             "blastShare",
             "buriedFollowUp",
             "buriedBurst",
-            "barrageGuard"
+            "barrageGuard",
+            "beamDodge",
+            "beamWade",
+            "beamLate"
           ],
           "properties": {
             "beamAnswer": {
@@ -436,6 +461,24 @@
             },
             "barrageGuard": {
               "description": "The chance the AI guards against a barrage of bolts.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamDodge": {
+              "description": "The chance its dodge is in time when it is dodging a beam.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamWade": {
+              "description": "The chance it holds toward when it guards a beam (the wade).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamLate": {
+              "description": "The chance of a late answer when it did not answer in the tell and can pay for one.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -469,7 +512,10 @@
             "blastShare",
             "buriedFollowUp",
             "buriedBurst",
-            "barrageGuard"
+            "barrageGuard",
+            "beamDodge",
+            "beamWade",
+            "beamLate"
           ],
           "properties": {
             "beamAnswer": {
@@ -604,6 +650,24 @@
               "type": "number",
               "minimum": 0,
               "maximum": 1
+            },
+            "beamDodge": {
+              "description": "The chance its dodge is in time when it is dodging a beam.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamWade": {
+              "description": "The chance it holds toward when it guards a beam (the wade).",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "beamLate": {
+              "description": "The chance of a late answer when it did not answer in the tell and can pay for one.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "additionalProperties": false,
@@ -627,6 +691,36 @@
       "type": "integer",
       "minimum": 0,
       "description": "Ticks the AI takes to answer."
+    },
+    "beamLook": {
+      "type": "object",
+      "required": [
+        "split",
+        "walk",
+        "swat"
+      ],
+      "properties": {
+        "split": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The weight of the split look of a perfect block against a beam."
+        },
+        "walk": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The weight of the walk-through look."
+        },
+        "swat": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The weight of the swat look."
+        }
+      },
+      "description": "The weights of the look of the AI's perfect block against a beam (rule-of-cool.md section 2).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
     }
   },
   "additionalProperties": false,

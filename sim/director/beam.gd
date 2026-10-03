@@ -31,10 +31,13 @@ static func opBeamCharge(S: SimState, ex, args) -> void:
 	SimFx.ring(S, A.x, A.y + 40.0, 260.0, A.aura, 0.8, 10.0)
 	# Step 2b: an AI defender may answer the beam, by the same rule as a player: its own signature (45 ki and the cooldown
 	# over), or else a heavy blast (40 ki). How often is its difficulty (control-rules.md §10); the press comes in the tell.
+	var answers: bool = false
 	if DirData.beamAtFire() and D.ai != null:
 		var canSig: bool = (D.ki >= 45.0 and S.T >= D.sigReadyT) or SimFighter.sigFree(D)   # the last stand answers free
 		if (canSig or D.ki >= 40.0) and S.rng.next() < float(DirAI.lv().beamAnswer):
+			answers = true
 			DirExchange.schedule(ex, ex.t + S.rng.range_(0.15, 0.6), "press", {"who": "D", "sig": canSig, "blast": not canSig})
+	DirBeamPlay.aiPlan(S, ex, answers)   # the beam plays: its perfect block and its look, its dodge, its wade, a late answer
 
 
 ## True while f is one of the two fighters of a live clash (the beam struggle). The host and the input layer read it
@@ -71,6 +74,9 @@ static func opBeamFire(S: SimState, ex, args) -> void:
 	if out == "":
 		# Step 2b: the outcome is decided now, from what the defender did during the tell (DirData.beamOutcome).
 		var answer: String = _answer(S, D)
+		if answer == "none" and DirBeamPlay.on():
+			DirBeamPlay.fire(S, ex, args)   # the beam plays: it leaves now, and the outcome is read when it reaches him
+			return
 		var res: Dictionary = DirData.beamOutcome(S, ex, dist, answer, args.get("perfect", false))
 		out = res.out
 		dAdd = res.dAdd
@@ -251,6 +257,8 @@ static func fireBeam(S: SimState, A, ox: float, oy: float, ux: float, uy: float,
 	b.sf = float(A.ld.beamStructure[_tierIx(A)])
 	b.cap = maxi(1, int(SimMathx.jround(float(A.ld.beamLevelCapShare[_tierIx(A)]) * S.buildings.size())))
 	S.beams.append(b)
+	if DirInterrupt.on():
+		DirInterrupt.si(A, DirInterrupt.BEAM_TRAVEL, 0)   # a beam at its own speed, unless DirBeamPlay.fire says otherwise
 	SimFx.shake(S, 14.0, ox)
 
 
@@ -281,6 +289,9 @@ static func beamStep(S: SimState, dt: float) -> void:
 		var b = S.beams[i]
 		b.t += dt
 		var np: float = SimMathx.jmin(1.0, b.t / 0.22)
+		var tv: int = DirBeamPlay.travel(S, b)
+		if tv > 0:
+			np = DirBeamPlay.front(b, tv)   # the beam plays: it reaches the defender at a set tick, at any distance
 		var s0: float = b.p * b.len
 		var s1: float = np * b.len
 		b.p = np
@@ -289,4 +300,6 @@ static func beamStep(S: SimState, dt: float) -> void:
 			sampleBeam(S, b, s)
 			s += 36.0 * SimConst.WS
 		if b.t > b.life:
+			if tv > 0:
+				DirInterrupt.si(b.A, DirInterrupt.BEAM_TRAVEL, 0)
 			S.beams.remove_at(i)

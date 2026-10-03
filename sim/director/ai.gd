@@ -97,11 +97,14 @@ static func aiInput(S: SimState, f) -> void:
 		i.guard = true
 	elif st == 2.0:
 		# Never inside a melee exchange: there a dodge is the cancel (step 3). During a beam's tell it is the Dodge answer.
-		i.dodge = (S.dirS.ex == null or _beamTell(S, f)) and S.tick - f.act.dodgeTick >= SimAct.dodgeWindow - 1
+		i.dodge = (S.dirS.ex == null or _beamTell(S, f)) and S.tick - f.act.dodgeTick >= SimAct.dodgeWindow - 1 and DirBeamPlay.aiMayDodge(S, f)
 	elif st == 3.0:
 		i.sprint = true
 		if _beamTell(S, f):
 			i.mx = -SimMathx.jsign(d) if d != 0.0 else 1.0   # still sprinting away at the fire beat: the ESCAPE gamble
+	var bd: float = DirBeamPlay.aiDir(S, f)
+	if bd != 0.0:
+		i.mx = bd   # the stick it holds as a beam reaches it: the look of its perfect block, or the wade
 	var free: bool = f.state == "free" or f.state == "charging"
 	if not free:
 		return

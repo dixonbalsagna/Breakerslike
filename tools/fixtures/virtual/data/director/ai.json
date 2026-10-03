@@ -51,7 +51,10 @@
       "blastShare": 0.1,
       "buriedFollowUp": 0.4,
       "buriedBurst": 0.2,
-      "barrageGuard": 0.2
+      "barrageGuard": 0.2,
+      "beamDodge": 0.4,
+      "beamWade": 0.3,
+      "beamLate": 0.05
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -81,7 +84,10 @@
       "blastShare": 0.2,
       "buriedFollowUp": 0.8,
       "buriedBurst": 0.5,
-      "barrageGuard": 0.5
+      "barrageGuard": 0.5,
+      "beamDodge": 0.55,
+      "beamWade": 0.5,
+      "beamLate": 0.1
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -111,7 +117,15 @@
       "blastShare": 0.25,
       "buriedFollowUp": 1,
       "buriedBurst": 0.8,
-      "barrageGuard": 0.8
+      "barrageGuard": 0.8,
+      "beamDodge": 0.7,
+      "beamWade": 0.7,
+      "beamLate": 0.2
     }
+  },
+  "beamLook": {
+    "split": 1,
+    "walk": 1,
+    "swat": 1
   }
 }

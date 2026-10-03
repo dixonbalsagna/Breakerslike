@@ -680,13 +680,14 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const lv = isObj(dai.levels) ? dai.levels : {};
     if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
     const order = ['easy', 'medium', 'hard'];
-    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp', 'barrageGuard']) {
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp', 'barrageGuard', 'beamDodge', 'beamWade', 'beamLate']) {
       for (let i = 1; i < order.length; i++) {
         const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
       }
     }
     for (const name of order) { const ar = isObj(lv[name]) ? lv[name].approachReact : undefined; if (Array.isArray(ar) && ar.every((x) => typeof x === 'number') && ar.reduce((s2, x) => s2 + x, 0) > 1 + 1e-9) err(AI, `/levels/${name}/approachReact`, 'ai-approach-react', `the three chances sum to ${ar.reduce((s2, x) => s2 + x, 0).toFixed(3)}, more than 1`); }
+    if (isObj(dai.beamLook) && Object.entries(dai.beamLook).filter(([k]) => !k.startsWith('_')).every(([, v]) => typeof v === 'number') && Object.entries(dai.beamLook).filter(([k]) => !k.startsWith('_')).reduce((s2, [, v]) => s2 + v, 0) <= 0) err(AI, '/beamLook', 'ai-beam-look', 'the three weights of beamLook sum to 0, so a perfect block against a beam has no look to draw');
     const med = isObj(lv.medium) ? lv.medium.beamAnswer : undefined;
     if (typeof dai.beamAnswer === 'number' && typeof med === 'number' && dai.beamAnswer !== med) err(AI, '/beamAnswer', 'ai-level-beam', `beamAnswer ${dai.beamAnswer} differs from the medium level's ${med} (it is kept for readers of the old shape)`, 'warning');
   }
@@ -699,8 +700,13 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const w = isObj(pb.windows) ? pb.windows : {};
     for (const cls of ['opener', 'blast']) if (isObj(w[cls]) && typeof w[cls].light === 'number' && typeof w[cls].heavy === 'number' && w[cls].light > w[cls].heavy) err(IT, `/perfectBlock/windows/${cls}/light`, 'interrupts-order', `${cls} light window ${w[cls].light} is longer than its heavy window ${w[cls].heavy}`);
     if (typeof pb.oneArmedOff === 'number') {
-      const all = [['opener/light', isObj(w.opener) ? w.opener.light : undefined], ['opener/heavy', isObj(w.opener) ? w.opener.heavy : undefined], ['heavy', w.heavy], ['ender', w.ender], ['blast/light', isObj(w.blast) ? w.blast.light : undefined], ['blast/heavy', isObj(w.blast) ? w.blast.heavy : undefined], ['return', w.return]];
+      const all = [['opener/light', isObj(w.opener) ? w.opener.light : undefined], ['opener/heavy', isObj(w.opener) ? w.opener.heavy : undefined], ['heavy', w.heavy], ['ender', w.ender], ['blast/light', isObj(w.blast) ? w.blast.light : undefined], ['blast/heavy', isObj(w.blast) ? w.blast.heavy : undefined], ['return', w.return], ['beam', w.beam]];
       for (const [name, v] of all) if (typeof v === 'number' && v > 0 && v <= pb.oneArmedOff) err(IT, `/perfectBlock/oneArmedOff`, 'interrupts-order', `oneArmedOff ${pb.oneArmedOff} leaves no window for ${name} (${v} ticks)`);
+    }
+    const bpl = itr.beamPlays;
+    if (isObj(bpl)) {
+      if (isObj(bpl.walk) && typeof bpl.walk.minTicks === 'number' && typeof bpl.walk.maxTicks === 'number' && bpl.walk.minTicks > bpl.walk.maxTicks) err(IT, '/beamPlays/walk/minTicks', 'beamplays-order', `walk minTicks ${bpl.walk.minTicks} is above maxTicks ${bpl.walk.maxTicks}`);
+      if (isObj(bpl.split)) for (const k of ['widthMul', 'powerMul']) if (typeof bpl.split[k] === 'number' && bpl.split[k] > 1) err(IT, `/beamPlays/split/${k}`, 'beamplays-split', `the split beams' ${k} ${bpl.split[k]} is above 1; they are meant to be lesser than the beam`, 'warning');
     }
     const dcI = itr.dodgeCancel;
     if (isObj(dcI) && typeof dcI.freeGapTicks === 'number' && typeof dcI.cooldownTicks === 'number' && dcI.freeGapTicks > dcI.cooldownTicks) err(IT, '/dodgeCancel/freeGapTicks', 'interrupts-order', `freeGapTicks ${dcI.freeGapTicks} is longer than cooldownTicks ${dcI.cooldownTicks}, so the free cancel would cost more than a paid one`, 'warning');

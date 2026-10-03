@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/director-interrupts",
   "title": "director.interrupts/1",
-  "description": "data/director/interrupts.json: control-scheme step 3 (ADR 0008; control-rules.md sections 1, 2 and 6): the costs, cooldowns and windows of what a fighter does inside an exchange, read by sim/director/interrupt.gd (DirInterrupt). Ticks are sim ticks (60 a second); ki is out of 100. Version field: schema. Policy: closed except keys starting with an underscore; every key required except the window classes (a class not listed has no window). Orders (kiPatient at most ki; the stale maximums are at least one repeat's step; a one-armed blocker keeps a window; light at most heavy; a window not longer than its wind-up, a warning) are checked by tools/lib/xref-fight.js (interrupts-*).",
+  "description": "data/director/interrupts.json: control-scheme step 3 (ADR 0008; control-rules.md sections 1, 2 and 6): the costs, cooldowns and windows of what a fighter does inside an exchange, read by sim/director/interrupt.gd (DirInterrupt). Ticks are sim ticks (60 a second); ki is out of 100. Version field: schema. Policy: closed except keys starting with an underscore; every key required except the window classes (a class not listed has no window). Orders (a walk's minTicks at most its maxTicks; the split's width and power shares at most 1, a warning; kiPatient at most ki; the stale maximums are at least one repeat's step; a one-armed blocker keeps a window; light at most heavy; a window not longer than its wind-up, a warning) are checked by tools/lib/xref-fight.js (interrupts-*).",
   "type": "object",
   "required": [
     "schema",
@@ -16,7 +16,8 @@
     "bands",
     "blast",
     "signature",
-    "buried"
+    "buried",
+    "beamPlays"
   ],
   "properties": {
     "schema": {
@@ -101,6 +102,11 @@
             "return": {
               "type": "integer",
               "minimum": 0
+            },
+            "beam": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "The last ticks of a beam's tell in which a fresh guard press is a perfect block against it."
             }
           },
           "description": "The last ticks of the wind-up in which a fresh guard press is a perfect block, by strike class (moveset-rules.md section 11(f)); a class not listed has no window.",
@@ -1014,6 +1020,187 @@
         }
       },
       "description": "The buried fighter (agency-pass.md section 7; sim/director/bury.gd; World's embed holds him down for embed.ticks). guardFromTick and burstFromTick are at most landByTick and at most the embed ticks (checked by tools/lib/xref-fight.js, buried-order).",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "beamPlays": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "travelTicks",
+        "afterTicks",
+        "dodge",
+        "late",
+        "walk",
+        "split",
+        "swat"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "false: a beam is decided at its fire beat, as before."
+        },
+        "travelTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "A signature not answered in its tell reaches the defender this many ticks after it fires, at any distance."
+        },
+        "afterTicks": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The exchange's length after that."
+        },
+        "dodge": {
+          "type": "object",
+          "required": [
+            "beforeTicks",
+            "afterTicks"
+          ],
+          "properties": {
+            "beforeTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "A dodge tap in the last ticks of the tell avoids the beam."
+            },
+            "afterTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "A dodge tap in the first ticks of the beam avoids it."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "late": {
+          "type": "object",
+          "required": [
+            "ticks",
+            "scoreAdd"
+          ],
+          "properties": {
+            "ticks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "The defender's own signature or heavy energy attack within this many ticks of the fire stops the beam in a struggle."
+            },
+            "scoreAdd": {
+              "type": "number",
+              "description": "Added to the defender's score in that struggle."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "walk": {
+          "type": "object",
+          "required": [
+            "speed",
+            "minTicks",
+            "maxTicks",
+            "recoverTicks"
+          ],
+          "properties": {
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Units a second he advances through the beam."
+            },
+            "minTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The shortest walk."
+            },
+            "maxTicks": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The longest walk."
+            },
+            "recoverTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Recovery left to the attacker when he arrives."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "split": {
+          "type": "object",
+          "required": [
+            "spreadDeg",
+            "lenBh",
+            "widthMul",
+            "powerMul"
+          ],
+          "properties": {
+            "spreadDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90,
+              "description": "Degrees either side of the beam's line the two lesser beams leave."
+            },
+            "lenBh": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Their length, in body heights."
+            },
+            "widthMul": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Their width, as a share of the beam's."
+            },
+            "powerMul": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Their power, as a share of the beam's."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "swat": {
+          "type": "object",
+          "required": [
+            "lenBh",
+            "skyDeg",
+            "groundDeg"
+          ],
+          "properties": {
+            "lenBh": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The turned beam's length, in body heights."
+            },
+            "skyDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90,
+              "description": "A fighter with an anguish meter sends it up at this angle."
+            },
+            "groundDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90,
+              "description": "Anyone else sends it down at this angle."
+            }
+          },
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        }
+      },
+      "description": "The beam plays (agency-pass.md section 5; sim/director/beamplay.gd): how a signature that reaches a defender plays out.",
       "additionalProperties": false,
       "patternProperties": {
         "^_": true

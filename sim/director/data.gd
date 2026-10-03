@@ -558,7 +558,7 @@ static func beamAtFire() -> bool:
 ## The beam's outcome at the fire beat, from what the defender did during the tell: the first rule that matches wins.
 ## answer is the defender's answering request (signature, heavy_blast or none); the held state is the live one. The
 ## draws (the dodge, the escape gamble) happen here. Returns {"out", "dAdd"}: dAdd is added to the defender's clash score.
-static func beamOutcome(S: SimState, ex, dist: float, answer: String, perfect: bool = false) -> Dictionary:
+static func beamOutcome(S: SimState, ex, dist: float, answer: String, perfect: bool = false, noRoll: bool = false) -> Dictionary:
 	var A = ex.A
 	var D = ex.D
 	var defState: String = DirExchange.STN[int(D.stance)]
@@ -570,6 +570,8 @@ static func beamOutcome(S: SimState, ex, dist: float, answer: String, perfect: b
 	for rule in _tpl.beam.outcomeByProfile[tplProfile()].rules:
 		if rule.has("defender") and rule.defender != defState:
 			continue
+		if noRoll and String(rule.get("defender", "")) == "EVASIVE":
+			continue   # the beam plays: a dodge is a timed tap (DirBeamPlay.opReach), not a roll
 		if rule.has("if") and not _cond(rule["if"], ctx):
 			continue
 		var dAdd: float = float(rule.get("clashScoreAdd", {}).get("D", 0.0))

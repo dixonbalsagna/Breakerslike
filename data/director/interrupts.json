@@ -15,7 +15,8 @@
         "light": 8,
         "heavy": 10
       },
-      "return": 6
+      "return": 6,
+      "beam": 12
     },
     "early": {
       "default": 4,
@@ -184,5 +185,36 @@
       "damage": 44
     },
     "_note": "The buried fighter (agency-pass.md sections 7 and 14.5; sim/director/bury.gd; World's embed holds him down for its own ticks, data/biomes/contact.json embed.ticks). followTicks: his rival's first attack press this soon after the burial is the free follow-up. A physical press is a dive: the director flies him to the crater at dive.speed (units a second, the light charge's; at least dive.minTicks), and the blow must land by landByTick of the burial, otherwise there is no follow-up. It is one heavy blow of 'damage' that he cannot answer, free of ki, with no launch, and it makes his crater 'deepen' times as deep as it was (WorldCrater.deepen). An energy press is the other free blow: a charged shot of blast.damage, free of ki, that arrives from any distance (data/fight/shots.json arriveTicks). He is held until the blow lands, never past landByTick; nothing of his stops a follow-up on its way. One follow-up to a burial. guardFromTick: his guard counts from this tick, or once the follow-up is used. burstFromTick: his burst throws him out, not before this tick; an AI bursts only when no follow-up is coming, with its rival within burstWithinBh (ai.json buriedBurst). safeTicks: out of the crater he is safe this long: no exchange starts on him and a shot passes"
+  },
+  "beamPlays": {
+    "enabled": true,
+    "travelTicks": 20,
+    "afterTicks": 42,
+    "dodge": {
+      "beforeTicks": 14,
+      "afterTicks": 6
+    },
+    "late": {
+      "ticks": 20,
+      "scoreAdd": -10
+    },
+    "walk": {
+      "speed": 3000,
+      "minTicks": 24,
+      "maxTicks": 54,
+      "recoverTicks": 20
+    },
+    "split": {
+      "spreadDeg": 14,
+      "lenBh": 12,
+      "widthMul": 0.5,
+      "powerMul": 0.6
+    },
+    "swat": {
+      "lenBh": 30,
+      "skyDeg": 50,
+      "groundDeg": 20
+    },
+    "_note": "The beam plays (agency-pass.md section 5; rule-of-cool.md section 2; sim/director/beamplay.gd). enabled false: a beam is decided at its fire beat, as before. travelTicks: a signature not answered in its tell reaches the defender this many ticks after it fires, at any distance; the outcome is read on that tick. afterTicks: the exchange's length after that. dodge: a dodge tap in the last beforeTicks of the tell or the first afterTicks of the beam avoids it, with no roll. late: the defender's own signature or heavy energy attack within ticks of the fire stops the beam in a struggle that starts scoreAdd on his score. The perfect block's window against a beam is perfectBlock.windows.beam; its look is the direction held as the beam reaches him: away the swat, level the split, toward the walk. A held guard with the stick toward is the wade (guard damage, no launch). walk: he advances at speed (units a second), for minTicks to maxTicks, and the attacker is left recoverTicks of recovery when he arrives. split: two lesser beams leave him spreadDeg either side of the beam's line, lenBh long, at widthMul of its width and powerMul of its power. swat: the turned beam is lenBh long; a fighter with an anguish meter sends it up at skyDeg, one with a menace meter at the nearest standing building within lenBh, anyone else down at groundDeg"
   }
 }

@@ -15,7 +15,8 @@
         "light": 8,
         "heavy": 10
       },
-      "return": 6
+      "return": 6,
+      "beam": 12
     },
     "early": {
       "default": 4,
@@ -23,6 +24,36 @@
     },
     "oneArmedOff": 2,
     "_note": "ki: gained by the blocker. stopTicks: the hit-stop on the block. windows: the last ticks of the wind-up in which a fresh guard press is a perfect block, by strike class (moveset-rules.md section 11(f)); an opener and a blast depend on the exchange's weight; a class not listed has no window. early: ticks before the window opens in which a press still counts, by class. oneArmedOff: ticks off every window for a blocker with a broken arm. The lockout and the assist factor are Controls' (data/input/timing.json perfectBlock antiMashLockout, assistFactor). Touch's 2 extra ticks need the slot's layout in the sim and are not applied yet"
+  },
+  "beamPlays": {
+    "enabled": true,
+    "travelTicks": 20,
+    "afterTicks": 42,
+    "dodge": {
+      "beforeTicks": 14,
+      "afterTicks": 6
+    },
+    "late": {
+      "ticks": 20,
+      "scoreAdd": -10
+    },
+    "walk": {
+      "speed": 3000,
+      "minTicks": 24,
+      "maxTicks": 54,
+      "recoverTicks": 20
+    },
+    "split": {
+      "spreadDeg": 14,
+      "lenBh": 12,
+      "widthMul": 0.5,
+      "powerMul": 0.6
+    },
+    "swat": {
+      "lenBh": 30,
+      "skyDeg": 50,
+      "groundDeg": 20
+    }
   },
   "dodgeCancel": {
     "ki": 15,

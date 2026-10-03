@@ -155,6 +155,16 @@ const lvl = (follow, dodge, wade, late) => [
 `];
 edit("data/director/ai.json", [
   lvl("0.4", "0.4", "0.3", "0.05"), lvl("0.8", "0.55", "0.5", "0.1"), lvl("1.0", "0.7", "0.7", "0.2"),
+  [`      "guardRepeat": 6.5,
+`,
+   `      "guardRepeat": 5.5,
+`],
+  [`      "barrageGuard": 0.5,
+`,
+   `      "barrageGuard": 0.7,
+`],
+  ["guardRepeat 6.5, punish 0.4 and punishHeavy 0.5 measured 40 of 100 on the section 14 rulings (a plain blur's ender is half a set-up, which slows his kills; guardRepeat 6.0: 39; 8.75: 24). The win rate moves with every slice: re-measure after each.",
+   "guardRepeat 5.5, punish 0.4 and punishHeavy 0.5 on the beam plays, measured with QA's masher script (qa/godot/masher.gd, 100 matches): 6.5 gave 33, 6.0 gave 35, 5.0 gave 45, 4.0 gave 55. The same build's bolt-only row (qa/godot/players.gd, the script in both slots, band 20 to 40%): barrageGuard 0.5 gave 54 of 100, 0.6 gave 37, 0.7 gave 31. Both move with every slice: re-measure after each. On the section 14 rulings guardRepeat 6.5 gave 40 (a plain blur's ender is half a set-up, which slows his kills)."],
   [`  "reactTicks": 14,
 `,
    `  "beamLook": {"split": 1.0, "walk": 1.0, "swat": 1.0},
