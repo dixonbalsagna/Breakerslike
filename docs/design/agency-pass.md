@@ -674,3 +674,37 @@ Encounter's alchemy plan (`docs/director/alchemy-plan.md`, A4) reads "flow earns
 **What timing adds:** launches at the end of his strings, the showcase ender at flow 5, and each style's upgrade.
 
 **The mashed blur keeps its weak ender** (§13 and §14.4): after four landed lights, 0.6 of the knock-back distance and half a set-up. This replaces §2's first "no ender", which was written before §13. Encounter's plan follows the later rule, and that is right.
+
+## 19. Rulings on slice 9 (Encounter's `docs/director/agency-slice-9.md`, 2026-10-03)
+
+### 1. Match length: a recommendation for Orb
+
+**Measured:** a median of 498.5 s against a band that ends at 480, a 90th percentile of 609 s against 600, and a first brink at 427.5 s against 420. Encounter shows that firing less would drop blasts under their 10% floor, and that more wear only moves time from before the brink to after it.
+
+**Recommendation: widen the band, and leave the brink chapter alone.**
+
+| Band | Today | Proposed while blasts and beam plays are in |
+| :--- | :--- | :--- |
+| Median length | 6:00 to 8:00 | **6:00 to 8:30** (360 to 510 s) |
+| First brink, median | 4:30 to 7:00 | 4:30 to 7:15 |
+| 90th percentile | At most 10:00 | Unchanged |
+| Brink to KO | 45 to 90 s | Unchanged |
+
+- **Why.** Orb's standing answer is matches of five minutes or more, and 8:18 is inside that. Ranged play adds time that wasn't there before: fighters now spend part of each match apart, firing and closing. The brink chapter is the climax. Orb asked for it after it ran 4 s, and at 61 to 84 s it is inside its own band. Cutting it to meet a clock would trade the best minute of the match for an average one.
+- **What it costs.** Sessions run about 20 s longer, and more matches come near the 11:00 event.
+- **One small number holds the tail.** The finisher's overtime tilt (10 points less survival for each minute) starts at **7:30, not 8:00.** Late finishers land more often, which trims the longest matches and should bring the 90th percentile back under 10:00. It barely moves the median. Data: the tilt's start, 480 s to 450 s.
+
+**If Orb would rather keep 8:00,** the number to change is `brinkSetups`, from 2 to 1. That takes about 30 s off the median. It costs the brink its two steps (the opening, then the finisher), and it puts brink to KO at about 40 s, under its 45 s floor.
+
+### 2. The free approach after a perfect block of a shot
+
+**As built:** for 45 ticks, any shot that meets him is shrugged off at half damage and doesn't count toward a barrage.
+
+**Confirmed, with one amendment.** Half damage is right: it matches the heavy charge's shrug, and it leaves the rival's fire some value. The amendment keeps §15.2's promise that the approach can't be stopped:
+- **if he starts a charge or a lunge inside the 45 ticks, the protection lasts until it arrives.** A far charge can take longer than what is left of the window, and it mustn't lapse halfway there;
+- if he doesn't start one, it ends at 45 ticks.
+
+### 3. The AI's firing share and barrage guard
+
+- **Firing share 0.2, 0.4 and 0.5** (it was 0.18, 0.35 and 0.45): confirmed. Deflected shots no longer hurt the shooter, so the AI needs to fire a little more to keep blasts at 10 to 25% of match damage.
+- **Medium `barrageGuard` 0.42** (it was 0.5): confirmed. Easy and hard stay at 0.2 and 0.8. The band it serves is a bolt-only player winning 20 to 40% against the medium AI.
