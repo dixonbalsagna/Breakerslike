@@ -2,7 +2,7 @@
  "schema": "combat-strike-specs/0-draft",
  "_about": "PARKED. Combat's own rows for the launch pair's new strikes and entries, replacing the rows Animation borrowed from wave 1 slots. Fighter keys are the neutral working ids (protagonist, rival). Not loaded, not hashed. offset is the contact distance; reach is the limb's envelope to the socket; lunge and clear are left for Animation's strike_lab to fill on the posed strike.",
  "_manifestDrift": {
-  "_about": "Where Animation's manifests at HEAD a56187a (data/anim/waves, render only) still carry a borrowed slot's numbers. Combat's rows here and in strikes.antihero.wave1.json are the ones to regenerate from. Limbs and targets agree everywhere, so the recipes' blur patterns are not affected",
+  "_about": "Where Animation's manifests at HEAD 45a95b9 (data/anim/waves, render only) still carry a borrowed slot's numbers. Combat's rows here and in strikes.antihero.wave1.json are the ones to regenerate from. Limbs and targets agree everywhere, so the recipes' blur patterns are not affected",
   "protag1": {
    "strike.palm_push": {
     "ticks": {
@@ -126,6 +126,26 @@
     "offset": {
      "manifest": 34,
      "combat": 38
+    }
+   }
+  },
+  "protag6": {
+   "strike.body_hook": {
+    "offset": {
+     "manifest": 58,
+     "combat": 54
+    },
+    "ticks": {
+     "manifest": [
+      12,
+      6,
+      12
+     ],
+     "combat": [
+      10,
+      6,
+      10
+     ]
     }
    }
   }
@@ -451,6 +471,14 @@
      "strike.spinning_back_kick"
     ],
     "look": "A cartwheel step along the ground that comes up into the blow."
+   }
+  ],
+  "shares": [
+   {
+    "id": "strike.body_hook",
+    "row": "rival.strikes: one row for both fighters",
+    "keySet": "ph.body_hook (protag6)",
+    "look": "A round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through, the other open hand up at his cheek."
    }
   ]
  },

@@ -86,6 +86,10 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-064 | Launch pair: six On the Chin poses | Combat | Low | GO; not a flat cross, no head thrown back | Closed |
 | RL-065 | Launch pair: energy kinds per fighter | Combat | Low | GO | Closed |
 | RL-066 | Anti-hero glasses and glare (rules in advance) | Art, VFX | Low to Medium | GO on the rules; frames screened 2026-10-02: five GO, chamfer plates change or drop | Open until frame 3 is changed or dropped |
+| RL-067 | Protagonist far taunts: nod, bounce, fist to palm | Combat | Low | Clear; fist to palm and the close taunt have conditions | Closed |
+| RL-068 | Glasses compare: A, B, C clear; D avoid | Art | Low | Clear; D avoid | Closed |
+| RL-069 | Protagonist sheet: big fists, forelock | Art | Medium | CONDITIONAL: fists solid and plated, forelock a swept tuft | Open until Art revises |
+| RL-070 | Rival sheet: tail, coat blades, glasses | Art | Low | Clear | Closed |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 

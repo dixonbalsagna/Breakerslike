@@ -155,3 +155,28 @@ Screens `docs/combat/launch-pair-movesets.md` and `docs/combat/pending/launch-pa
 - **Anti-hero:** rain and the splitting shot, with the RL-062 rules: one arm with plates lit for the rain, never both hands overhead holding an orb; no hands spread wide as the splitting cue; nothing surrounds the rival.
 - **Protagonist:** the curving shot, steered by the stick only and released from a still flat palm (never a finger or a hand sweep), nothing closing in on command; the ricochet shot is fine.
 - **Both:** shot core in the lane colour, explosion may be fire-coloured, no shouted name.
+
+## Launch pair: far taunts and Art's three sheets (2026-10-03)
+
+Screens `docs/combat/launch-pair-movesets.md` section 9 and `art/concepts/refine/` (`glasses-compare.svg`, `launch-pair-protagonist.svg`, `launch-pair-rival.svg`), which I rendered and looked at. A screen, not legal advice.
+
+| Item | Verdict | Log |
+|---|---|---|
+| Far taunt: the nod | **Clear** | RL-067 |
+| Far taunt: the bounce on the toes | **Clear** | RL-067 |
+| Far taunt: fist to palm | **Clear, with conditions** | RL-067 |
+| Glasses A (lead), B (chamfers changed), C (chamfers dropped) | **Clear** | RL-068 |
+| Glasses D (the chamfer-plates frame) | **Avoid** | RL-068 |
+| Protagonist sheet | **Conditional** | RL-069 |
+| Rival sheet | **Clear** | RL-070 |
+
+**Far taunts.** None is tied to one character. A nod, a bounce on the toes (a boxer's shuffle) and a fist-to-palm salute are everyday gestures, and the fist-to-palm is a real martial courtesy. Conditions: (1) the fist-to-palm stays a single, short, respectful tap or held salute at chest height: never pounded or ground into the palm, never repeated, no cracked knuckles (as Combat wrote); (2) the three-in-one close taunt (bounce, tap, chin lift) must not add a grin-and-wipe-the-nose beat, a thumb under the nose or a beckon, so it never becomes one hero's pre-fight routine; (3) none uses two fingers, a point or a beckon (as written).
+
+**Glasses sheet.** A (blade lenses with the lit top line), B (bevelled corners and tabs) and C (the bare wedge) are clear under `glasses-rules.md`. **D, the chamfer-plates frame, reads as a plain tinted rectangle: avoid.** The glare wedge is fine in all four. Keep the violet visible in colour, and not pure white at 24 px.
+
+**Protagonist sheet (conditional).**
+- **The big fists must not be pale glowing balls.** On the pick sheet they are drawn as light circles at the end of the arms, which read as energy balls in his hands (the lit-fist rule says plate edges, never a ball of light round the fist). Make them solid, dark and plated, with the same value as his sleeves, not a pale disc.
+- **The forelock** must be a swept tuft, never a curled "spit curl" on the forehead (a famous hero's mark). Keep it flat and angular.
+- The refined face (heavier lids, angled brow, temple arc), the broad body and the short swept teal tuft are clear: not spiky, not gold. Big round fists on a broad body are a generic bruiser shape, not one character's.
+
+**Rival sheet (clear).** A long tail to the knee, three coat blades and blade-lens glasses make a distinct silhouette. The glare is the one pale-violet wedge, with eyes hidden and a smirk, inside `glasses-rules.md`. Neither the long ponytail nor the dark coat matches a known character. Keep the coat blades as flat plates, not a jet-pack or wings.

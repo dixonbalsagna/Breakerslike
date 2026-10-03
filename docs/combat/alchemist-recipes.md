@@ -180,7 +180,7 @@ Game Design's rule: a far taunt is a challenge. If the rival presses attack duri
 | Status | Meaning | Anti-hero | Protagonist |
 | :--- | :--- | ---: | ---: |
 | `live` | plays in live matches today | 0 | 0 |
-| `posed` | posed in Animation's packs and parked; it plays when its fighter lands | 36 of 40 (wave 1 and rival2) | 42 of 42 (protag1) |
+| `posed` | posed in Animation's packs and parked; it plays when its fighter lands | 36 of 40 (wave 1 and rival2) | 43 of 43 (protag1, and protag6 for his body hook) |
 | `waiting` | not posed yet | 4: the tail strikes, held for Orb's ruling | 0 |
 
 Nothing is live because KAI and VORR still draw on the placeholder key sets, and go-live step 1 is a flag, off. Each blur pattern is checked against both fighters' lights. The director's own numbers (the window, the flow's thresholds, the multipliers) stay out of this file: they belong in Encounter's `data/director/alchemy.json`.

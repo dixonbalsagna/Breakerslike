@@ -1,8 +1,8 @@
 {
  "schema": "combat-launch-pair/0-draft",
- "_about": "PARKED. What each fighter of the launch pair ships with in the next update, and what waits (../launch-pair-movesets.md). Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. Counts are authored sketches. Game Design's launch-pair-plan.md sets the scope. Checked against HEAD a56187a.",
+ "_about": "PARKED. What each fighter of the launch pair ships with in the next update, and what waits (../launch-pair-movesets.md). Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. Counts are authored sketches. Game Design's launch-pair-plan.md sets the scope. Checked against HEAD 45a95b9.",
  "posed": {
-  "_about": "poses in Animation's packs at HEAD a56187a (data/anim/waves and data/anim/poses.json), all parked or behind flags",
+  "_about": "poses in Animation's packs at HEAD 45a95b9 (data/anim/waves and data/anim/poses.json), all parked or behind flags",
   "shared": {
    "poses.json": 103,
    "step3": 32,
@@ -10,19 +10,26 @@
    "energy1": 8,
    "ground1": 16,
    "intro1": 11,
-   "laststand1": 15
+   "laststand1": 15,
+   "pair1": 5,
+   "_total": 202
   },
   "rival": {
    "wave1": 120,
    "wave2": 62,
    "rival1": 20,
-   "rival2": 9
+   "rival2": 9,
+   "rival3": 30,
+   "_total": 241
   },
   "protagonist": {
    "protag1": 126,
    "protag2": 54,
    "protag3": 8,
-   "protag4": 8
+   "protag4": 8,
+   "protag5": 29,
+   "protag6": 3,
+   "_total": 228
   }
  },
  "rival": {
@@ -472,6 +479,55 @@
   },
   "newCues": [
    "gives_way"
+  ]
+ },
+ "added": {
+  "_about": "Posed by Animation beyond the plan's 60 sketches (docs/animation/launch-pair-coverage.md), confirmed by Combat (../launch-pair-movesets.md section 9). The plan's totals are not changed",
+  "protagonist": [
+   {
+    "piece": "his ribs hook for Blow for Blow (strike.body_hook, key set ph.body_hook)",
+    "status": "posed",
+    "pack": "protag6"
+   },
+   {
+    "piece": "his own Blow for Blow brace",
+    "status": "posed",
+    "pack": "protag5"
+   },
+   {
+    "piece": "three far taunts (nod, bounce, fist to palm) and a close taunt",
+    "status": "posed",
+    "pack": "protag5"
+   },
+   {
+    "piece": "the free blast presses with his hands, and the spray with open hands",
+    "status": "posed",
+    "pack": "protag5"
+   }
+  ],
+  "rival": [
+   {
+    "piece": "the free blast presses, wave 6's charged brace and the shove",
+    "status": "posed",
+    "pack": "rival3"
+   },
+   {
+    "piece": "his four far taunts and a close taunt",
+    "status": "posed",
+    "pack": "rival3"
+   },
+   {
+    "piece": "the Drop the Act cinematic",
+    "status": "posed",
+    "pack": "rival3"
+   }
+  ],
+  "shared": [
+   {
+    "piece": "the brawl file's three pieces in five poses: the forearm check, the shin check, the clash recoil",
+    "status": "posed",
+    "pack": "pair1"
+   }
   ]
  }
 }

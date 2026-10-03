@@ -222,7 +222,7 @@ Animation's coverage pass (`docs/animation/launch-pair-coverage.md`) added one s
 - It takes Combat's row for `strike.body_hook` as it stands (`pending/strikes.launchpair.json`): a heavy to the gut socket, 54 u, ticks 10, 6 and 10, sends turned or across, one arm, fine on the ground or in the air. The manifest's 58 u and 12, 6 and 12 are a borrowed slot's.
 - With it he has all six places: ribs (this hook), flank (roundhouse), shoulder plate (dropping elbow, hammer), chest (double palm, and his own palm push), hip (rising knee, spinning heel), thigh (stomp). The rib shot stays the rival's.
 - His own brace for the set piece is confirmed too: open hands up at the chest with the forearms close, upright, giving ground on his heels without folding (Legal's rule 2: each takes the blow his own way).
-- It joins his recipe pools where the rival's hook sits (the blur's ender, power, the last power blow) when Animation's pack is committed: 43 pieces, all posed.
+- It is in his recipe pools where the rival's hook sits (the blur's ender, power, the last power blow), now that Animation's pack is committed (45a95b9): 43 pieces, all posed.
 
 **His far taunts: all three confirmed, with three conditions.** He is earnest and delighted, and his taunt is a challenge (`docs/narrative/voices/protagonist.md`). The rival's four dismiss; these three invite.
 

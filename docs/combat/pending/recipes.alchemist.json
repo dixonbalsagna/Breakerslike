@@ -1,10 +1,10 @@
 {
  "schema": "combat.recipes/1",
  "_target": "data/combat/recipes.json",
- "_about": "PARKED: ready to become data/combat/recipes.json as it stands (drop _target), but not moved. The pieces each of Game Design's recipes calls (docs/design/agency-pass.md section 2), per fighter. Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. The rules and numbers quoted are Game Design's; the director's own numbers (the window, the flow's thresholds, the multipliers) belong in Encounter's data/director/alchemy.json. Checked against HEAD a56187a: every posed id is a strike of a wave manifest, and every blur step fills for both fighters.",
+ "_about": "PARKED: ready to become data/combat/recipes.json as it stands (drop _target), but not moved. The pieces each of Game Design's recipes calls (docs/design/agency-pass.md section 2), per fighter. Fighter keys are the neutral working ids (protagonist, rival) until Orb names the pair. The rules and numbers quoted are Game Design's; the director's own numbers (the window, the flow's thresholds, the multipliers) belong in Encounter's data/director/alchemy.json. Checked against HEAD 45a95b9: every posed id is a strike of a wave manifest, and every blur step fills for both fighters.",
  "_status": {
   "live": "plays in live matches today. Nothing in these pools does yet: KAI and VORR still draw on the placeholder key sets, and go-live step 1 is a flag, off",
-  "posed": "posed in one of Animation's packs and parked: it plays when its fighter lands (wave 1 and rival2 for the rival, protag1 for the Protagonist). The director may draw on posed and live pieces alike",
+  "posed": "posed in one of Animation's packs and parked: it plays when its fighter lands (wave 1 and rival2 for the rival; protag1 and protag6 for the Protagonist). The director may draw on posed and live pieces alike",
   "waiting": "not posed yet: the director skips it"
  },
  "_counts": {
@@ -19,8 +19,8 @@
    ]
   },
   "protagonist": {
-   "pieces": 42,
-   "posed": 42,
+   "pieces": 43,
+   "posed": 43,
    "waiting": []
   }
  },
@@ -791,6 +791,10 @@
     {
      "id": "strike.spinning_back_kick",
      "status": "posed"
+    },
+    {
+     "id": "strike.body_hook",
+     "status": "posed"
     }
    ],
    "combo.link": [
@@ -1013,6 +1017,10 @@
     {
      "id": "strike.spinning_back_kick",
      "status": "posed"
+    },
+    {
+     "id": "strike.body_hook",
+     "status": "posed"
     }
    ],
    "power.last": [
@@ -1086,6 +1094,10 @@
     },
     {
      "id": "strike.spinning_back_kick",
+     "status": "posed"
+    },
+    {
+     "id": "strike.body_hook",
      "status": "posed"
     }
    ]
