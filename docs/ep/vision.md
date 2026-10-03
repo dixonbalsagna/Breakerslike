@@ -535,3 +535,5 @@ Orb, after the mock-up (2026-10-02): "charged shots should have the capability o
 "I want the next big update to include the expanded energy blasts, two fighters (protagonist and rival, I will have names for these two and the vocabulary text work you need me to do soon) and the framework for the combat alchemy layer tied into the fight choreographer. I want some peace and quiet for gaming, so please bring all ongoing work to a pause and we'll get ready for the big update soon."
 
 Scope of the next update: (1) expanded energy blasts (agency-pass sections 15 and 16: wild deflects, the spray cone, shots against buildings, mines, more kinds); (2) two fighters, the Protagonist and the rival (the Anti-hero), replacing the KAI and VORR placeholders; Orb supplies their names and edits the voice packet; (3) the framework of the combat alchemy layer in the director (the press window, styles, timing grades, flow). All sessions pause until Orb says go.
+
+Orb, 2026-10-02: "the rival character should have glasses, i want him to be our resident 'scary shiny glasses' trope character". The rival (the Anti-hero) wears glasses whose lenses go opaque with glare at key moments.
