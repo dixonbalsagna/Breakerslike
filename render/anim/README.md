@@ -33,6 +33,7 @@ Owner: Animation (Rendering reviews). Plan: `docs/animation/pose-pipeline.md`; r
 | `tools/strike_lab.gd` | The strike lab: each strike of a wave against a dummy defender at its own distance, as a captioned reel, a contact sheet, or (`--measure`, `--sweep`) the reach, the step-in and the clipping |
 | `tools/socket_check.gd` | The reach envelope of every striking limb against every region (`data/anim/sockets.json`) |
 | `tools/joint_scan.gd` | Joint-limit lint: poses, sequences and live matches against joints.json, with the stage that broke each limit and the size of every correction (`--strict` fails on one; `--head`, `--legacy`, `--nopass` show the before) |
+| `tools/coverage.gd` | Launch-pair coverage check: every row of `docs/animation/launch-pair-coverage.json` (a move, shot kind, ending or set piece of the next update, per fighter) finds its poses in the loader (`--strict` fails on a missing id or a gap row) |
 | `tools/lead_scan.gd` | Feet-first lint (GB-006): live matches for a fighter moving fast with his feet leading while not tumbling (`--strict --max=N`; the shipped budget is 40) |
 | `tools/limb_scan.gd` | Joint-limit scan (`--nolimit` turns the runtime limb pass off to show what it fixes) |
 

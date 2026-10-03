@@ -1,0 +1,41 @@
+{
+ "wave": "protag6",
+ "strikes": [
+  {
+   "id": "ph.body_hook",
+   "combat": "strike.body_hook",
+   "name": "body_hook",
+   "weight": "heavy",
+   "target": "gut",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "A round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through.",
+   "orig": "a round hook with the open hand dug in along the ribs, the elbow bent and the hip turned through, the other open hand up at his cheek",
+   "poses": [
+    "ph.body_hook.chamber",
+    "ph.body_hook.contact",
+    "ph.body_hook.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  }
+ ],
+ "skipped": []
+}

@@ -14,10 +14,11 @@ extends SceneTree
 
 const DT := 1.0 / 60.0
 const SCENES := ["taunt", "charge_light", "charge_heavy", "charge_feint", "knock_short", "knock_long", "drift", "embed"]
-const ENERGY := ["swat", "mine", "spray", "curve", "chin", "chin_beam", "fin_flight"]   # the parked energy poses (wave energy1, docs 9.24): the lab plays the sequence by hand (nothing fires these yet); needs --waves
+const ENERGY := ["swat", "mine", "spray", "curve", "chin", "chin_beam", "fin_flight"]   # (and --seq=ID plays any baked sequence)   # the parked energy poses (wave energy1, docs 9.24): the lab plays the sequence by hand (nothing fires these yet); needs --waves
 
 var scene: String = "taunt"
 var scene_given: bool = false
+var seq_id: String = ""   # --seq=ID: play any baked sequence by hand (needs --waves), the scene "seq"
 var out: String = "agency.rgb"
 var sheet: String = ""
 var off: bool = false
@@ -30,6 +31,10 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--scene="):
 			scene = a.substr(8)
+			scene_given = true
+		elif a.begins_with("--seq="):
+			seq_id = a.substr(6)
+			scene = "seq"
 			scene_given = true
 		elif a.begins_with("--out="):
 			out = a.substr(6)
@@ -154,7 +159,7 @@ func _run() -> void:
 			f0.face = 1.0
 			f1.face = -1.0
 			f0.x = x0
-			var label_phase: String = sc
+			var label_phase: String = seq_id if sc == "seq" else sc
 			match sc:
 				"taunt":
 					f0.y = 24.0
@@ -181,8 +186,8 @@ func _run() -> void:
 						f0.y = 14.0 * sin(u * PI)
 					if k == 10:
 						evs.append(_ev("knockback", S.tick, {"victim": 0.0, "attacker": 1.0, "kind": kind, "amount": 60.0, "n": S.tick + int(dur * 60.0), "dur": dur}))
-				"swat", "mine", "spray":
-					var sq: String = {"curve": "pn.curve", "chin": "rv.on_the_chin", "chin_beam": "rv.chin_beam", "fin_flight": "pf.finisher"}.get(sc, "en." + sc)   # (curve: the Protagonist's curving shot, protag3; chin and chin_beam: the rival's On the Chin, rival1)
+				"swat", "mine", "spray", "seq":
+					var sq: String = {"curve": "pn.curve", "chin": "rv.on_the_chin", "chin_beam": "rv.chin_beam", "fin_flight": "pf.finisher"}.get(sc, seq_id if sc == "seq" else "en." + sc)   # (curve: the Protagonist's curving shot, protag3; chin and chin_beam: the rival's On the Chin, rival1)
 					var at: Array = [10, 16, 22, 28] if sc == "spray" else [10]
 					if at.has(k) and AnimData.entries.has(sq):
 						var afe: AnimFighter = RenderAnim.fighter(S, f0)
