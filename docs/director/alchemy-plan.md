@@ -32,6 +32,16 @@ Sources: `docs/design/agency-pass.md` §2 (the frame, the three styles, timing, 
 | **A7. Blow for Blow** | Both release a power blow on the flash in one exchange: they trade heavies in turn, each inside an 8-tick window. The beat is 40 ticks and 4 shorter a turn, never under 24. Each blow is ×0.7 of a heavy, on a different strike and place. The pair travel 40 units on the first turn and 8 more each turn after. The first to miss, guard or dodge gives way to an earned launch with the panel and 25% more wear. At most 8 turns, one per 20 s; mood +8 and +3 a blow | Large (about 250 lines, on A3 and A6) | **Legal:** its twelve staging rules, screened before it is built. **Combat:** §2's pieces and three poses. **Animation:** sockets for the places. **Camera, VFX, World** (the furrow), **Narrative** (the name), **QA** |
 | **The AI, in every slice** | Its presses make styles at its level's mix; it times presses, pulses and the flash at its level's rate (40, 65 and 85% for pulses and beats) | Inside each slice | `ai.json` keys per level; **Tools** |
 
+## Controls' note for A1 to A4 (`docs/controls/agency-input.md`)
+
+- **The beat** for a string is the nearest blow contact in the exchange, either fighter's, from the director's strike schedule.
+- **A hold** grades against the charge's flash: the director stamps the planned flash tick when the charge begins.
+- **Clashes** grade against the pulse and are never pushed into the log.
+- **The log** is 20 presses, with a five-press mix and a 90-tick expiry.
+- **No intent change** for A1 to A4: `lightHeld`, `heavyHeld`, `escape` and the intent hash are already in.
+- **Hit-stop:** `S.tick` runs through hit-stop and only `S.T` stops. A press or a release made in a freeze of h ticks arrives on the first live tick, so A1 grades it at `S.tick - h`. Otherwise timed presses on heavy hits read late.
+- **The stick's launch direction** comes from Controls' `SimAim` (`sim/input/aim.gd`): eight sectors with a 12-tick latch, `pool(sector, opp_sign)` for the direction pools and `snap(sector, candidates)` for the launch target. Its latch's two integers live in the director's per-fighter integers, which are hashed.
+
 ## A first playable cut
 
 **A1, A2, A4, and A3's blur and combo upgrades.** Presses become ingredients, the three styles play differently, mashing steadily or tapping in time pays, and flow earns the launch at the end of a string. That is the "framework" Orb asked for, and it can be played against the AI.
