@@ -616,7 +616,7 @@ Spam is the bigger show and the weaker attack, which is the same rule as mashing
 
 | # | Rule | Data |
 | ---: | :--- | :--- |
-| 1 | **When four of a fighter's bolts land on the rival inside 90 ticks, the fourth is a knock-back.** The player doesn't press for it. It is a decisive exchange, like any knock-back (§13), and never a launch | `barrage.enderAfter` 4, `barrage.window` 90 |
+| 1 | **When four of a fighter's clean shots land on the rival inside 120 ticks, the fourth is a knock-back** (any kind of shot, since §21; it was four bolts inside 90 ticks). The player doesn't press for it. It is a decisive exchange, like any knock-back (§13), and never a launch | `barrage.enderAfter` 4, `barrage.window` 90 |
 | 2 | **Only clean hits count.** A bolt that is guarded, deflected, or shrugged off by a heavy charge doesn't. Pieces of a volley or a shard spread count as one each | |
 | 3 | **Measured bolts close hard, and spam closes weak.** If all four were measured (fired 10 ticks or more apart, with no spread), the knock-back is the tier's full distance and a full set-up. If any was spammed, it is 0.6 of the distance and half a set-up, the same as the plain blur's ender (§14.4) | `barrage.enderDist` 1.0 and 0.6; `setup.weight.barragePlain` 0.5 |
 | 4 | **It can't chain at once.** After a barrage's knock-back, the count starts again, and the rival can't be knocked back by another barrage for 90 ticks | `barrage.immune` 90 |
@@ -807,3 +807,30 @@ It never launches, in either form.
 With five presses this is the rule in §2 unchanged (none; one to three; four or five). With fewer, it means a lone heavy is a power blow, and two heavies running are power. So a player who wants power gets it from his first heavy and doesn't have to press through three exchanges of something else to reach it.
 
 **What changes for Controls** (`sim/input/press_read`): `expireTicks` 90 becomes an idle lapse for the whole window, counted from the last press. `mixShort` stays 5. The style is read from the share of heavies among the presses present.
+
+## 21. The barrage counts every clean shot (2026-10-03)
+
+**What QA found.** A blaster firing light, light, tapped heavy at about 24 ticks a press never finishes a match against a melee player: 40 of 40 reach the 900 s cap. Encounter traced it. After the brink the melee fighter takes about 1,100 bolts and 550 tapped charged shots a match, all clean. But the barrage's ender needs 4 clean **bolts** inside 90 ticks, and this mix fits 3 at most, because every third shot is a charged one. A tapped charged shot doesn't knock back either: that needs a full charge. So nothing decisive ever happens, and damage alone doesn't end a match. A real player firing that mix would stall the same way.
+
+**The ruling: the count is by clean hits of any shot kind, and the window is a little wider.**
+
+| Key (`interrupts.json`, `blast.barrage`) | Value | Was |
+| :--- | :--- | :--- |
+| What counts | **A clean hit from any kind of shot,** one for each shot, and one for a whole group (a volley, a split, a rain) | Bolts only |
+| `window` | **120 ticks** | 90 |
+| `enderAfter` | 4 | Unchanged |
+| `immune` | 90 ticks | Unchanged |
+| `enderDist` | 1.0 when all four were measured, 0.6 when any was spammed | Unchanged |
+
+- **Why any kind.** The barrage's ender exists so that sustained clean fire can close a fight. That shouldn't depend on which button the fire came from.
+- **Why 120.** At about 24 ticks a press, four hits span 72 ticks, which fits. A slower, deliberate shooter at 30 ticks a shot spans exactly 90 and would miss the old window by one tick.
+- **It doesn't make bolt spam stronger.** A bolt-only spammer's hits already counted, and he lands four well inside 90 ticks, so neither change gives him anything. The 90 ticks of immunity still cap how often anyone can be knocked back this way.
+- **Measured or spammed is unchanged.** If all four shots were fired 10 ticks or more apart with no spread, the ender is the strong one. If any was spammed, it is the weak one, worth half a set-up (§16).
+- A full charged shot still knocks back by itself. It also counts as one clean hit.
+
+**What QA checks:**
+- E4 and E5 (the light, light, tapped heavy blaster against a melee player): at least 95% of matches finish before the cap;
+- the bolt-only player against the medium AI stays at 20 to 40% (30% today);
+- blasts stay at 10 to 25% of match damage (11.4% today);
+- the mixed blaster's win rate against the medium AI, reported as a new row. The starting band is 25 to 45%;
+- brink to KO between AIs stays at 45 to 90 s.
