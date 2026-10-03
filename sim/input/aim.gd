@@ -22,8 +22,10 @@ const DOWN_LEFT: int = 5
 const DOWN: int = 6
 const DOWN_RIGHT: int = 7
 
-## tan(22.5 degrees): a direction is on an axis while its minor component is below this fraction of its major one.
-const TAN_22_5: float = 0.4142135623730951
+## tan(22.5 degrees), sqrt(2) - 1, as a float64 from its bit pattern (the sim's long-literal rule): a direction is on an axis
+## while its minor component is below this fraction of its major one.
+static func tan_22_5() -> float:
+	return SimMathx.f64("3fda827999fcef33")
 
 ## The unit step of each sector, x then y: (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1).
 const STEP_X: Array = [1, 1, 0, -1, -1, -1, 0, 1]
@@ -54,9 +56,10 @@ static func sector(mx: float, my: float, dead_zone: float = -1.0) -> int:
 		return NONE
 	var ax: float = absf(mx)
 	var ay: float = absf(my)
-	if ay < ax * TAN_22_5:
+	var t: float = tan_22_5()
+	if ay < ax * t:
 		return RIGHT if mx > 0.0 else LEFT
-	if ax < ay * TAN_22_5:
+	if ax < ay * t:
 		return UP if my > 0.0 else DOWN
 	if mx > 0.0:
 		return UP_RIGHT if my > 0.0 else DOWN_RIGHT

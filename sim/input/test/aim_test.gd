@@ -85,7 +85,7 @@ func _keyboard() -> void:
 
 ## Exactly 22.5 degrees reads as the diagonal; just under is the axis. Mirror images agree.
 func _boundaries() -> void:
-	var t: float = SimAim.TAN_22_5
+	var t: float = SimAim.tan_22_5()
 	ok(SimAim.sector(1.0, t) == SimAim.UP_RIGHT, "boundary: exactly 22.5 degrees is the diagonal")
 	ok(SimAim.sector(1.0, t - 0.0001) == SimAim.RIGHT, "boundary: just under is the axis")
 	ok(SimAim.sector(1.0, 1.0 / t - 0.0001) == SimAim.UP_RIGHT and SimAim.sector(1.0, 1.0 / t + 0.01) == SimAim.UP, "boundary: 67.5 degrees is where up-right becomes up")
