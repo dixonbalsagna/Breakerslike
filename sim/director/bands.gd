@@ -22,6 +22,7 @@ const SLOPE_STEPS: Array = [1.0, 0.66, 0.4]   # shares of engageBh tried for the
 const CHARGE: int = 1 << 6    # APPR_REQ: the approach is a held charge
 const MEET: int = 1 << 7      # APPR_REQ: the approach is the answer to a taunt: both rush to the middle
 const CHARGED: int = 1 << 8   # APPR_REQ: ... and the rival was holding a heavy charge when he was met: he enters with an edge
+const FREE: int = 1 << 9      # APPR_REQ: the free approach a deflect earned: no shot stops it (DirBlast.hit)
 const PAYS: Array = ["half", "quarter", "eighth"]   # what an ignored far taunt pays: the first, the second, the third
 # The AI's answer to a rival who is coming, or to his taunt (DirInterrupt.AI_REACT).
 const R_NONE: int = 0
@@ -123,7 +124,10 @@ static func begin(S: SimState, A, D, weight: int, entry: int, pressTick: int, op
 	A.rush = r
 	DirInterrupt.si(A, DirInterrupt.TAUNT_AGE, 0)
 	DirInterrupt.si(A, DirInterrupt.APPR_LEFT, n)
-	DirInterrupt.si(A, DirInterrupt.APPR_REQ, weight | ((entry + 1) << 2) | (opn << 4) | (CHARGE if charge else 0))
+	var free: bool = S.tick < DirInterrupt.gi(A, DirInterrupt.FREE_UNTIL)   # a deflect's free approach: this charge or lunge uses it
+	if free:
+		DirInterrupt.si(A, DirInterrupt.FREE_UNTIL, 0)
+	DirInterrupt.si(A, DirInterrupt.APPR_REQ, weight | ((entry + 1) << 2) | (opn << 4) | (CHARGE if charge else 0) | (FREE if free else 0))
 	DirInterrupt.si(A, DirInterrupt.APPR_TICK, pressTick)
 	SimFx.rush(S, A, D, S.tick + n)
 	var what: String = ": CHARGES" if charge else (": LUNGE" if b == MID else ": FLIES IN")

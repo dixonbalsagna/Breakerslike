@@ -69,7 +69,11 @@ const BEAM_FIRE: int = 52  # S.tick the beam aimed at him left
 const BEAM_TRAVEL: int = 53   # the ticks his own main beam takes to reach its target; 0 when it is not on its way under the plays
 const BEAM_REACH: int = 54 # ... and how far along it the target is, in whole units
 const BEAM_DODGED: int = 55   # 1 once he tapped dodge inside the window of the beam coming at him
-const N: int = 56
+const FREE_UNTIL: int = 56 # S.tick until which the approach he starts cannot be stopped by a shot (a deflect earned it)
+const CTX_SHOT: int = 57   # the shot (or volley) his context deflect is set for: its group, or minus its id; 0 when none
+const CTX_DEFL: int = 58   # ... and that shot's deflect count when it was set
+const SPRAY: int = 59      # his bolts' spread, in thousandths (the spray cone)
+const N: int = 60
 const END_NONE: int = -1   # LAST_END before any launch beat or launch: the exchange has sent nobody anywhere
 const END_LAUNCH: int = 0
 const END_KNOCK: int = 1
@@ -333,6 +337,9 @@ static func tick(S: SimState) -> void:
 	for f in order:
 		if _human(f) and f.input.guardPress:
 			guardPress(S, f)
+	for f in order:
+		if f.input.context and f.stunTicks <= 0 and (f.ai != null or _human(f)):
+			DirBlast.context(S, f)   # outside an exchange: a mine with the energy family held, the context deflect on a held guard
 	if ex != null:
 		_aiBlocks(S, ex)
 	var taken: bool = false

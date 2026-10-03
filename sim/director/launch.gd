@@ -388,10 +388,10 @@ static func heavyBlow(S: SimState, ex, att) -> bool:
 ##  - In the air, over the sea, or with groundMode "shove": he is carried back that far, upright, over driftTicks.
 ## mul scales the distance (the plain blur's ender goes blur.enderDist of it). A knock-back the director carries pays
 ## its wear here (knockBack.wear of a launch's impact at the speed he is carried); a skid's wear is the journey's.
-static func knock(S: SimState, att, tgt, mul: float = 1.0) -> void:
+static func knock(S: SimState, att, tgt, mul: float = 1.0, ox: float = NAN) -> void:
 	var kb: Dictionary = data().knockBack
 	var ti: int = clampi(int(att.tier) - 1, 0, 3)
-	var s: float = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(att.x, tgt.x)), att.face)
+	var s: float = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(att.x if is_nan(ox) else ox, tgt.x)), att.face)   # ox: away from that point (a mine's blast), not from the attacker
 	var g: float = WorldTerrain.groundY(S, tgt.x)
 	var dist: float = float(kb.distBh[ti]) * BH * mul
 	var ground: bool = String(kb.groundMode) == "skid" and tgt.y - g <= float(kb.groundWithinBh) * BH and not WorldTerrain.seaAt(S, tgt.x)

@@ -835,6 +835,12 @@ static func _opCue(S: SimState, ex, a) -> void:
 		f = ex.D
 	var bark = a.get("bark", "")
 	SimFx.cue(S, f, String(a.cue), String(a.get("cam", "")), "" if bark == null else str(bark))
+	# A volley on the cue (Combat's finisher rows: {dmg, shape, count}): the named fighter's volley lands on the other
+	# for dmg, whatever he holds. The shots are drawn from the cue volley_fire; count is the renderer's (by Pride).
+	if f != null and a.get("volley") is Dictionary and S.game.ko == null and not ex.cancel:
+		var tgt = ex.D if f == ex.A else ex.A
+		SimFx.cue(S, f, "volley_fire", "", "")
+		SimDamage.hit(S, ex, f, tgt, float(a.volley.get("dmg", 0.0)), {"kind": "blast", "ignoreStance": true, "noParry": true, "stop": 0.04, "shake": 5.0})
 
 
 ## The contest window opens (the struggle): a window_open of kind "contest" for the fighter on the brink, lasting until

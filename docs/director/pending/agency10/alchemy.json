@@ -1,0 +1,12 @@
+{
+  "schema": "director.alchemy/1",
+  "_about": "The fight alchemist's switches (sim/director/alchemy.gd, recipe.gd; docs/director/alchemy-plan.md). The press log's own numbers are Controls' (data/input/timing.json, the read and aim blocks) and the pieces are Combat's (data/combat/recipes.json).",
+  "recipes": {
+    "enabled": true,
+    "fighters": {
+      "KAI": "protagonist",
+      "VORR": "rival"
+    },
+    "_note": "enabled: every strike the director plans is given a piece (args.piece on its beat) from the pool its fighter's style calls; false, strikes carry no piece. fighters: the key of data/combat/recipes.json pools for each roster id (a fighter not listed uses his id in lower case). Pieces whose status is waiting are skipped; posed and live are drawn alike"
+  }
+}

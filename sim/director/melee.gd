@@ -302,6 +302,8 @@ static func strike(S: SimState, ex, a, d, dmg: float, o = null) -> void:
 			if pp >= 0 and (pp & 1) == SimAct.LIGHT and ((pp >> 8) & 3) == DirAlchemy.MASHED:
 				dmg *= float(bl.strikeMul)
 	SimDamage.hit(S, ex, a, d, dmg, o)
+	if dmg > 0.0 and DirBlast.minesOn() and not S.shots.is_empty():
+		SimShots.tripNear(S, d.x, d.y + SimShots.chest, float(DirBlast.data().mine.blowR), "blow", S.fighters.find(a))   # a blow on a mine sets it off in the striker's face
 	if dmg > 0.0 and not o.get("ignoreStance", false) and (ex.sD if d == ex.D else ex.sA) == 1.0:
 		DirInterrupt.onBlock(S, ex, d)   # a normal block: the reversal's window
 	elif dmg > 0.0:

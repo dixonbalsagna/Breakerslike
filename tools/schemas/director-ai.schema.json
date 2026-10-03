@@ -14,7 +14,8 @@
     "levels",
     "reactTicks",
     "answerTicks",
-    "beamLook"
+    "beamLook",
+    "mineMinKi"
   ],
   "properties": {
     "schema": {
@@ -143,7 +144,8 @@
             "barrageGuard",
             "beamDodge",
             "beamWade",
-            "beamLate"
+            "beamLate",
+            "mineShare"
           ],
           "properties": {
             "beamAnswer": {
@@ -293,6 +295,12 @@
             },
             "beamLate": {
               "description": "The chance of a late answer when it did not answer in the tell and can pay for one.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "mineShare": {
+              "description": "The chance an AI blast press is a mine.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -329,7 +337,8 @@
             "barrageGuard",
             "beamDodge",
             "beamWade",
-            "beamLate"
+            "beamLate",
+            "mineShare"
           ],
           "properties": {
             "beamAnswer": {
@@ -479,6 +488,12 @@
             },
             "beamLate": {
               "description": "The chance of a late answer when it did not answer in the tell and can pay for one.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "mineShare": {
+              "description": "The chance an AI blast press is a mine.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -515,7 +530,8 @@
             "barrageGuard",
             "beamDodge",
             "beamWade",
-            "beamLate"
+            "beamLate",
+            "mineShare"
           ],
           "properties": {
             "beamAnswer": {
@@ -665,6 +681,12 @@
             },
             "beamLate": {
               "description": "The chance of a late answer when it did not answer in the tell and can pay for one.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "mineShare": {
+              "description": "The chance an AI blast press is a mine.",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -721,6 +743,11 @@
       "patternProperties": {
         "^_": true
       }
+    },
+    "mineMinKi": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The ki below which the AI lays no mine."
     }
   },
   "additionalProperties": false,

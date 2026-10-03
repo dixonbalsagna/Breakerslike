@@ -142,7 +142,7 @@ static func tick(S: SimState) -> void:
 			var q: int = (req & QUEUED) >> 1
 			if q > 0:
 				DirInterrupt.si(f, DirInterrupt.BLAST_REQ, (req & ~QUEUED) | ((q - 1) << 1))
-				DirInterrupt.si(f, DirInterrupt.BLAST_LEFT, int(c.light.windupTicks))
+				DirInterrupt.si(f, DirInterrupt.BLAST_LEFT, int(c.light.get("aiGapTicks", c.light.windupTicks)) if f.ai != null else int(c.light.windupTicks))   # the AI spaces its volley: measured bolts
 			else:
 				DirInterrupt.si(f, DirInterrupt.BLAST_LEFT, 0)
 		else:
@@ -167,17 +167,130 @@ static func _fire(S: SimState, f, weight: int, charge: float) -> void:
 		o2["dmg"] = float(SimShots.kinds[kind].dmg) * (float(w.tapShare) + (1.0 - float(w.tapShare)) * charge)
 	else:
 		var g: int = DirInterrupt.gi(f, DirInterrupt.BLAST_GROUP)
-		if g == 0 or S.tick - DirInterrupt.gi(f, DirInterrupt.BLAST_LAST) > int(w.groupTicks):
+		var gap: int = S.tick - DirInterrupt.gi(f, DirInterrupt.BLAST_LAST)
+		if g == 0 or gap > int(w.groupTicks):
 			g = S.shotSeq + 1   # a new volley: its group is its first shot's id
 		DirInterrupt.si(f, DirInterrupt.BLAST_GROUP, g)
 		DirInterrupt.si(f, DirInterrupt.BLAST_LAST, S.tick)
 		o2["group"] = g
+		_spray(S, f, o2, gap)
 	f.face = SimDamage.jor(SimMathx.jsign(SimWrap.sdx(f.x, o.x)), f.face)
 	var sh = SimShots.fire(S, slot, kind, o2)
 	if sh == null:
 		return   # the cap on live shots: the press is spent
 	f.ki -= float(w.ki)
-	SimEvents.feed(S, f.name + (" CHARGED SHOT" if weight == SimAct.HEAVY else " BOLT"), ("charge " + str(int(charge * 100.0)) + "%, " if weight == SimAct.HEAVY else "") + "arrives in " + str(sh.left) + " ticks")
+	SimEvents.feed(S, f.name + (" CHARGED SHOT" if weight == SimAct.HEAVY else " BOLT"), ("charge " + str(int(charge * 100.0)) + "%, " if weight == SimAct.HEAVY else "") + ("arrives in " + str(sh.left) + " ticks" if sh.mode == SimShots.SEEK else "sprayed wide of him (spread " + str(DirInterrupt.gi(f, DirInterrupt.SPRAY) / 10) + "%)"))
+
+
+## The spray cone (agency-pass.md section 15.4; interrupts.json blast.spray). A bolt fired measuredTicks or more after
+## the last seeks, as before, and his spread recovers at recoverPerSec. Each bolt fired sooner adds perBolt to his
+## spread, up to max. A bolt then still seeks with a chance of 1 - missShare x spread; otherwise it flies straight
+## inside the cone at the rival (slopeMin at no spread to slopeMax at full) and explodes where it lands. The draw is
+## keyed on the match seed and the shot's id: no stream shifts and a replay matches.
+static func _spray(S: SimState, f, o2: Dictionary, gap: int) -> void:
+	var sp: Dictionary = data().get("spray", {})
+	if sp.is_empty():
+		return
+	var s: float = float(DirInterrupt.gi(f, DirInterrupt.SPRAY)) / 1000.0
+	if gap < int(sp.measuredTicks):
+		s = minf(float(sp.max), s + float(sp.perBolt))
+	else:
+		s = maxf(0.0, s - float(sp.recoverPerSec) * float(gap) / DirData.TICKS_PER_SEC)
+	DirInterrupt.si(f, DirInterrupt.SPRAY, int(round(s * 1000.0)))
+	if s > 0.0 and SimRng.keyed(int(S.game.seed), "blast.spray", S.shotSeq + 1) < float(sp.missShare) * s:
+		o2["aim"] = o2.target
+		o2.erase("target")
+		o2["spread"] = float(sp.slopeMin) + (float(sp.slopeMax) - float(sp.slopeMin)) * s
+
+
+## True when mines can be laid (interrupts.json blast.mine).
+static func minesOn() -> bool:
+	return on() and data().get("mine", {}).get("enabled", false)
+
+
+## f's context press outside an exchange of his (DirInterrupt.tick): on a held guard it is the context deflect, and
+## with the energy family held it lays a mine.
+static func context(S: SimState, f) -> void:
+	if not on() or S.game.ko != null:
+		return
+	var ex = S.dirS.ex
+	if ex != null and (ex.A == f or ex.D == f):
+		return
+	if f.input.guard:
+		_contextDeflect(S, f)
+	elif f.act.mode == 1:
+		layMine(S, f)
+
+
+## The context deflect (section 15.2): with guard held, the context press sets a deflect on the shot coming at him,
+## for deflect.context.ki and with no timing. It sends the shot off as a perfect block does, with none of its rewards.
+static func _contextDeflect(S: SimState, f) -> void:
+	var cd: Dictionary = data().get("deflect", {}).get("context", {})
+	if cd.is_empty() or f.state == "launched" or f.state == "down" or f.ki < float(cd.ki):
+		return
+	var slot: int = S.fighters.find(f)
+	var best = null
+	for sh in S.shots:
+		if sh.dead or sh.owner == slot or sh.mode != SimShots.SEEK or sh.tgt != slot:
+			continue
+		if best == null or sh.left < best.left:
+			best = sh
+	if best == null:
+		return
+	var key: int = best.group if best.group != 0 else -best.id
+	if DirInterrupt.gi(f, DirInterrupt.CTX_SHOT) == key and DirInterrupt.gi(f, DirInterrupt.CTX_DEFL) == best.deflected:
+		return   # already set for this shot
+	f.ki -= float(cd.ki)
+	DirInterrupt.si(f, DirInterrupt.CTX_SHOT, key)
+	DirInterrupt.si(f, DirInterrupt.CTX_DEFL, best.deflected)
+	SimFx.cue(S, f, "context_deflect_set", "", "")
+
+
+## The mine (section 15.5; interrupts.json blast.mine): laid where he is, hovering, or resting on the ground when he
+## stands on it. It costs mine.ki. The core holds the cap, the gap between mines, the arming, the trigger, the blast
+## and the chain (data/fight/shots.json, the kind's mine block). Inside shoveWithinBh of the rival the press is the
+## energy shove's, which is not built: nothing happens.
+static func layMine(S: SimState, f) -> void:
+	if not minesOn() or (f.state != "free" and f.state != "charging") or DirBands.pending(f):
+		return
+	var m: Dictionary = data().mine
+	if DirBands.dist(f, SimRoster.opp(S, f)) <= float(m.shoveWithinBh) * DirInterrupt.BH:
+		return
+	if f.ki < float(m.ki):
+		if f.ai == null:
+			SimFx.banner(S, "NEED " + SimMathx.jstr(float(m.ki)) + " KI", "#9fb4ff", 0.6)
+		return
+	var grounded: bool = f.y - WorldTerrain.groundY(S, f.x) <= float(m.groundWithinBh) * DirInterrupt.BH
+	var sh = SimShots.fire(S, S.fighters.find(f), String(m.kind), {"ground": grounded})
+	if sh == null:
+		SimFx.cue(S, f, "mine_refused", "", "")   # the cap on live shots, or too near another mine: the press is spent
+		return
+	f.ki -= float(m.ki)
+	DirInterrupt.si(f, DirInterrupt.BLAST_AT, S.tick)
+	SimFx.cue(S, f, "mine_lay", "", "")
+	SimEvents.feed(S, f.name + " LAYS A MINE", "on the ground" if grounded else "hovering")
+
+
+## A mine's blast has reached f, who is not its owner (the core gives the owner his own share). It cannot be dodged
+## or deflected; a held guard takes it at the guard's rate. Unguarded, on a fighter who is up and outside an exchange,
+## it knocks him back from the mine, and that is decisive.
+static func _mineHit(S: SimState, sh, by, f) -> bool:
+	var c: Dictionary = data()
+	if DirBury.safe(S, f):
+		SimFx.shotHit(S, sh, f, "safe")
+		return true
+	var guarded: bool = f.stance == 1.0 and f.state != "down" and f.state != "launched"
+	var brink0: bool = f.brink
+	SimDamage.hit(S, null, by, f, sh.dmg, {"kind": "blast", "ignoreStance": not guarded, "stop": float(c.stopTicks) / DirData.TICKS_PER_SEC, "shake": 7.0})
+	SimFx.shotHit(S, sh, f, "guard" if guarded else "hit")
+	if guarded or S.game.ko != null or S.dirS.ex != null or (f.state != "free" and f.state != "charging"):
+		return true
+	if DirBands.pending(f):
+		DirBands.drop(S, f, "a mine knocked him back")
+	DirLaunch.knock(S, by, f, 1.0, sh.x)
+	SimEvents.feed(S, "MINE: KNOCK BACK", by.name + "'s mine caught " + f.name + ": decisive")
+	DirExchange.decisiveShot(S, by, f, -sh.id, brink0, "blast")
+	return true
 
 
 ## The window, in ticks before it arrives, in which f's fresh guard press perfect-blocks the shot: the blast class's, by
@@ -252,6 +365,8 @@ static func hit(S: SimState, sh, f) -> bool:
 	var c: Dictionary = data()
 	var by = S.fighters[sh.owner]
 	var slot: int = S.fighters.find(f)
+	if sh.mode == SimShots.MINE:
+		return _mineHit(S, sh, by, f)
 	# Just out of his crater he is safe: the shot passes. Buried and helpless, he answers nothing: it is the follow-up.
 	if DirBury.followShot(f, sh):
 		DirBury.shotLanded(f)   # the follow-up he was held for: it lands clean
@@ -277,12 +392,25 @@ static func hit(S: SimState, sh, f) -> bool:
 		SimFx.shotHit(S, sh, f, "deflect")
 		SimShots.deflect(S, sh, slot)
 		SimFx.cue(S, f, "perfect_block", "", "")
-		SimEvents.feed(S, f.name + " DEFLECTS", "a perfect block: the " + sh.kind + " goes back to " + by.name)
+		var fa: int = int(c.get("deflect", {}).get("freeApproachTicks", 0))
+		if fa > 0:
+			DirInterrupt.si(f, DirInterrupt.FREE_UNTIL, S.tick + fa)   # section 15.2: his next charge or lunge in that time is stopped by no shot
+		SimEvents.feed(S, f.name + " DEFLECTS", "a perfect block: the " + sh.kind + (" flies wild" if SimShots.scatter else " goes back to " + by.name) + ("; a free approach for " + str(fa) + " ticks" if fa > 0 else ""))
+		return false
+	# The context deflect: set by the context press on a held guard. The shot is sent off; no ki back, no free approach.
+	if DirInterrupt.gi(f, DirInterrupt.CTX_SHOT) == key and DirInterrupt.gi(f, DirInterrupt.CTX_DEFL) == sh.deflected and f.stunTicks <= 0 and f.state != "launched" and f.state != "down":
+		SimFx.shotHit(S, sh, f, "deflect")
+		SimShots.deflect(S, sh, slot)
+		SimFx.cue(S, f, "context_deflect", "", "")
+		SimEvents.feed(S, f.name + " DEFLECTS", "the context deflect: the " + sh.kind + (" flies wild" if SimShots.scatter else " goes back to " + by.name))
 		return false
 	# A charge: a light one is stopped by any blast; a heavy one shrugs off a weak shot at part of its damage.
 	var dmg: float = sh.dmg
 	var outcome: String = "guard" if f.stance == 1.0 else "hit"
-	if DirBands.pending(f) and (DirInterrupt.gi(f, DirInterrupt.APPR_REQ) & DirBands.CHARGE) != 0:
+	if DirBands.pending(f) and (DirInterrupt.gi(f, DirInterrupt.APPR_REQ) & DirBands.FREE) != 0:
+		dmg *= float(c.charge.shrugMul)   # the free approach a deflect earned: any shot is shrugged off, and he keeps coming
+		outcome = "shrug"
+	elif DirBands.pending(f) and (DirInterrupt.gi(f, DirInterrupt.APPR_REQ) & DirBands.CHARGE) != 0:
 		var heavyCharge: bool = (DirInterrupt.gi(f, DirInterrupt.APPR_REQ) & 3) == SimAct.HEAVY
 		if heavyCharge and sh.power <= float(c.charge.shrugPower):
 			dmg *= float(c.charge.shrugMul)

@@ -208,6 +208,11 @@ static func aiInput(S: SimState, f) -> void:
 				i.light = true
 			if (i.light or i.heavy) and DirBlast.on() and DirBands.band(f, o) != DirBands.CLOSE and not DirBands.taunting(o) and S.rng.next() < float(lv().get("blastShare", 0.0)):
 				i.mode = 1   # it fires instead: a volley of bolts for a light, a charged shot for a heavy (DirBlast)
+			if (i.light or i.heavy) and DirBlast.minesOn() and DirBands.band(f, o) == DirBands.FAR and f.ki >= float(skill().get("mineMinKi", 40.0)) and S.rng.next() < float(lv().get("mineShare", 0.0)):
+				i.light = false
+				i.heavy = false
+				i.mode = 1
+				i.context = true   # a mine where it stands, in place of this beat's attack (DirBlast.layMine)
 			elif (i.light or i.heavy) and DirBands.farOn() and DirBands.band(f, o) == DirBands.FAR and not DirBands.taunting(o):
 				var u: float = S.rng.next()
 				var ft: float = float(lv().get("farTaunt", 0.0)) if not DirBands.tauntSpent(f) else 0.0

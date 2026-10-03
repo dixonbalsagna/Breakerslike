@@ -35717,7 +35717,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -35742,6 +35743,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -35765,7 +35789,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -35791,6 +35816,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -35814,7 +35862,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -35840,6 +35889,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -35866,7 +35938,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -35879,6 +35952,29 @@
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -35905,7 +36001,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -35930,6 +36027,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -35956,7 +36076,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -35981,6 +36102,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36028,6 +36172,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36055,7 +36222,8 @@
                 "queueMax": 3,
                 "groupTicks": 20,
                 "aiVolley": 3,
-                "pierce": 1
+                "pierce": 1,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36080,6 +36248,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36106,7 +36297,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36131,6 +36323,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36157,7 +36372,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36182,6 +36398,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36208,7 +36447,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36233,6 +36473,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36259,7 +36522,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36284,6 +36548,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36307,7 +36594,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36332,6 +36620,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36358,7 +36669,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36383,6 +36695,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36409,7 +36744,8 @@
                 "holdTicks": 0,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36434,6 +36770,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36457,7 +36816,8 @@
                 "holdTicks": 14,
                 "queueMax": 0,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36482,6 +36842,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36508,7 +36891,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 0,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36533,6 +36917,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36559,7 +36966,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 0
+                "aiVolley": 0,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36584,6 +36992,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36610,7 +37041,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36623,6 +37055,29 @@
               "charge": {
                 "shrugPower": 1,
                 "shrugMul": 0.5
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36649,7 +37104,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36675,6 +37131,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36701,7 +37180,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "nowhere",
@@ -36726,6 +37206,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36752,7 +37255,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "bolt",
@@ -36777,6 +37281,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36803,7 +37330,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36828,6 +37356,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36854,7 +37405,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36879,6 +37431,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36905,7 +37480,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36930,6 +37506,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -36956,7 +37555,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -36981,6 +37581,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37007,7 +37630,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37032,6 +37656,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37058,7 +37705,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37083,6 +37731,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37109,7 +37780,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37134,6 +37806,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37160,7 +37855,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37185,6 +37881,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37208,7 +37927,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37233,6 +37953,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37259,7 +38002,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37284,6 +38028,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37307,7 +38074,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37331,6 +38099,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37357,7 +38148,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37382,6 +38174,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37408,7 +38223,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37433,6 +38249,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -37459,7 +38298,8 @@
                 "holdTicks": 14,
                 "queueMax": 3,
                 "groupTicks": 20,
-                "aiVolley": 3
+                "aiVolley": 3,
+                "aiGapTicks": 10
               },
               "heavy": {
                 "kind": "lob",
@@ -37485,6 +38325,29 @@
                   "measured": 1,
                   "plain": 0.6
                 }
+              },
+              "deflect": {
+                "freeApproachTicks": 45,
+                "context": {
+                  "ki": 10
+                }
+              },
+              "spray": {
+                "measuredTicks": 10,
+                "perBolt": 0.15,
+                "max": 1,
+                "missShare": 0.6,
+                "slopeMin": 0.105,
+                "slopeMax": 0.325,
+                "recoverPerSec": 0.5
+              },
+              "mine": {
+                "enabled": true,
+                "kind": "mine",
+                "ki": 8,
+                "shoveWithinBh": 3,
+                "groundWithinBh": 0.5,
+                "blowR": 60
               }
             }
           }
@@ -44760,6 +45623,869 @@
           "file": "data/director/ai.json",
           "set": {
             "/_beam": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-light-ai-gap-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/light/aiGapTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/light"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-ai-gap-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/light/aiGapTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/light/aiGapTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-ai-gap-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/light/aiGapTicks": 10.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/light/aiGapTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-light-ai-gap-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/light/aiGapTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-deflect-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/deflect"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/spray"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/mine"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/deflect/context"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/deflect"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/deflect/extra"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-deflect-free-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/freeApproachTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/deflect/freeApproachTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-free-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/freeApproachTicks": 20.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/deflect/freeApproachTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-free-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/freeApproachTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-deflect-context-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/context": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/deflect/context"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-context-ki-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/context/ki": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/deflect/context/ki"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-deflect-context-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/deflect/context/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/deflect/context/extra"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/spray/recoverPerSec"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/spray"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/spray/extra"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-spray-measured-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/measuredTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/spray/measuredTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-measured-integer",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/measuredTicks": 10.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/spray/measuredTicks"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-per-bolt-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/perBolt": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/spray/perBolt"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-max-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/max": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/spray/max"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-miss-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/missShare": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/spray/missShare"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-miss-above-one-warns",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/missShare": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-spray",
+        "pointer": "/blast/spray/missShare"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-miss-one-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/missShare": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-spray-slope-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/slopeMin": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/spray/slopeMin"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-slope-max-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/slopeMax": "wide"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/spray/slopeMax"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-slopes-reversed",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/slopeMin": 0.9,
+            "/blast/spray/slopeMax": 0.2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-spray",
+        "pointer": "/blast/spray/slopeMin"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-spray-slopes-equal-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/slopeMin": 0.3,
+            "/blast/spray/slopeMax": 0.3
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-spray-recover-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/spray/recoverPerSec": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/spray/recoverPerSec"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-key-required",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "del": [
+            "/blast/mine/blowR"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blast/mine"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-unknown-key",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blast/mine/extra"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-note-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-mine-enabled-type",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/enabled": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blast/mine/enabled"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-off-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/enabled": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-interrupts-blast-mine-kind-shape",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/kind": "Mine"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/blast/mine/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-kind-not-a-shot",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/kind": "nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-mine-kind",
+        "pointer": "/blast/mine/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-kind-not-a-mine",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/kind": "bolt"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-mine-kind",
+        "pointer": "/blast/mine/kind"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-ki-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/ki": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/mine/ki"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-shove-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/shoveWithinBh": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/mine/shoveWithinBh"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-ground-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/groundWithinBh": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/mine/groundWithinBh"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-blow-negative",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/blowR": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blast/mine/blowR"
+      }
+    },
+    {
+      "id": "director-interrupts-blast-mine-blow-zero-ok",
+      "schema": "director-interrupts.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/interrupts.json",
+          "set": {
+            "/blast/mine/blowR": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-mine-min-ki-required",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/mineMinKi"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-ai-mine-min-ki-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/mineMinKi": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/mineMinKi"
+      }
+    },
+    {
+      "id": "director-ai-mine-min-ki-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/mineMinKi": "lots"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/mineMinKi"
+      }
+    },
+    {
+      "id": "director-ai-mine-min-ki-zero-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/mineMinKi": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-mine-note-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_mine": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-mine-share-required-easy",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/mineShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-mine-share-required-medium",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/medium/mineShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/medium"
+      }
+    },
+    {
+      "id": "director-ai-mine-share-required-hard",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/mineShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-mine-share-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/mineShare": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/easy/mineShare"
+      }
+    },
+    {
+      "id": "director-ai-mine-share-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/mineShare": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/medium/mineShare"
+      }
+    },
+    {
+      "id": "director-ai-mine-share-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/mineShare": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/mineShare"
+      }
+    },
+    {
+      "id": "director-ai-mine-share-edges-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/mineShare": 0,
+            "/levels/hard/mineShare": 1
           }
         }
       ],

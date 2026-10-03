@@ -725,6 +725,16 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (isObj(bl2.heavy) && typeof bl2.heavy.holdMaxTicks === 'number' && typeof bl2.heavy.chargeTicks === 'number' && bl2.heavy.holdMaxTicks < bl2.heavy.chargeTicks) err(IT, '/blast/heavy/holdMaxTicks', 'interrupts-order', `holdMaxTicks ${bl2.heavy.holdMaxTicks} is below chargeTicks ${bl2.heavy.chargeTicks}, so the charge could never finish`);
       if (kindsI && isObj(bl2.light) && isObj(bl2.heavy) && isObj(kindsI[bl2.light.kind]) && isObj(kindsI[bl2.heavy.kind]) && typeof kindsI[bl2.light.kind].power === 'number' && typeof kindsI[bl2.heavy.kind].power === 'number' && kindsI[bl2.heavy.kind].power < kindsI[bl2.light.kind].power) err(IT, '/blast/heavy/kind', 'blast-shot-kind', `the heavy blast "${bl2.heavy.kind}" trades with less power (${kindsI[bl2.heavy.kind].power}) than the light "${bl2.light.kind}" (${kindsI[bl2.light.kind].power})`, 'warning');
     }
+    if (isObj(bl2) && isObj(bl2.mine) && typeof bl2.mine.kind === 'string') {
+      const shotsM = get('data/fight/shots.json');
+      const kindsM = isObj(shotsM) && isObj(shotsM.kinds) ? shotsM.kinds : undefined;
+      if (kindsM && !isObj(kindsM[bl2.mine.kind])) err(IT, '/blast/mine/kind', 'blast-mine-kind', `mine kind "${bl2.mine.kind}" is not a kind of data/fight/shots.json (${Object.keys(kindsM).filter((k) => !k.startsWith('_')).join(', ')})`);
+      else if (kindsM && !isObj(kindsM[bl2.mine.kind].mine)) err(IT, '/blast/mine/kind', 'blast-mine-kind', `mine kind "${bl2.mine.kind}" has no mine block in data/fight/shots.json, so it is not a mine`);
+    }
+    if (isObj(bl2) && isObj(bl2.spray)) {
+      if (typeof bl2.spray.slopeMin === 'number' && typeof bl2.spray.slopeMax === 'number' && bl2.spray.slopeMin > bl2.spray.slopeMax) err(IT, '/blast/spray/slopeMin', 'blast-spray', `slopeMin ${bl2.spray.slopeMin} is above slopeMax ${bl2.spray.slopeMax}`);
+      if (typeof bl2.spray.missShare === 'number' && bl2.spray.missShare > 1) err(IT, '/blast/spray/missShare', 'blast-spray', `missShare ${bl2.spray.missShare} is above 1; it is a share of the sprayed bolts`, 'warning');
+    }
     const bu = itr.buried;
     const embedC = get('data/biomes/contact.json');
     if (isObj(bu) && isObj(embedC) && isObj(embedC.embed) && typeof embedC.embed.ticks === 'number') for (const k of ['guardFromTick', 'burstFromTick']) if (typeof bu[k] === 'number' && bu[k] > embedC.embed.ticks) err(IT, `/buried/${k}`, 'buried-order', `${k} ${bu[k]} is after the burial ends (embed.ticks ${embedC.embed.ticks} in data/biomes/contact.json), so it could never happen`);

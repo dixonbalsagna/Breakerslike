@@ -54,7 +54,8 @@
       "barrageGuard": 0.2,
       "beamDodge": 0.4,
       "beamWade": 0.3,
-      "beamLate": 0.05
+      "beamLate": 0.05,
+      "mineShare": 0.02
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -87,7 +88,8 @@
       "barrageGuard": 0.5,
       "beamDodge": 0.55,
       "beamWade": 0.5,
-      "beamLate": 0.1
+      "beamLate": 0.1,
+      "mineShare": 0.04
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -120,12 +122,14 @@
       "barrageGuard": 0.8,
       "beamDodge": 0.7,
       "beamWade": 0.7,
-      "beamLate": 0.2
+      "beamLate": 0.2,
+      "mineShare": 0.06
     }
   },
   "beamLook": {
     "split": 1,
     "walk": 1,
     "swat": 1
-  }
+  },
+  "mineMinKi": 40
 }

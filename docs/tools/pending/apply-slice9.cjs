@@ -2,7 +2,7 @@
 // NOT run by CI, the validator or the sim. Run once from the repo root, in the commit that lands the slice's data:
 //     node docs/tools/pending/apply-slice9.cjs
 // It does NOT edit data/. It adds:
-//   data/director/interrupts.json  the required blast.deflect {freeApproachTicks, context {ki}}, blast.spray {measuredTicks, perBolt, max,
+//   data/director/interrupts.json  the required blast.light.aiGapTicks (integer, 0 or more) and the required blast.deflect {freeApproachTicks, context {ki}}, blast.spray {measuredTicks, perBolt, max,
 //                                  missShare, slopeMin, slopeMax, recoverPerSec} and blast.mine {enabled, kind, ki, shoveWithinBh,
 //                                  groundWithinBh, blowR} (closed; _note allowed)
 //   data/director/ai.json          the required top-level mineMinKi (note _mine allowed) and, per level, mineShare (a chance)
@@ -29,6 +29,7 @@ const FX = {
     mine: { enabled: true, kind: 'mine', ki: 20, shoveWithinBh: 3, groundWithinBh: 1, blowR: 80 },
   },
   mineMinKi: 20,
+  aiGapTicks: 10,
   mineShare: { easy: 0.1, medium: 0.2, hard: 0.3 },
 };
 const liveI = fs.existsSync('data/director/interrupts.json') ? rj('data/director/interrupts.json') : null;
@@ -38,6 +39,16 @@ const haveA = liveA && liveA.mineMinKi !== undefined;
 const strip = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith('_')).map(([k, v]) => [k, v && typeof v === 'object' && !Array.isArray(v) ? strip(v) : v]));
 
 // =============================== interrupts schema ===============================
+{
+  const f = 'tools/schemas/director-interrupts.schema.json';
+  const s = rj(f);
+  const b = s.properties.blast;
+  if (!b.properties.light.properties.aiGapTicks) {
+    b.properties.light.properties.aiGapTicks = i0('The AI spaces the bolts of its volley this many ticks apart, so its bolts are measured and keep seeking.');
+    if (!b.properties.light.required.includes('aiGapTicks')) b.properties.light.required.push('aiGapTicks');
+    wj(f, s);
+  }
+}
 {
   const f = 'tools/schemas/director-interrupts.schema.json';
   const s = rj(f);
@@ -88,6 +99,11 @@ const strip = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.sta
 // =============================== fixtures ===============================
 {
   const dir = 'tools/fixtures/virtual/data/director/';
+  {
+    const f = dir + 'interrupts.json';
+    const o = rj(f);
+    if (o.blast && o.blast.light && o.blast.light.aiGapTicks === undefined) { o.blast.light.aiGapTicks = haveI && liveI.blast.light.aiGapTicks !== undefined ? liveI.blast.light.aiGapTicks : FX.aiGapTicks; wj(f, o); }
+  }
   {
     const f = dir + 'interrupts.json';
     const o = rj(f);
@@ -145,6 +161,7 @@ const strip = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.sta
     if (!/^director-interrupts-blast-/.test(k.id)) continue;
     for (const m of k.mutate || []) {
       const o = m.set && m.set['/blast'];
+      if (o && typeof o === 'object' && o.light && typeof o.light === 'object' && o.light.aiGapTicks === undefined && !(k.expect && k.expect.rule === 'required' && k.expect.pointer === '/blast/light')) o.light.aiGapTicks = 10;
       if (o && typeof o === 'object') for (const key of Object.keys(newKeys)) if (o[key] === undefined) o[key] = clone(newKeys[key]);
     }
   }
@@ -154,6 +171,10 @@ const strip = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.sta
   const S = '/blast/spray/';
   const M = '/blast/mine/';
   const add = [
+    it('blast-light-ai-gap-required', { del: ['/blast/light/aiGapTicks'] }, { rule: 'required', pointer: '/blast/light' }),
+    it('blast-light-ai-gap-negative', { set: { '/blast/light/aiGapTicks': -1 } }, { rule: 'minimum', pointer: '/blast/light/aiGapTicks' }),
+    it('blast-light-ai-gap-integer', { set: { '/blast/light/aiGapTicks': 10.5 } }, { rule: 'type', pointer: '/blast/light/aiGapTicks' }),
+    it('blast-light-ai-gap-zero-ok', { set: { '/blast/light/aiGapTicks': 0 } }, null),
     it('blast-deflect-required', { del: ['/blast/deflect'] }, { rule: 'required', pointer: '/blast' }),
     it('blast-spray-required', { del: ['/blast/spray'] }, { rule: 'required', pointer: '/blast' }),
     it('blast-mine-required', { del: ['/blast/mine'] }, { rule: 'required', pointer: '/blast' }),

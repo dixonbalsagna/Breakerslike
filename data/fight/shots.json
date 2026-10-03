@@ -9,7 +9,7 @@
   "structures": true,
   "_structures": "true: a straight or lobbed shot stops at a standing building its path crosses (one within World's blast reach in depth of the fight plane), and World's rule says what the building takes (a seeking shot is not stopped, as with the ground)",
   "deflect": {
-    "scatter": false,
+    "scatter": true,
     "nearMin": 300.0,
     "nearMax": 1500.0,
     "farMin": 1500.0,

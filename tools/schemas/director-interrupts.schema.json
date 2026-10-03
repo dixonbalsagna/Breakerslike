@@ -675,7 +675,10 @@
         "heavy",
         "stopTicks",
         "charge",
-        "barrage"
+        "barrage",
+        "deflect",
+        "spray",
+        "mine"
       ],
       "properties": {
         "enabled": {
@@ -691,7 +694,8 @@
             "holdTicks",
             "queueMax",
             "groupTicks",
-            "aiVolley"
+            "aiVolley",
+            "aiGapTicks"
           ],
           "properties": {
             "kind": {
@@ -728,6 +732,11 @@
               "description": "The AI's light is this many bolts.",
               "type": "integer",
               "minimum": 1
+            },
+            "aiGapTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "The AI spaces the bolts of its volley this many ticks apart, so its bolts are measured and keep seeking."
             }
           },
           "description": "The light blast: a bolt.",
@@ -876,6 +885,143 @@
             }
           },
           "description": "A barrage closes (agency-pass.md section 16).",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "deflect": {
+          "type": "object",
+          "required": [
+            "freeApproachTicks",
+            "context"
+          ],
+          "properties": {
+            "freeApproachTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Ticks of free approach a wild deflect leaves the deflector (no shot stops him)."
+            },
+            "context": {
+              "type": "object",
+              "required": [
+                "ki"
+              ],
+              "properties": {
+                "ki": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "The ki a context deflect costs."
+                }
+              },
+              "additionalProperties": false,
+              "patternProperties": {
+                "^_": true
+              }
+            }
+          },
+          "description": "The director's side of the wild deflect (agency-pass.md section 15.2).",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "spray": {
+          "type": "object",
+          "required": [
+            "measuredTicks",
+            "perBolt",
+            "max",
+            "missShare",
+            "slopeMin",
+            "slopeMax",
+            "recoverPerSec"
+          ],
+          "properties": {
+            "measuredTicks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "A bolt fired this many ticks or more after the one before is measured, not sprayed."
+            },
+            "perBolt": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The spread each spammed bolt adds."
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The widest the spread grows."
+            },
+            "missShare": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The share of sprayed bolts that miss."
+            },
+            "slopeMin": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The least slope of the cone."
+            },
+            "slopeMax": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The most slope of the cone."
+            },
+            "recoverPerSec": {
+              "type": "number",
+              "minimum": 0,
+              "description": "How fast the spread recovers while he waits, a second."
+            }
+          },
+          "description": "The spray: spammed bolts fan out into a cone (agency-pass.md section 15.4).",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^_": true
+          }
+        },
+        "mine": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "kind",
+            "ki",
+            "shoveWithinBh",
+            "groundWithinBh",
+            "blowR"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "false: no mines are laid."
+            },
+            "kind": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "description": "A shot kind of data/fight/shots.json that has a mine block (checked by tools/lib/xref-fight.js, blast-mine-kind)."
+            },
+            "ki": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The ki a mine costs."
+            },
+            "shoveWithinBh": {
+              "type": "number",
+              "minimum": 0,
+              "description": "A rival within this many body heights is shoved."
+            },
+            "groundWithinBh": {
+              "type": "number",
+              "minimum": 0,
+              "description": "A mine is laid on the ground when it is this close to it."
+            },
+            "blowR": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The radius in which a blow sets a mine off."
+            }
+          },
+          "description": "Mines (agency-pass.md section 15.5).",
           "additionalProperties": false,
           "patternProperties": {
             "^_": true

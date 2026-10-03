@@ -132,7 +132,8 @@
       "holdTicks": 14,
       "queueMax": 3,
       "groupTicks": 20,
-      "aiVolley": 3
+      "aiVolley": 3,
+      "aiGapTicks": 10
     },
     "heavy": {
       "kind": "charged",
@@ -159,6 +160,32 @@
       },
       "immune": 90,
       "_note": "A barrage closes (agency-pass.md section 16). When enderAfter of a fighter's bolts land clean on his rival inside 'window' ticks (not guarded, not shrugged off, not deflected), the last is a knock-back he did not press: decisive (kind barrage), never a launch. measuredTicks: if each was fired this many ticks or more after the one before, it goes enderDist.measured of the tier's knock-back distance and is a full set-up; otherwise enderDist.plain and launch.json setup.weight.barragePlain. immune: the count starts again and the rival cannot be knocked back by another barrage for this many ticks"
+    },
+    "deflect": {
+      "freeApproachTicks": 45,
+      "context": {
+        "ki": 10
+      },
+      "_note": "Deflects (agency-pass.md section 15.2). Where a deflected shot goes is the core's (data/fight/shots.json deflect: wild with scatter on, back at the shooter with it off). freeApproachTicks: a perfect block of a shot gives him this long to start a charge or a lunge that no shot stops (a shot that meets him on it is shrugged off at charge.shrugMul); 0 switches it off. context.ki: with guard held, the context press sets a deflect on the shot coming at him for this much ki, with no timing; it sends the shot off with none of the perfect block's rewards"
+    },
+    "spray": {
+      "measuredTicks": 10,
+      "perBolt": 0.15,
+      "max": 1,
+      "missShare": 0.6,
+      "slopeMin": 0.105,
+      "slopeMax": 0.325,
+      "recoverPerSec": 0.5,
+      "_note": "The spray cone (agency-pass.md section 15.4). A bolt fired measuredTicks or more after his last seeks, and his spread recovers by recoverPerSec a second. Each bolt fired sooner adds perBolt to his spread, up to max. A bolt then still seeks with a chance of 1 - missShare x spread; otherwise it flies straight inside the cone at the rival, a half-angle whose slope runs from slopeMin (6 degrees) at no spread to slopeMax (18 degrees) at full, and explodes where it lands. light.aiGapTicks: the AI spaces the bolts of its volley this many ticks apart, so its bolts are measured and keep seeking"
+    },
+    "mine": {
+      "enabled": true,
+      "kind": "mine",
+      "ki": 8,
+      "shoveWithinBh": 3,
+      "groundWithinBh": 0.5,
+      "blowR": 60,
+      "_note": "Mines (agency-pass.md sections 15.5 and 17). With the energy family held, the context press lays a mine of 'kind' (data/fight/shots.json) where he is for 'ki': on the ground when his feet are within groundWithinBh of it, else hovering. Within shoveWithinBh of the rival the press is the energy shove's (not built: nothing). blowR: a landed blow whose target's chest is within this of a mine sets it off. The cap, the gap, the arming, the trigger, the blast, the chain and the fuse are the kind's own. A mine's blast on the rival cannot be dodged or deflected; unguarded it knocks him back from the mine and is decisive"
     }
   },
   "signature": {
