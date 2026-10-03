@@ -69,3 +69,14 @@ Written by the EP on 2026-10-01. Paths are from the project folder. The fuller s
 - The rival's glasses: art/concepts/refine/anti-hero-glasses.svg. Decide: the frame (Art's lead: blade lenses; second: cut hex), whether the glare hides his eyes completely, and whether the glasses are always on.
 - The launch pair's look (2026-10-03), three sheets in art/concepts/refine/: glasses-compare.svg (frame A lead blade lenses with a lit top line, B bevelled with hinge tabs, C bare wedge, D the earlier plates; Art picks A), launch-pair-protagonist.svg (big fists and a broader body with the forelock, or the long swept tuft?), launch-pair-rival.svg (long tail and coat blades, or the swept shoulder blade?).
 - The Protagonist's strikes (42 slots, 12 re-posed, 8 of his own): art/animation/review/protag1/README.md.
+
+## Decisions waiting on Orb (2026-10-03, after slices 8 to 12 went live)
+
+- Match length: widen the median band to 6:00 to 8:30 (Game Design, agency-pass.md section 19), or keep 8:00. QA is re-measuring a wear lever on df05b9f that may hold 8:00 without shortening the last stand.
+- Front-row buildings (52.7% lost, ceiling 50): raise the ceiling, soften landing blasts to about a third (World, ground-contact.md section 32), or reduce top-tier reach into buildings (QA's lever, being re-measured).
+- Which extra blast kinds ship: curving shot (Protagonist), splitting shot and rain (rival); whether rain can hit its thrower; rain on a roof (launch-pair-plan.md section 9).
+- The look picks: glasses frame A, B or C (art/concepts/refine/glasses-compare.svg), launch-pair-protagonist.svg, launch-pair-rival.svg.
+- The landing ring that shows where a deflected shot will explode: keep, or make the landing a surprise.
+- The rush jolt in split screen (Camera: docs/camera/split-screen.md section 21c): tackle in this update or later.
+- The beat-pace metronome earning the perfect blur about a quarter of the time: build Controls' fix (docs/controls/agency-input.md, option B) or leave it.
+- The fighters' names; the split to PROTAGONIST and RIVAL can run on neutral ids meanwhile.
