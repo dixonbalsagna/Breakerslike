@@ -111,3 +111,38 @@ Explosions go into the shared debris pool (no draw call), a fixed number of draw
 ### Checks
 
 `effects_check.gd` `_explosions()` (32 cases): the radii, the tier factor and the smoke seconds; more of everything for a bigger blast; the ground burst's parts, the ring flat, the chunks falling, the smoulder jobs running; the fighter, guard, water variants; the budgets (twenty bursts, quality low, reduced motion); the events (a missed shot, a hit, a guard, a dodge, flag off); a knocked-loose shot's trail and tumble; the mines (arming, armed, fuse, blast, each fighter's look, hexagons and no filled disc, the events). `hash_check.gd` and `determinism.gd` pass; the gameplay hash is unchanged.
+
+
+## Round two: real mines, wild deflects, the spray, buildings, air bursts (2026-10-03, on HEAD a56187a)
+
+Simulation's second round (shots.md 13 to 18, applied with its switches off) and World's window (ground-contact.md 27 to 30) are in the tree. This makes each of them read on screen from the events and state that exist, so it is ready the day a director fires them. Code: `shots.gd`, `shots_view.gd`, `explode.gd`. No new flag (it rides `shots_enabled` and `explosions_enabled`); no data file; `vfx_layer.gd` and `transform_view.gd` untouched.
+
+| Behaviour | What the view reads | What is drawn |
+| :--- | :--- | :--- |
+| **A mine laid by the sim** | An entry of `S.shots` with `mode == SimShots.MINE`: `x y z owner ground arm fuse left total`, plus `mine_trip.dur` for the fuse's length | The same hexagonal plate or caltrop look as the concept (Legal RL-062), now from the sim's own record: hovering (bobbing, a line to a flat shadow) or on the ground (the plate lies flat); `arm` above 0 is dim, 0 is bright and breathing, `fuse` 0 or more is the blink and the warning ring running out to the blast radius (2 bh times the owner's tier factor), and it dims over its last seconds before it fizzles. It is never drawn as a shot in flight, and at gameplay zoom it is told from a bolt: hexagons, a plate about 69 units across against a bolt's 34 round body, standing still, in the lane colour |
+| **A mine set off** | `mine_trip` (a flash now), then `shot_end` with cause `mine` (the blast, a chain's too) | A full burst: on the ground a ground burst (flame, sparks, smoke, chunks, a flat ring, a smoulder), in the air an air burst (no chunks, no ring), 2 bh across (3 bh for a tier 4 owner), and the blast radius as a ring. A mine that runs out of life (`life`) fizzles: a pop of sparks and a ring, no flame |
+| **A wild deflect** | `shot_deflect {id, actor, kind, x y z, x1 y1, dur}`; the shot itself in `S.shots` (`wild`, a lob) | The knock-off where it was (a flash, a ring in the deflector's colour, sparks), the shot flying off tumbling with a smoke trail (it keeps the shooter's colour: it still belongs to him), **a thin flat ring on the ground at the landing point that closes in as it flies** (so the player sees where the payoff is coming), and on landing the ground burst at the shooter's radius. `shot_hit` deflect and `shot_deflect` are one deflect: drawn once |
+| **The spray** | Nothing new: the shots are in `S.shots` | Each bolt flies as it flies; the muzzle ring is rationed to one every 4 ticks a fighter (a spray has no ring a shot), and every bolt that misses ends in its own small ground burst (bounded by the pool's caps) |
+| **A shot against a building** | `shot_end` with cause `building` at the face | A burst at the face at the shot's radius: concrete chips thrown and falling, pale dust, a small flame, sparks and smoke, no ground ring; a charged shot throws about three times what a bolt does. The wear pool and the floors failing are World's, and still draw through `floor_hit` as before |
+| **A stray shot out of life** | `shot_end` with cause `life` | An air burst where it is (flame, sparks, smoke), or a ground burst if it is within 1.2 fighter heights of the ground |
+
+Also: a charged shot's radius now reads the kind's own damage (82.5 full, 0.6 of it a tap, as the sim passes it).
+
+### Pictures (the web build in the browser pane; real mines, real shot options)
+
+| Mines and a bolt: the plate and the caltrop hover, the bolt is a round disc with a tail | A bolt sets off a ground mine (a mine is set off by any shot) |
+| :---: | :---: |
+| ![](img/r2-mines-vs-bolt.jpg) | ![](img/r2-mine-set-off-by-shot.jpg) |
+
+| A wild deflect: knocked off, tumbling with a smoke trail, the landing ring on the ground at the right | A spray (aim 1, spread 0.3): the bolts that miss explode where they land |
+| :---: | :---: |
+| ![](img/r2-wild-deflect.jpg) | ![](img/r2-spray.jpg) |
+
+No picture of a building chip or an air burst (tested: `effects_check.gd` `_blast_round2()`, 19 cases).
+
+### Needs from Simulation (optional; nothing here is blocked)
+
+1. `shot_end` carries no owner or damage, so I remember them from `S.shots` by id (works today). An `actor` and an `amount` on `shot_end` would make that exact for a shot that ends in the tick it was fired.
+2. `shot_end` with cause `building` has no direction or face (`ux, uy` of the shot, or a normal). With it the chips would fly out of the face, not both ways.
+3. Game Design's wear pool says a light shot shows only scorch until the pool is paid. The event does not say whether this hit paid it, so every building hit shows its small burst. A flag (`chip` or `paid`) on `shot_end` would let a bolt that has not paid show only its grains.
+4. A mine's own `blastR` and `tierR` are read from my constants (2 bh, 1.25 and 1.5); the event does not carry them (`mine_trip` has no radius). The warning ring would follow the data exactly with a `r` on `mine_trip`.

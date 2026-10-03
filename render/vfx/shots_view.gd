@@ -80,6 +80,8 @@ func update(hub: VfxHub, host, a: float, cam_x: float, zoom: float, half_w: floa
 	for sp in S.shots:
 		if n >= CAP - 24:
 			break
+		if int(sp.mode) == SimShots.MINE:
+			continue          # a mine is not a shot in flight: it is drawn below, by its own look
 		var rel: float = SimWrap.sdx(cam_x, sp.x)
 		# Where it is at this frame: the state is the end of the last tick, so go back by what is left of the tick unless the shots
 		# stood still (a hit-stop, a pause) or it was fired this tick.
@@ -97,7 +99,7 @@ func update(hub: VfxHub, host, a: float, cam_x: float, zoom: float, half_w: floa
 		if dirv.length() < 1.0:
 			dirv = Vector2(1.0, 0.0)
 		dirv = dirv.normalized()
-		var tumbling: bool = int(sp.deflected) > 0 and hub.explosions_enabled
+		var tumbling: bool = (int(sp.deflected) > 0 or bool(sp.wild)) and hub.explosions_enabled
 		var spin: float = (float(sh.clock) + a) * 0.55 + float(sp.id)
 		if tumbling and not hub.reduced_motion:
 			dirv = dirv.rotated(sin(spin * 0.8) * 0.35)
@@ -164,6 +166,12 @@ func update(hub: VfxHub, host, a: float, cam_x: float, zoom: float, half_w: floa
 					var sc: Color = e.col
 					sc.a = alpha * 0.9 * (1.0 - u)
 					n = _put(n, Vector2(rx, e.y) + dv * (d0 - ln * 0.5), dv, ln, maxf(6.0, minpx * 1.5), ez, sc, 0.5, 0.05, SHAPE_STREAK)
+			"mark":
+				# Where a wild shot will come down: a thin flat ring on the ground that closes in as it flies.
+				var mr: float = lerpf(e.size * 1.25, e.size * 0.35, u)
+				var mc: Color = e.col
+				mc.a = alpha * 0.4 * smoothstep(0.0, 0.1, u) * (1.0 - smoothstep(0.85, 1.0, u))
+				n = _put(n, Vector2(rx, e.y + 6.0), Vector2(1.0, 0.0), mr * 2.0, mr * 2.0 * 0.28, ez - 1.0, mc, maxf(0.05, 1.6 * minpx / maxf(mr, 1.0)), 0.0, SHAPE_RING)
 			"burst":
 				# A trade: a ring in each colour and eight short lines out of the point.
 				var br: float = lerpf(e.size * 0.3, e.size, eo)
@@ -250,89 +258,102 @@ static func arc_y(prog: float, total: int, bh: float) -> float:
 ## of the inner hexagon; the fuse (about to go): a quick blink, the inner hexagon swelling, and one thin warning ring running out to the
 ## blast's radius. One mine at a time per spot: no row of matching shapes is staged. The lane colour only, never white, gold or red.
 func _mines(n: int, S: SimState, hub: VfxHub, sh: VfxShots, cam_x: float, half_w: float, a: float, bh: float, minpx: float, alpha: float) -> int:
+	# The concept list (tools and the events a sim may send), then the real ones: every entry of S.shots whose mode is MINE.
 	for m: VfxShots.Mine in sh.mines:
-		if n >= CAP - 16:
-			break
-		var rx: float = SimWrap.sdx(cam_x, m.x)
-		if absf(rx) > half_w + 3.0 * bh:
+		n = _draw_mine(n, m, 1.0, S, hub, sh, cam_x, half_w, a, bh, minpx, alpha)
+	for sp in S.shots:
+		if int(sp.mode) != SimShots.MINE:
 			continue
-		var lane: Color = VfxShots.lane_of(S, m.owner)
-		var villain: bool = String(S.fighters[m.owner].role) == "villain"
-		var age: float = m.age + (0.0 if sh.last_frozen else a)
-		var hover: bool = m.mode == "hover"
-		var gy: float = WorldTerrain.groundY(S, m.x)
-		var bob: float = 0.0 if (not hover or hub.reduced_motion) else sin(TAU * (float(sh.clock) + a) / 90.0 + float(m.id)) * 5.0
-		var c := Vector2(rx, m.y + bob)
-		var z: float = m.z + Z_SHOT - 0.5
-		var close: float = 1.0
-		var ak: float = 1.0
-		var core_k: float = 1.0
-		var blink: float = 1.0
-		var grow: float = 1.0
-		match m.state:
-			"arming":
-				var u: float = clampf(age / VfxShots.MINE_ARM_TICKS, 0.0, 1.0)
-				close = lerpf(2.4, 1.0, 1.0 - pow(1.0 - u, 2.0))
-				ak = lerpf(0.25, 1.0, u)
-				grow = lerpf(0.4, 1.0, u)
-			"armed":
-				var br: float = 0.0 if hub.reduced_motion else sin(TAU * age / 60.0)
-				close = 1.0 + 0.03 * br
-				core_k = 0.9 + 0.1 * br
-			"trigger":
-				var uf: float = clampf(age / VfxShots.MINE_FUSE_TICKS, 0.0, 1.0)
-				close = lerpf(1.0, 0.8, uf)
-				core_k = lerpf(1.0, 1.4, uf)
-				blink = 1.0 if (hub.reduced_motion or int(age / 4.0) % 2 == 0) else 0.45
-				var wr: float = lerpf(40.0, m.radius, 1.0 - pow(1.0 - uf, 2.0))
-				var wc: Color = lane
-				wc.a = alpha * 0.55 * (1.0 - uf * 0.5)
-				n = _put(n, Vector2(rx, m.y) if hover else Vector2(rx, gy + 12.0), Vector2(1.0, 0.0), wr * 2.0, wr * (2.0 if hover else 0.5), z - 0.6, wc, maxf(0.03, 1.6 * minpx / wr), 0.0, SHAPE_RING)
-		var a_all: float = alpha * ak * blink
-		# What shows it hovers, or sits.
-		if hover:
-			var sc: Color = lane.darkened(0.55)
-			sc.a = alpha * 0.28
-			n = _put(n, Vector2(rx, gy + 5.0), Vector2(1.0, 0.0), 96.0, 22.0, z - 1.4, sc, 1.0, 0.0, SHAPE_RING)
-			var gap: float = maxf((c.y - 30.0) - (gy + 8.0), 0.0)
-			var steps: int = clampi(int(gap / 34.0), 0, 4)
-			for k in range(steps):
-				var lc: Color = lane
-				lc.a = alpha * 0.32 * (1.0 - float(k) / float(maxi(steps, 1)) * 0.6)
-				n = _put(n, Vector2(rx, c.y - 32.0 - float(k) * 34.0 - 9.0), Vector2(0.0, 1.0), 18.0, maxf(3.0, minpx), z - 1.0, lc, 0.5, 0.5, SHAPE_STREAK)
-		var flat_k: float = 1.0 if hover else 0.3          # a plate on the ground lies flat
-		var base: Vector2 = c if hover else Vector2(rx, gy + 9.0)
-		var plate: Color = lane.darkened(0.45)
-		plate.a = a_all * 0.92
-		var rimc: Color = lane
-		rimc.a = a_all
-		var inner: Color = lane.lightened(0.14 + 0.12 * (core_k - 1.0))
-		inner.a = a_all
-		if villain:
-			# A faceted caltrop: three tapering spikes round a small hexagonal hub; in the air a spike up and two down, on the ground one up and two
-			# low to the sides.
-			var angs: Array = [PI * 0.5, PI * 1.17, PI * 1.83] if hover else [PI * 0.5, PI * 0.12, PI * 0.88]
-			var ln: float = 40.0 * grow
-			for an in angs:
-				var dv: Vector2 = Vector2(cos(an), sin(an))
-				var sp0: Color = lane.darkened(0.2)
-				sp0.a = a_all
-				n = _put(n, base + dv * (ln * 0.5 + 6.0), dv, ln, 15.0, z + 0.1, sp0, 0.04, 0.5, SHAPE_STREAK)
-				var sp1: Color = lane
-				sp1.a = a_all * 0.9
-				n = _put(n, base + dv * (ln * 0.5 + 8.0), dv, ln * 0.8, 5.0, z + 0.2, sp1, 0.04, 0.5, SHAPE_STREAK)
-			n = _put(n, base, Vector2(1.0, 0.0), 30.0 * close, 30.0 * 0.866 * close, z + 0.3, plate, maxf(0.09, 1.6 * minpx / 15.0), 1.0, SHAPE_HEX)
-			n = _put(n, base, Vector2(1.0, 0.0), 30.0 * close, 30.0 * 0.866 * close, z + 0.35, rimc, maxf(0.14, 1.6 * minpx / 15.0), 0.0, SHAPE_HEX)
-			n = _put(n, base, Vector2(1.0, 0.0), 14.0 * core_k, 14.0 * 0.866 * core_k, z + 0.4, inner, 0.15, 1.0, SHAPE_HEX)
-		else:
-			# A hexagonal plate with a raised inner hexagon and a thin ring round it (flat on the ground, face-on in the air).
-			var rr: float = 46.0 * close
-			var rc: Color = lane
-			rc.a = a_all * 0.55
-			n = _put(n, base, Vector2(1.0, 0.0), rr * 2.0, rr * 2.0 * flat_k, z - 0.2, rc, maxf(0.04, 1.6 * minpx / rr), 0.0, SHAPE_RING)
-			n = _put(n, base, Vector2(1.0, 0.0), 54.0, 54.0 * 0.866 * flat_k, z + 0.1, plate, maxf(0.07, 1.6 * minpx / 27.0), 1.0, SHAPE_HEX)
-			n = _put(n, base, Vector2(1.0, 0.0), 54.0, 54.0 * 0.866 * flat_k, z + 0.15, rimc, maxf(0.1, 1.6 * minpx / 27.0), 0.0, SHAPE_HEX)
-			n = _put(n, base, Vector2(1.0, 0.0), 28.0 * core_k, 28.0 * 0.866 * core_k * flat_k, z + 0.3, inner, 0.14, 1.0, SHAPE_HEX)
+		var m := VfxShots.mine_of(S, sp, sh)
+		var life_k: float = lerpf(0.35, 1.0, smoothstep(0.0, 0.08, float(sp.left) / maxf(float(sp.total), 1.0)))    # it dims over its last seconds, then fizzles
+		n = _draw_mine(n, m, life_k, S, hub, sh, cam_x, half_w, a, bh, minpx, alpha)
+	return n
+
+
+## One mine. life_k: how bright it is for its age (1 until its last seconds).
+func _draw_mine(n: int, m: VfxShots.Mine, life_k: float, S: SimState, hub: VfxHub, sh: VfxShots, cam_x: float, half_w: float, a: float, bh: float, minpx: float, alpha: float) -> int:
+	if n >= CAP - 16:
+		return n
+	var rx: float = SimWrap.sdx(cam_x, m.x)
+	if absf(rx) > half_w + 3.0 * bh:
+		return n
+	var lane: Color = VfxShots.lane_of(S, m.owner)
+	var villain: bool = String(S.fighters[m.owner].role) == "villain"
+	var age: float = m.age + (0.0 if sh.last_frozen else a)
+	var hover: bool = m.mode == "hover"
+	var gy: float = WorldTerrain.groundY(S, m.x)
+	var bob: float = 0.0 if (not hover or hub.reduced_motion) else sin(TAU * (float(sh.clock) + a) / 90.0 + float(m.id)) * 5.0
+	var c := Vector2(rx, m.y + bob)
+	var z: float = m.z + Z_SHOT - 0.5
+	var close: float = 1.0
+	var ak: float = 1.0
+	var core_k: float = 1.0
+	var blink: float = 1.0
+	var grow: float = 1.0
+	match m.state:
+		"arming":
+			var u: float = clampf(age / VfxShots.MINE_ARM_TICKS, 0.0, 1.0)
+			close = lerpf(2.4, 1.0, 1.0 - pow(1.0 - u, 2.0))
+			ak = lerpf(0.25, 1.0, u)
+			grow = lerpf(0.4, 1.0, u)
+		"armed":
+			var br: float = 0.0 if hub.reduced_motion else sin(TAU * age / 60.0)
+			close = 1.0 + 0.03 * br
+			core_k = 0.9 + 0.1 * br
+		"trigger":
+			var uf: float = clampf(age / VfxShots.MINE_FUSE_TICKS, 0.0, 1.0)
+			close = lerpf(1.0, 0.8, uf)
+			core_k = lerpf(1.0, 1.4, uf)
+			blink = 1.0 if (hub.reduced_motion or int(age / 4.0) % 2 == 0) else 0.45
+			var wr: float = lerpf(40.0, m.radius, 1.0 - pow(1.0 - uf, 2.0))
+			var wc: Color = lane
+			wc.a = alpha * 0.55 * (1.0 - uf * 0.5)
+			n = _put(n, Vector2(rx, m.y) if hover else Vector2(rx, gy + 12.0), Vector2(1.0, 0.0), wr * 2.0, wr * (2.0 if hover else 0.5), z - 0.6, wc, maxf(0.03, 1.6 * minpx / wr), 0.0, SHAPE_RING)
+	var a_all: float = alpha * ak * blink * life_k
+	# What shows it hovers, or sits.
+	if hover:
+		var sc: Color = lane.darkened(0.55)
+		sc.a = alpha * 0.28
+		n = _put(n, Vector2(rx, gy + 5.0), Vector2(1.0, 0.0), 96.0, 22.0, z - 1.4, sc, 1.0, 0.0, SHAPE_RING)
+		var gap: float = maxf((c.y - 30.0) - (gy + 8.0), 0.0)
+		var steps: int = clampi(int(gap / 34.0), 0, 4)
+		for k in range(steps):
+			var lc: Color = lane
+			lc.a = alpha * 0.32 * (1.0 - float(k) / float(maxi(steps, 1)) * 0.6)
+			n = _put(n, Vector2(rx, c.y - 32.0 - float(k) * 34.0 - 9.0), Vector2(0.0, 1.0), 18.0, maxf(3.0, minpx), z - 1.0, lc, 0.5, 0.5, SHAPE_STREAK)
+	var flat_k: float = 1.0 if hover else 0.3          # a plate on the ground lies flat
+	var base: Vector2 = c if hover else Vector2(rx, gy + 9.0)
+	var plate: Color = lane.darkened(0.45)
+	plate.a = a_all * 0.92
+	var rimc: Color = lane
+	rimc.a = a_all
+	var inner: Color = lane.lightened(0.14 + 0.12 * (core_k - 1.0))
+	inner.a = a_all
+	if villain:
+		# A faceted caltrop: three tapering spikes round a small hexagonal hub; in the air a spike up and two down, on the ground one up and two
+		# low to the sides.
+		var angs: Array = [PI * 0.5, PI * 1.17, PI * 1.83] if hover else [PI * 0.5, PI * 0.12, PI * 0.88]
+		var ln: float = 40.0 * grow
+		for an in angs:
+			var dv: Vector2 = Vector2(cos(an), sin(an))
+			var sp0: Color = lane.darkened(0.2)
+			sp0.a = a_all
+			n = _put(n, base + dv * (ln * 0.5 + 6.0), dv, ln, 15.0, z + 0.1, sp0, 0.04, 0.5, SHAPE_STREAK)
+			var sp1: Color = lane
+			sp1.a = a_all * 0.9
+			n = _put(n, base + dv * (ln * 0.5 + 8.0), dv, ln * 0.8, 5.0, z + 0.2, sp1, 0.04, 0.5, SHAPE_STREAK)
+		n = _put(n, base, Vector2(1.0, 0.0), 30.0 * close, 30.0 * 0.866 * close, z + 0.3, plate, maxf(0.09, 1.6 * minpx / 15.0), 1.0, SHAPE_HEX)
+		n = _put(n, base, Vector2(1.0, 0.0), 30.0 * close, 30.0 * 0.866 * close, z + 0.35, rimc, maxf(0.14, 1.6 * minpx / 15.0), 0.0, SHAPE_HEX)
+		n = _put(n, base, Vector2(1.0, 0.0), 14.0 * core_k, 14.0 * 0.866 * core_k, z + 0.4, inner, 0.15, 1.0, SHAPE_HEX)
+	else:
+		# A hexagonal plate with a raised inner hexagon and a thin ring round it (flat on the ground, face-on in the air).
+		var rr: float = 46.0 * close
+		var rc: Color = lane
+		rc.a = a_all * 0.55
+		n = _put(n, base, Vector2(1.0, 0.0), rr * 2.0, rr * 2.0 * flat_k, z - 0.2, rc, maxf(0.04, 1.6 * minpx / rr), 0.0, SHAPE_RING)
+		n = _put(n, base, Vector2(1.0, 0.0), 54.0, 54.0 * 0.866 * flat_k, z + 0.1, plate, maxf(0.07, 1.6 * minpx / 27.0), 1.0, SHAPE_HEX)
+		n = _put(n, base, Vector2(1.0, 0.0), 54.0, 54.0 * 0.866 * flat_k, z + 0.15, rimc, maxf(0.1, 1.6 * minpx / 27.0), 0.0, SHAPE_HEX)
+		n = _put(n, base, Vector2(1.0, 0.0), 28.0 * core_k, 28.0 * 0.866 * core_k * flat_k, z + 0.3, inner, 0.14, 1.0, SHAPE_HEX)
 	return n
 
 

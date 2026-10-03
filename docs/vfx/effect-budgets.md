@@ -76,3 +76,7 @@ One MultiMesh, one draw call (the transformation's shader), 224 quads reserved: 
 ## Blast explosions and mines (2026-10-03)
 
 Debris pool only (no draw call): a bolt's explosion about 9 bits, a full charged shot's about 32 plus 8 smouldering jobs; flames capped at 40 alive, sparks at 12 a tick and 100 alive, the pool at 460 (a test fires twenty full bursts in one tick: 292 bits). Quality low about 0.35 of the count, reduced motion half and no ring. Knocked-loose shots: up to six, a smoke puff each tick (every other at low). Mines: 7 to 13 quads each, at most 24 held, in the shots view's one draw (320 quads reserved). Not measured: the web build and an old laptop.
+
+## Round two of the blasts (2026-10-03)
+
+Twelve mines (the most there can be) and twenty bolts in one view: 123 quads of 320, one draw call. A mine is 7 to 13 quads. A building hit or an air burst costs a bolt's explosion (about 9 bits) or a charged shot's (about 24 to 32) from the debris pool; a spray's misses are bounded by the pool's caps (flames 40, sparks 12 a tick). Not measured: the web build and an old laptop.

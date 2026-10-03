@@ -56,12 +56,22 @@ static func radius_for(kind: String, dmg: float, tier: int) -> float:
 			bh = 1.0
 		"lob":
 			bh = 1.5
+		"mine":
+			bh = 2.0
 		"charged":
-			bh = 2.0 if dmg >= 60.0 else 1.5
+			# 1.5 bh tapped (0.6 of the kind's damage) rising to 2 bh fully charged (all of it).
+			bh = lerpf(1.5, 2.0, clampf((dmg / kind_dmg("charged") - 0.6) / 0.4, 0.0, 1.0))
 		_:
 			bh = 0.5
 	var tf: float = 1.5 if tier >= 4 else (1.25 if tier == 3 else 1.0)
 	return bh * VfxLook.BH * tf
+
+
+## A kind's full damage (data/fight/shots.json, the sim's), for how charged a charged shot was.
+static func kind_dmg(kind: String) -> float:
+	if SimShots.kinds.has(kind):
+		return maxf(float(SimShots.kinds[kind].dmg), 1.0)
+	return {"bolt": 13.0, "shard": 5.2, "arc": 52.8, "charged": 82.5, "lob": 66.0, "mine": 52.8}.get(kind, 13.0)
 
 
 ## How long its smoke stays, seconds, for show (2 for the smallest, 5 for the largest).
@@ -78,18 +88,19 @@ static func _q(d: VfxDebris) -> float:
 	return VfxLook.QUALITY_SHARDS[clampi(d.quality, 0, 2)] * (0.5 if d.reduced else 1.0)
 
 
-## radius: the blast radius (radius_for). surface: "ground", "fighter" or "water". mode: "burst" (a flame burst, the default), "spark" (sparks and smoke only: a guard or a deflect).
+## radius: the blast radius (radius_for). surface: "ground", "fighter" (a body), "air" (a burst in the air: no ground), "wall" (against a
+## building's face: concrete chips and dust, no ring) or "water". mode: "burst" (a flame burst, the default), "spark" (sparks and smoke only: a guard or a deflect).
 ## Returns how many bits it asked the pool for (the tests and the budget).
 static func at(S: SimState, d: VfxDebris, x: float, y: float, z: float, radius: float, surface: String, mode: String = "burst") -> int:
 	var rd: SimRng = d._rd
 	var q: float = _q(d)
-	var s: float = scale_for(radius) * (p("fighter_k") if surface == "fighter" else 1.0)
+	var s: float = scale_for(radius) * (p("fighter_k") if surface == "fighter" else (0.8 if surface == "air" else (0.75 if surface == "wall" else 1.0)))
 	var smoke_life: float = smoke_s(radius)
 	var biome: String = VfxPalette.biome_key(x)
 	var asked: int = 0
 	var flame_cap: int = int(round(p("flame_cap") * (0.5 + 0.5 * q)))
 	# Flames: a burst going up and out, the larger ones taller.
-	var nf: int = 0 if (mode == "spark" or surface == "water") else clampi(int(round(p("flames") * s)), 1, 9)
+	var nf: int = 0 if (mode == "spark" or surface == "water") else clampi(int(round(p("flames") * s * (0.6 if surface == "wall" else 1.0))), 1, 9)
 	for i in range(nf):
 		var side: float = -1.0 + 2.0 * (float(i) + 0.5) / float(nf)
 		var vx: float = side * rd.range_(80.0, 220.0) * s + rd.range_(-30.0, 30.0)
@@ -130,7 +141,27 @@ static func at(S: SimState, d: VfxDebris, x: float, y: float, z: float, radius: 
 		if keep3 and not (d.reduced and i > 1):
 			d.smoke(x + dx, y + 30.0 + rd.range_(0.0, 30.0), z - 2.0, sz2, life3)
 			asked += 1
-	if surface == "ground":
+	if surface == "wall":
+		# A building's face: chips of its own concrete thrown out and falling, and pale dust off it; nothing on the ground.
+		var ctones: Array = VfxEarth.tones_for_col("#77808f", x)["t"]
+		var nw: int = clampi(int(round(p("chunks") * s)), 2, 8)
+		for i in range(nw):
+			var vx3: float = rd.range_(-1.0, 1.0) * rd.range_(120.0, 380.0) * (0.6 + 0.4 * s)
+			var vy3: float = rd.range_(150.0, 520.0) * (0.6 + 0.4 * s)
+			var sz5: float = rd.range_(8.0, 17.0) * (0.7 + 0.4 * s)
+			var life5: float = rd.range_(0.9, 1.6)
+			var keep6: bool = rd.next() < q
+			if keep6:
+				d.chunk(x + rd.range_(-18.0, 18.0), y + rd.range_(-12.0, 12.0), z + 8.0, vx3, vy3, sz5, life5, ctones, 0, 7.0)
+				asked += 1
+		var ndu: int = clampi(int(round(3.0 * s)), 1, 5)
+		for i in range(ndu):
+			var sz6: float = rd.range_(34.0, 60.0) * (0.6 + 0.5 * s)
+			var keep7: bool = rd.next() < q
+			if keep7:
+				d.dust_puff("city", x + rd.range_(-30.0, 30.0), y + rd.range_(-20.0, 20.0), z + rd.range_(0.0, 20.0), rd.range_(-40.0, 40.0), rd.range_(30.0, 90.0), sz6 * 0.6, sz6 * 1.7, rd.range_(1.0, 1.8), 2)
+				asked += 1
+	elif surface == "ground":
 		# Chunks of the ground's own earth, thrown and falling.
 		var tones: Array = VfxEarth.tones_for_surface("soil", x)
 		var nc: int = clampi(int(round(p("chunks") * s)), 2, 10)

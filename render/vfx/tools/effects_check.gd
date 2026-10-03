@@ -192,6 +192,7 @@ func _run() -> void:
 	_pressure()
 	_shots()
 	_explosions()
+	_blast_round2()
 	print("\neffects check passed" if fails == 0 else "\neffects check FAILED (%d)" % fails)
 	quit(0 if fails == 0 else 1)
 
@@ -2028,10 +2029,10 @@ func _explosions() -> void:
 	var bh: float = VfxLook.BH
 	var R1: float = VfxExplode.radius_for("bolt", 8.67, 1)
 	var R2: float = VfxExplode.radius_for("arc", 52.8, 1)
-	var Rt: float = VfxExplode.radius_for("charged", 44.0, 1)
-	var R3: float = VfxExplode.radius_for("charged", 66.0, 1)
+	var Rt: float = VfxExplode.radius_for("charged", 49.5, 1)
+	var R3: float = VfxExplode.radius_for("charged", 82.5, 1)
 	_check(absf(R1 - 0.5 * bh) < 0.01 and absf(R2 - 1.0 * bh) < 0.01 and absf(Rt - 1.5 * bh) < 0.01 and absf(R3 - 2.0 * bh) < 0.01, "Game Design's radii: a bolt 0.5 bh, an arc 1, a tapped charged shot 1.5, a full one 2 (%.0f, %.0f, %.0f, %.0f units)" % [R1, R2, Rt, R3])
-	_check(absf(VfxExplode.radius_for("bolt", 8.0, 3) - 0.625 * bh) < 0.01 and absf(VfxExplode.radius_for("charged", 66.0, 4) - 3.0 * bh) < 0.01, "times 1.25 at the shooter's tier 3 and 1.5 at tier 4")
+	_check(absf(VfxExplode.radius_for("bolt", 8.0, 3) - 0.625 * bh) < 0.01 and absf(VfxExplode.radius_for("charged", 82.5, 4) - 3.0 * bh) < 0.01, "times 1.25 at the shooter's tier 3 and 1.5 at tier 4")
 	_check(VfxExplode.smoke_s(R1) == 2.0 and absf(VfxExplode.smoke_s(R2) - 3.0) < 0.01 and absf(VfxExplode.smoke_s(Rt) - 4.0) < 0.01 and VfxExplode.smoke_s(R3) == 5.0, "the smoke stays 2, 3, 4 and 5 seconds by size, for show")
 	var kinds_of := func(d: VfxDebris) -> Dictionary:
 		var k: Dictionary = {}
@@ -2295,6 +2296,234 @@ func _rocks_world() -> void:
 		_tick(S, h3, [])
 	_check(releases <= 2, "speed hovering about the limit does not make the rocks flicker on and off (%d releases in 300 ticks)" % releases)
 	_check(h3.rocks.level[0] > 0.99, "and standing still again they come all the way up, not a few stuck at part (%.2f)" % h3.rocks.level[0])
+	view.queue_free()
+	SimCore.dispose(S)
+
+
+## The second round of blasts on screen (agency-pass.md 15 to 17; Simulation's shots.md 13 to 18): real mines in S.shots, the wild deflect, the
+## spray, a shot stopped by a building, a stray shot bursting in the air.
+func _blast_round2() -> void:
+	print("blasts, round two: mines, wild deflects, spray, buildings, air bursts")
+	var S := SimCore.createSim()
+	SimCore.newMatch(S, 6)
+	var plains: float = SimWrap.wrap(2250.0 * SimConst.PS)
+	var g: float = WorldTerrain.groundY(S, plains)
+	var f0 = S.fighters[0]
+	var f1 = S.fighters[1]
+	f0.x = plains
+	f0.y = g
+	f1.x = SimWrap.wrap(plains + 2400.0)
+	f1.y = g
+	var host := FakeHost.new()
+	host.S = S
+	var view := VfxShotsView.new()
+	root.add_child(view)
+	var bh: float = VfxLook.BH
+	var kinds_of := func(d: VfxDebris) -> Dictionary:
+		var k: Dictionary = {}
+		for b in d.bits:
+			k[b.kind] = int(k.get(b.kind, 0)) + 1
+		return k
+	var shapes := func(want: float) -> Array:      # the quads of one shape in the view's buffer: [width, alpha] each
+		var out: Array = []
+		for q in range(view.count):
+			if is_equal_approx(view._buf[q * VfxShotsView.STRIDE + 18], want):
+				out.append([view._buf[q * VfxShotsView.STRIDE], view._buf[q * VfxShotsView.STRIDE + 15]])
+		return out
+	# --- 1. A real mine, laid by the sim, is drawn by its own look and is not a bolt.
+	S.shots = []
+	var mine1 = SimShots.fire(S, 0, "mine", {"x": plains + 500.0, "y": g + 120.0})
+	var mine2 = SimShots.fire(S, 1, "mine", {"x": plains + 1100.0, "ground": true})
+	_check(mine1 != null and mine2 != null and int(mine1.mode) == SimShots.MINE and mine2.ground, "the sim lays a hovering mine and a ground mine")
+	var hub := VfxHub.new()
+	hub.reset(S, 6)
+	_tick(S, hub, [])
+	view.update(hub, host, 1.0, plains + 800.0, 0.7, 1200.0)
+	var mine_hex: Array = shapes.call(VfxShotsView.SHAPE_HEX)
+	_check(view.shots_drawn == 0 and mine_hex.size() >= 4, "a mine is not drawn as a shot in flight: it has its own look (%d hexagons, %d shots)" % [mine_hex.size(), view.shots_drawn])
+	var mine_w: float = 0.0
+	for hx in mine_hex:
+		mine_w = maxf(mine_w, hx[0])
+	var bolt := SimState.Shot.new()
+	bolt.kind = "bolt"
+	bolt.owner = 0
+	bolt.x = plains + 800.0
+	bolt.y = g + 60.0
+	bolt.vx = 3600.0
+	bolt.power = 1.0
+	bolt.dmg = 13.0
+	bolt.fresh = false
+	S.shots = [bolt]
+	view.update(hub, host, 1.0, plains + 800.0, 0.7, 1200.0)
+	var bolt_hex: Array = shapes.call(VfxShotsView.SHAPE_HEX)
+	var bolt_w: float = VfxShots.look_of(bolt)["rad"] * 2.0
+	_check(bolt_hex.is_empty() and mine_w > bolt_w * 1.3, "at gameplay zoom a mine is distinct from a bolt: hexagons and a plate %.0f units wide against a bolt's %.0f round body" % [mine_w, bolt_w])
+	# --- 2. Its state comes from the sim's own fields: arming dim, armed bright, the fuse on a blink with a warning ring.
+	S.shots = []
+	var m3 = SimShots.fire(S, 0, "mine", {"x": plains + 500.0, "y": g + 120.0})
+	var hm := VfxHub.new()
+	hm.reset(S, 6)
+	_tick(S, hm, [])
+	m3.arm = 29
+	view.update(hm, host, 1.0, plains + 500.0, 0.7, 1200.0)
+	var a_arming: float = 0.0
+	for hx in shapes.call(VfxShotsView.SHAPE_HEX):
+		a_arming = maxf(a_arming, hx[1])
+	m3.arm = 0
+	view.update(hm, host, 1.0, plains + 500.0, 0.7, 1200.0)
+	var a_armed: float = 0.0
+	for hx in shapes.call(VfxShotsView.SHAPE_HEX):
+		a_armed = maxf(a_armed, hx[1])
+	var q_armed: int = view.count
+	_check(a_arming < a_armed * 0.6, "arming is dim, armed is bright (alpha %.2f then %.2f)" % [a_arming, a_armed])
+	_tick(S, hm, [VfxMock.ev("mine_trip", {"id": m3.id, "actor": 1, "kind": "fighter", "x": m3.x, "y": m3.y, "z": 0.0, "dur": 0.133})])
+	m3.fuse = 4
+	view.update(hm, host, 1.0, plains + 500.0, 0.7, 1200.0)
+	_check(hm.shots.trips == 1 and absf(float(hm.shots._fuse_total[m3.id]) - 8.0) < 0.5 and view.count > q_armed, "mine_trip: a flash now and a fuse of 8 ticks, and the fuse shows a warning ring (%d quads against %d)" % [view.count, q_armed])
+	# --- 3. Its blast: a full-size burst, in the air or on the ground, with the radius ring.
+	var he := VfxHub.new()
+	he.reset(S, 6)
+	S.shots = []
+	var ma = SimShots.fire(S, 0, "mine", {"x": plains + 500.0, "y": g + 700.0})
+	var mg = SimShots.fire(S, 1, "mine", {"x": plains + 1100.0, "ground": true})
+	_tick(S, he, [])
+	var ex0: int = he.shots.explosions
+	_tick(S, he, [VfxMock.ev("shot_end", {"id": ma.id, "kind": "mine", "x": ma.x, "y": ma.y, "z": 0.0, "cause": "mine"})])
+	var k_air: Dictionary = kinds_of.call(he.debris)
+	_check(he.shots.explosions == ex0 + 1 and absf(he.shots.last_radius - 2.0 * bh) < 0.5 and k_air.has(VfxDebris.FLAME) and not k_air.has(VfxDebris.CHUNK) and not k_air.has(VfxDebris.RING), "a mine hovering high blows in an air burst, 2 bh across (no chunks, no ground ring: %s)" % str(k_air))
+	_tick(S, he, [VfxMock.ev("shot_end", {"id": mg.id, "kind": "mine", "x": mg.x, "y": mg.y, "z": 0.0, "cause": "mine"})])
+	var k_gr: Dictionary = kinds_of.call(he.debris)
+	_check(k_gr.has(VfxDebris.CHUNK) and k_gr.has(VfxDebris.RING), "a ground mine blows in a ground burst (chunks and a flat ring)")
+	var ring_fx: bool = false
+	for e in he.shots.fx:
+		if e.kind == "ring" and e.size > 1.2 * bh:
+			ring_fx = true
+	_check(ring_fx, "and its blast radius is shown as a ring")
+	f0.tier = 4.0
+	var ht := VfxHub.new()
+	ht.reset(S, 6)
+	S.shots = []
+	var mt = SimShots.fire(S, 0, "mine", {"x": plains + 500.0, "ground": true})
+	_tick(S, ht, [])
+	_tick(S, ht, [VfxMock.ev("shot_end", {"id": mt.id, "kind": "mine", "x": mt.x, "y": mt.y, "z": 0.0, "cause": "mine"})])
+	_check(absf(ht.shots.last_radius - 3.0 * bh) < 0.5, "a tier 4 owner's mine blows 1.5 times as wide (%.0f units)" % ht.shots.last_radius)
+	f0.tier = 1.0
+	# --- 4. A mine that ran out of life fizzles: a pop, no flame.
+	var hz := VfxHub.new()
+	hz.reset(S, 6)
+	S.shots = []
+	var mz = SimShots.fire(S, 0, "mine", {"x": plains + 500.0, "ground": true})
+	_tick(S, hz, [])
+	_tick(S, hz, [VfxMock.ev("shot_end", {"id": mz.id, "kind": "mine", "x": mz.x, "y": mz.y, "z": 0.0, "cause": "life"})])
+	_check(not kinds_of.call(hz.debris).has(VfxDebris.FLAME) and hz.shots.explosions == 0, "a mine that runs out of life fizzles: sparks and a ring, no flame, no blast")
+	# --- 5. A shot stopped by a building: concrete chips and dust at its face.
+	var hb := VfxHub.new()
+	hb.reset(S, 6)
+	_tick(S, hb, [VfxMock.ev("shot_end", {"id": 90, "kind": "bolt", "x": plains + 700.0, "y": g + 300.0, "z": 0.0, "cause": "building"})])
+	var kb_small: Dictionary = kinds_of.call(hb.debris)
+	var hb2 := VfxHub.new()
+	hb2.reset(S, 6)
+	_tick(S, hb2, [VfxMock.ev("shot_end", {"id": 91, "kind": "charged", "x": plains + 700.0, "y": g + 300.0, "z": 0.0, "cause": "building"})])
+	var kb_big: Dictionary = kinds_of.call(hb2.debris)
+	var concrete: bool = false
+	for b in hb2.debris.bits:
+		if b.kind == VfxDebris.CHUNK and b.mode == 0:
+			concrete = true
+	_check(concrete and kb_big.has(VfxDebris.PUFF) and not kb_big.has(VfxDebris.RING) and hb2.debris.bits.size() > hb.debris.bits.size() and kb_small.has(VfxDebris.CHUNK), "a shot stopped by a building throws its concrete chips and dust, bigger for a charged shot (%d bits against %d), and leaves no ground ring" % [hb2.debris.bits.size(), hb.debris.bits.size()])
+	# --- 6. A stray shot out of life bursts where it is: in the air, an air burst; low, a ground burst.
+	var hl := VfxHub.new()
+	hl.reset(S, 6)
+	_tick(S, hl, [VfxMock.ev("shot_end", {"id": 92, "kind": "bolt", "x": plains + 700.0, "y": g + 900.0, "z": 0.0, "cause": "life"})])
+	var kl: Dictionary = kinds_of.call(hl.debris)
+	var hl2 := VfxHub.new()
+	hl2.reset(S, 6)
+	_tick(S, hl2, [VfxMock.ev("shot_end", {"id": 93, "kind": "bolt", "x": plains + 700.0, "y": g + 20.0, "z": 0.0, "cause": "life"})])
+	var kl2: Dictionary = kinds_of.call(hl2.debris)
+	_check(hl.shots.explosions == 1 and kl.has(VfxDebris.FLAME) and not kl.has(VfxDebris.CHUNK) and kl2.has(VfxDebris.CHUNK) and kl2.has(VfxDebris.RING), "a stray bolt out of life bursts in the air (flame, sparks, smoke) and, if it is low, as a ground burst")
+	# --- 7. The wild deflect: the knock-off, a mark where it will land, the tumble and the smoke trail, then the landing.
+	var hw := VfxHub.new()
+	hw.reset(S, 6)
+	S.shots = []
+	var ws := SimState.Shot.new()
+	ws.id = 77
+	ws.kind = "charged"
+	ws.owner = 0
+	ws.x = plains + 300.0
+	ws.y = g + 90.0
+	ws.vx = 2400.0
+	ws.vy = 600.0
+	ws.power = 3.0
+	ws.dmg = 82.5
+	ws.mode = SimShots.LOB
+	ws.left = 40
+	ws.total = 40
+	ws.fresh = false
+	S.shots = [ws]
+	_tick(S, hw, [])
+	var dflt := func(): return VfxMock.ev("shot_deflect", {"id": 77, "actor": 1, "kind": "charged", "x": ws.x, "y": ws.y, "z": 0.0, "x1": plains + 1500.0, "y1": g, "dur": 0.7})
+	_tick(S, hw, [dflt.call(), VfxMock.ev("shot_hit", {"actor": 0, "victim": 1, "kind": "charged", "id": 77, "x": ws.x, "y": ws.y, "z": 0.0, "amount": 0.0, "outcome": "deflect", "link": 0})])
+	var flashes: int = 0
+	var marks: int = 0
+	var mark_life: float = 0.0
+	for e in hw.shots.fx:
+		if e.kind == "flash":
+			flashes += 1
+		if e.kind == "mark":
+			marks += 1
+			mark_life = e.life
+	_check(hw.shots.wilds == 1 and flashes == 1 and marks == 1 and absf(mark_life - 42.0) < 0.5, "a wild deflect: one knock-off flash (shot_hit's deflect and shot_deflect are one), and a mark on the ground for the landing (%d flash, %d mark, %.0f ticks)" % [flashes, marks, mark_life])
+	var wild_col: Color = VfxShots.lane_of(S, 1)
+	var knock: Color = Color.BLACK
+	for e in hw.shots.fx:
+		if e.kind == "flash":
+			knock = e.col
+	_check(knock.to_html(false) == wild_col.to_html(false), "the knock-off is in the deflector's colour")
+	ws.wild = true
+	ws.deflected = 0
+	view.update(hw, host, 1.0, plains + 600.0, 0.7, 1200.0)
+	var wild_q: int = view.count
+	ws.wild = false
+	view.update(hw, host, 1.0, plains + 600.0, 0.7, 1200.0)
+	_check(wild_q - view.count == 2, "a wild shot is drawn tumbling even if the sim has not counted a deflect (%d quads against %d)" % [wild_q, view.count])
+	ws.wild = true
+	for k in range(30):
+		_tick(S, hw, [])
+	_check(hw.shots.trails >= 20, "and it trails smoke while it flies (%d puffs)" % hw.shots.trails)
+	_tick(S, hw, [VfxMock.ev("shot_end", {"id": 77, "kind": "charged", "x": plains + 1500.0, "y": g, "z": 0.0, "cause": "ground"})])
+	var kw: Dictionary = kinds_of.call(hw.debris)
+	_check(kw.has(VfxDebris.FLAME) and kw.has(VfxDebris.RING) and hw.shots.last_radius > 1.4 * bh, "where it lands it explodes in a ground burst, the shooter's charged radius (%.0f units)" % hw.shots.last_radius)
+	# --- 8. The spray: a bolt every few ticks from one fighter gets a muzzle ring only now and then, not a ring a shot.
+	var hs := VfxHub.new()
+	hs.reset(S, 6)
+	S.shots = []
+	var rings: int = 0
+	for k in range(12):
+		_tick(S, hs, [VfxMock.ev("shot_fire", {"actor": 0, "kind": "bolt", "id": 200 + k, "x": f0.x, "y": g + 60.0, "z": 0.0, "target": 1, "spd": 3600.0, "amount": 1.0, "link": 0, "ux": 1.0, "uy": 0.0})])
+	for e in hs.shots.fx:
+		if e.kind == "ring":
+			rings += 1
+	_check(rings <= 4, "twelve bolts in twelve ticks (a full spray) leave at most %d muzzle rings alive, not twelve" % rings)
+	# --- 9. Budget: twelve mines and twenty bolts in one view stay inside the draw.
+	S.shots = []
+	for k in range(6):
+		SimShots.fire(S, 0, "mine", {"x": plains + 200.0 + 160.0 * float(k), "y": g + 140.0})
+		SimShots.fire(S, 1, "mine", {"x": plains + 200.0 + 160.0 * float(k), "ground": true})
+	for k in range(20):
+		var bb := SimState.Shot.new()
+		bb.kind = "bolt"
+		bb.owner = k % 2
+		bb.x = plains + 100.0 * float(k)
+		bb.y = g + 60.0
+		bb.vx = 3600.0
+		bb.power = 1.0
+		bb.dmg = 13.0
+		bb.fresh = false
+		S.shots.append(bb)
+	var hbud := VfxHub.new()
+	hbud.reset(S, 6)
+	_tick(S, hbud, [])
+	view.update(hbud, host, 1.0, plains + 1000.0, 0.7, 2400.0)
+	_check(view.count <= VfxShotsView.CAP and view.shots_drawn == 20, "twelve mines and twenty bolts in one draw: %d quads of %d, all 20 bolts drawn" % [view.count, VfxShotsView.CAP])
 	view.queue_free()
 	SimCore.dispose(S)
 

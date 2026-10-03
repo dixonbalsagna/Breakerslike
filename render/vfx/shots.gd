@@ -27,8 +27,9 @@ const DEFAULTS: Dictionary = {
 	"shots": {"charge_ticks": 30.0, "charge_ease": 0.25, "charge_fade": 8.0, "charge_timeout": 90.0, "muzzle_life": 6.0, "hit_life": 9.0, "clash_life": 14.0,
 		"end_life": 8.0, "rad_k": 1.1, "rad_power": 0.1, "tail_k": 4.5, "tail_power": 1.0, "arc_bh": 0.1, "arc_min": 0.5, "arc_max": 3.0, "alpha": 0.95},
 }
-const KIND_R: Dictionary = {"bolt": 14.0, "shard": 10.0, "arc": 20.0, "charged": 30.0, "lob": 24.0}
-const KIND_POWER: Dictionary = {"bolt": 1.0, "shard": 1.0, "arc": 2.0, "charged": 3.0, "lob": 3.0}
+const KIND_R: Dictionary = {"bolt": 14.0, "shard": 10.0, "arc": 20.0, "charged": 30.0, "lob": 24.0, "mine": 30.0}
+const KIND_POWER: Dictionary = {"bolt": 1.0, "shard": 1.0, "arc": 2.0, "charged": 3.0, "lob": 3.0, "mine": 3.0}
+const MUZZLE_GAP: int = 4              # a spray's bolts leave a few ticks apart: at most one muzzle ring in this many ticks a fighter
 const MINE_ARM_TICKS: float = 30.0     # a mine arms over this many ticks (agency-pass.md 15.5: dim, then bright)
 const MINE_FUSE_TICKS: float = 30.0    # and shows it is about to go for this many
 const TRAIL_MAX: int = 6               # knocked-loose shots that trail smoke at once
@@ -82,7 +83,12 @@ var explode_enabled: bool = true      # the explosions and the knocked-loose loo
 var mines: Array = []                 # Mine
 var explosions: int = 0               # explosions asked for (the tests)
 var last_radius: float = 0.0          # the radius of the last one (the tests)
-var _known: Dictionary = {}           # shot id -> [owner, damage]: shot_end carries no owner, so it is remembered from S.shots
+var _known: Dictionary = {}           # shot id -> [owner, damage, on the ground (a mine), mode]: shot_end carries no owner, so it is remembered from S.shots
+var _fuse_total: Dictionary = {}      # mine id -> ticks of its fuse (mine_trip's dur), for the blink and the warning ring
+var _deflect_seen: Dictionary = {}    # ids deflected this tick (shot_hit deflect and shot_deflect are one deflect)
+var _last_muzzle := [-100, -100]      # per slot: the clock of the last muzzle ring
+var wilds: int = 0                    # wild deflects seen (the tests)
+var trips: int = 0                    # mines set off seen (the tests)
 var trails: int = 0                   # smoke puffs left behind knocked-loose shots
 
 static var _data: Dictionary = {}
@@ -123,6 +129,11 @@ func reset() -> void:
 	explosions = 0
 	last_radius = 0.0
 	_known = {}
+	_fuse_total = {}
+	_deflect_seen = {}
+	_last_muzzle = [-100, -100]
+	wilds = 0
+	trips = 0
 	trails = 0
 	warm()
 
@@ -138,8 +149,32 @@ static func look_of(sh) -> Dictionary:
 	var power: float = float(sh.power)
 	var rad: float = r * (p("shots", "rad_k") + p("shots", "rad_power") * power)
 	if String(sh.kind) == "charged":
-		rad *= 0.75 + 0.25 * clampf(float(sh.dmg) / 66.0, 0.0, 1.0)     # a tap is smaller than a full charge
+		rad *= 0.75 + 0.25 * clampf(float(sh.dmg) / VfxExplode.kind_dmg("charged"), 0.0, 1.0)     # a tap is smaller than a full charge
 	return {"rad": rad, "tail": rad * (p("shots", "tail_k") + p("shots", "tail_power") * (power - 1.0)), "halo": power >= 2.0}
+
+
+## A mine of the sim (an entry of S.shots with mode MINE) as the look's record: where it is, whether it rests or hovers, and its state from
+## `arm` (above 0: arming, dim), `fuse` (0 or more: about to go; its length from mine_trip's dur) and the clock (armed: it breathes).
+static func mine_of(S: SimState, sp, sh) -> Mine:
+	var m := Mine.new()
+	m.id = int(sp.id)
+	m.owner = int(sp.owner)
+	m.x = float(sp.x)
+	m.y = float(sp.y)
+	m.z = float(sp.z)
+	m.mode = "ground" if bool(sp.ground) else "hover"
+	if int(sp.fuse) >= 0:
+		m.state = "trigger"
+		var total: float = maxf(float(sh._fuse_total.get(int(sp.id), maxf(float(sp.fuse), 1.0))), 1.0)
+		m.age = clampf(1.0 - float(sp.fuse) / total, 0.0, 1.0) * MINE_FUSE_TICKS
+	elif int(sp.arm) > 0:
+		m.state = "arming"
+		m.age = maxf(MINE_ARM_TICKS - float(sp.arm), 0.0)
+	else:
+		m.state = "armed"
+		m.age = float(sh.clock + int(sp.id) * 7)
+	m.radius = VfxExplode.radius_for("mine", 52.8, VfxReact.tier_of(S.fighters[m.owner]) if m.owner < S.fighters.size() else 1)
+	return m
 
 
 static func lane_of(S: SimState, slot: int) -> Color:
@@ -168,8 +203,9 @@ func _add(kind: String, x: float, y: float, z: float, size: float, life: float, 
 
 ## One tick's events (all ticks, hit-stops too). debris and water: the shared pools, for a miss on the ground or the water.
 func on_events(S: SimState, events: Array, debris: VfxDebris, water: VfxWater, quality: int, reduced: bool) -> void:
+	_deflect_seen.clear()
 	for sh0 in S.shots:
-		_known[int(sh0.id)] = [int(sh0.owner), float(sh0.dmg)]
+		_known[int(sh0.id)] = [int(sh0.owner), float(sh0.dmg), bool(sh0.ground), int(sh0.mode)]
 	if _known.size() > 160:
 		_known.clear()
 	for e in events:
@@ -177,7 +213,12 @@ func on_events(S: SimState, events: Array, debris: VfxDebris, water: VfxWater, q
 			"shot_fire":
 				fired += 1
 				var power: float = float(VfxHub._g(e, "amount", 1.0))
-				_add("ring", float(e.x), float(e.y), float(VfxHub._g(e, "z", 0.0)), 24.0 + 14.0 * power, p("shots", "muzzle_life"), lane_of(S, int(e.actor)))
+				var ma: int = int(e.actor)
+				# A laid mine has no muzzle; a spray's bolts leave a few ticks apart, so only the first of them gets a ring.
+				if String(VfxHub._g(e, "kind", "")) != "mine" and (ma < 0 or ma > 1 or clock - int(_last_muzzle[ma]) >= MUZZLE_GAP):
+					_add("ring", float(e.x), float(e.y), float(VfxHub._g(e, "z", 0.0)), 24.0 + 14.0 * power, p("shots", "muzzle_life"), lane_of(S, ma))
+					if ma >= 0 and ma <= 1:
+						_last_muzzle[ma] = clock
 			"shot_hit":
 				hits += 1
 				var oc: String = String(VfxHub._g(e, "outcome", "hit"))
@@ -194,6 +235,10 @@ func on_events(S: SimState, events: Array, debris: VfxDebris, water: VfxWater, q
 				_on_end(S, e, debris, water, quality, reduced)
 			"cue":
 				_on_cue(S, e)
+			"shot_deflect":
+				_on_deflect(S, e, debris)
+			"mine_trip":
+				_on_trip(S, e)
 			"mine_place":
 				add_mine(int(VfxHub._g(e, "id", 0)), int(VfxHub._g(e, "actor", 0)), float(e.x), float(e.y), float(VfxHub._g(e, "z", 0.0)), String(VfxHub._g(e, "mode", "hover")))
 			"mine_armed":
@@ -208,6 +253,44 @@ func on_events(S: SimState, events: Array, debris: VfxDebris, water: VfxWater, q
 	for e in events:
 		if e.type == "shot_fire" and String(VfxHub._g(e, "kind", "")) == "charged":
 			_end_charge(int(e.actor), true)
+
+
+## A deflect that sends the shot wild (shot_deflect: from x, y, z to a landing x1, y1 in dur seconds): the ring and the sparks where it was
+## knocked off, in the deflector's colour (once if shot_hit's own deflect came in the same tick), and a thin ring on the ground where it
+## will come down, closing in as it flies (the payoff Orb wants is seeing it land and explode elsewhere, so it is told where).
+func _on_deflect(S: SimState, e, debris: VfxDebris) -> void:
+	wilds += 1
+	var id: int = int(VfxHub._g(e, "id", -1))
+	var actor: int = int(VfxHub._g(e, "actor", 0))
+	var kn: String = String(VfxHub._g(e, "kind", "bolt"))
+	var x: float = float(e.x)
+	var y: float = float(e.y)
+	var z: float = float(VfxHub._g(e, "z", 0.0))
+	var info = _known.get(id)
+	var own: int = int(info[0]) if info != null else (1 - actor if actor in [0, 1] else 0)
+	var dmg: float = float(info[1]) if info != null else (VfxExplode.kind_dmg(kn))
+	var life: float = p("shots", "hit_life")
+	if not _deflect_seen.has(id):
+		_deflect_seen[id] = true
+		var dcol: Color = lane_of(S, actor)
+		_add("flash", x, y, z, 70.0, life, dcol)
+		_add("ring", x, y, z, 130.0, life * 1.2, dcol, lane_of(S, own))
+		if explode_enabled and debris != null:
+			explosions += 1
+			VfxExplode.at(S, debris, x, y, z, VfxExplode.radius_for(kn, dmg, 1) * 0.6, "air", "spark")
+	var rad: float = VfxExplode.radius_for(kn, dmg, VfxReact.tier_of(S.fighters[own]) if own >= 0 and own < S.fighters.size() else 1)
+	var dur: float = maxf(float(VfxHub._g(e, "dur", 0.5)), 0.1)
+	_add("mark", float(VfxHub._g(e, "x1", x)), float(VfxHub._g(e, "y1", y)), z, rad, dur * 60.0, lane_of(S, own))
+
+
+## A mine was set off (mine_trip: it blows in dur seconds): a flash at it now, and its fuse length for the blink.
+func _on_trip(S: SimState, e) -> void:
+	trips += 1
+	var id: int = int(VfxHub._g(e, "id", -1))
+	_fuse_total[id] = maxf(float(VfxHub._g(e, "dur", 0.13)) * 60.0, 1.0)
+	var info = _known.get(id)
+	var own: int = int(info[0]) if info != null else 0
+	_add("flash", float(e.x), float(e.y), float(VfxHub._g(e, "z", 0.0)), 44.0, p("shots", "hit_life") * 0.7, lane_of(S, own))
 
 
 func add_mine(id: int, owner: int, x: float, y: float, z: float, mode: String) -> Mine:
@@ -246,7 +329,7 @@ func mine_blast(S: SimState, m: Mine, debris: VfxDebris, quality: int, reduced: 
 		return
 	explosions += 1
 	var on_ground: bool = m.mode == "ground"
-	var rad: float = VfxExplode.radius_for("charged", 66.0, VfxReact.tier_of(S.fighters[m.owner]) if m.owner < S.fighters.size() else 1)
+	var rad: float = VfxExplode.radius_for("mine", 52.8, VfxReact.tier_of(S.fighters[m.owner]) if m.owner < S.fighters.size() else 1)
 	last_radius = rad
 	VfxExplode.at(S, debris, m.x, m.y, m.z, rad, "ground" if on_ground else "fighter")
 	_add("ring", m.x, m.y, m.z, m.radius * 0.85, p("shots", "hit_life") * 1.4, lane_of(S, m.owner))
@@ -266,7 +349,13 @@ func _on_hit(S: SimState, e, oc: String, debris: VfxDebris) -> void:
 		back = 1.0 if SimWrap.sdx(S.fighters[victim].x, S.fighters[owner].x) >= 0.0 else -1.0
 	var kn: String = String(VfxHub._g(e, "kind", "bolt"))
 	var info = _known.get(int(VfxHub._g(e, "id", -1)))
-	var dmg: float = float(info[1]) if info != null else (66.0 if kn == "charged" else float(VfxHub._g(e, "amount", 8.0)))
+	var dmg: float = float(info[1]) if info != null else (VfxExplode.kind_dmg("charged") if kn == "charged" else float(VfxHub._g(e, "amount", 8.0)))
+	if oc == "deflect":
+		# shot_hit's deflect and shot_deflect (the wild one) are one deflect: whichever comes first draws it.
+		var did: int = int(VfxHub._g(e, "id", -1))
+		if _deflect_seen.has(did):
+			return
+		_deflect_seen[did] = true
 	if explode_enabled and debris != null and oc != "dodge":
 		explosions += 1
 		last_radius = VfxExplode.radius_for(kn, dmg, VfxReact.tier_of(S.fighters[owner]) if owner >= 0 and owner < S.fighters.size() else 1)
@@ -298,7 +387,7 @@ func _on_end(S: SimState, e, debris: VfxDebris, water: VfxWater, quality: int, r
 	var kind: String = String(VfxHub._g(e, "kind", "bolt"))
 	var info = _known.get(int(VfxHub._g(e, "id", -1)))
 	var own: int = int(info[0]) if info != null else int(VfxHub._g(e, "actor", 0))
-	var dmg: float = float(info[1]) if info != null else (66.0 if kind == "charged" else 8.0)
+	var dmg: float = float(info[1]) if info != null else (VfxExplode.kind_dmg("charged") if kind == "charged" else 8.0)
 	var rad: float = VfxExplode.radius_for(kind, dmg, VfxReact.tier_of(S.fighters[own]) if own >= 0 and own < S.fighters.size() else 1)
 	var big: float = 1.0 if kind == "bolt" or kind == "shard" else 1.8
 	match cause:
@@ -337,8 +426,38 @@ func _on_end(S: SimState, e, debris: VfxDebris, water: VfxWater, quality: int, r
 				explosions += 1
 				last_radius = rad
 				VfxExplode.at(S, debris, x, y, z, rad, "water")
+		"mine":
+			# A mine's blast (a chain's too): a full-size burst where it lay, on the ground or in the air, and its blast radius shown as a ring.
+			var mine_ground: bool = bool(info[2]) if info != null else (y - WorldTerrain.groundY(S, x) < 1.2 * VfxLook.BH)
+			if explode_enabled and debris != null:
+				explosions += 1
+				last_radius = rad
+				var low: bool = y - WorldTerrain.groundY(S, x) < 1.2 * VfxLook.BH
+				VfxExplode.at(S, debris, x, y, z, rad, "ground" if (mine_ground or low) else "air")
+			_add("ring", x, y, z, rad * 0.85, p("shots", "hit_life") * 1.4, lane_of(S, own))
+			_fuse_total.erase(int(VfxHub._g(e, "id", -1)))
+		"building":
+			# A shot stopped by a building's face: concrete chips and dust, a small flame, sparks and smoke at the face (the wear pool and
+			# the floors failing are World's; the shot's own explosion is what shows each time).
+			if explode_enabled and debris != null:
+				explosions += 1
+				last_radius = rad
+				VfxExplode.at(S, debris, x, y, z, rad, "wall")
+			_add("ring", x, y, z, 50.0 * big, p("shots", "end_life") * 0.8, lane_of(S, own))
 		"life":
-			_add("ring", x, y, z, 30.0, p("shots", "end_life") * 0.7, lane_of(S, own))
+			if kind == "mine":
+				# A mine that ran out of life fizzles: a small pop of sparks and a ring, no damage.
+				if explode_enabled and debris != null:
+					VfxExplode.at(S, debris, x, y, z, VfxLook.BH * 0.3, "air", "spark")
+				_add("ring", x, y, z, 50.0, p("shots", "end_life"), lane_of(S, own))
+			else:
+				# A stray shot out of life bursts where it is: in the air an air burst (flame, sparks, smoke), low a ground burst.
+				if explode_enabled and debris != null:
+					explosions += 1
+					last_radius = rad
+					var hgt: float = y - WorldTerrain.groundY(S, x)
+					VfxExplode.at(S, debris, x, y, z, rad, "ground" if hgt < 1.2 * VfxLook.BH else "air")
+				_add("ring", x, y, z, 30.0, p("shots", "end_life") * 0.7, lane_of(S, own))
 		_:
 			pass
 
@@ -401,7 +520,7 @@ func step(S: SimState, frozen: bool, debris: VfxDebris = null) -> void:
 	if explode_enabled and debris != null:
 		var live: int = 0
 		for sh in S.shots:
-			if int(sh.deflected) <= 0 or live >= TRAIL_MAX:
+			if (int(sh.deflected) <= 0 and not bool(sh.wild)) or live >= TRAIL_MAX:
 				continue
 			live += 1
 			var rd: SimRng = debris._rd
