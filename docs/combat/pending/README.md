@@ -100,7 +100,9 @@ One page for Orb: what each of the six waves adds in plain words, its new-pose c
 
 ## The alchemist's recipes, the traded-blows set piece and the charges (parked; the rules are Game Design's)
 
-`recipes.alchemist.json`: in the form of `data/combat/recipes.json` (`combat.recipes/1`), not moved yet: the three styles at their base and with timing, the flow's endings, six blur patterns, and each fighter's pools with every piece's status (live, posed or waiting). `templates.agency.json`: the traded-blows set piece (in-house label Blow for Blow: turns, a different strike and place each turn, the travel, 3 poses, camera notes, Legal's twelve rules), the light and heavy charges at range, and the meeting when a taunt is answered. Read them with `../alchemist-recipes.md`.
+`recipes.slice11.json`: the next version of the live `data/combat/recipes.json`, for Encounter's slice 11 (`../alchemist-recipes.md` section 6): a `pieces` block with each pool strike's limb and target, and the blur's fixed spacing taken out of the wording. Not moved.
+
+`recipes.alchemist.json`: **landed** as `data/combat/recipes.json` at `08a6002` and kept as the record. In the form of `data/combat/recipes.json` (`combat.recipes/1`): the three styles at their base and with timing, the flow's endings, six blur patterns, and each fighter's pools with every piece's status (live, posed or waiting). `templates.agency.json`: the traded-blows set piece (in-house label Blow for Blow: turns, a different strike and place each turn, the travel, 3 poses, camera notes, Legal's twelve rules), the light and heavy charges at range, and the meeting when a taunt is answered. Read them with `../alchemist-recipes.md`.
 
 ## Go-live step 1 (for Animation to apply after Orb's review of the wave 1 pack)
 

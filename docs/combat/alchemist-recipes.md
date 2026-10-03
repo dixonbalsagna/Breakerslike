@@ -13,7 +13,7 @@ The number of heavies among the last five presses sets the style (Game Design). 
 
 | Style | Heavies in five | Base | With timing | Pieces |
 | :--- | :--- | :--- | :--- | :--- |
-| **Blur** | none | **Mashing:** a ragged run, one small strike a press at the presses' own uneven spacing, with no ender | **A steady mash** (presses evenly spaced, within 3 ticks of the beat) is **a perfect blur:** one blur pattern of five lights at exactly 6 ticks, every strike clean, then its own ender, a burst that knocks the rival back | base: the 12 long and mid-range lights, or the 4 close ones when toward is held. Timed: a blur pattern (1.3), then one of 8 enders that send across, or the energy burst |
+| **Blur** | none | **Mashing:** a ragged run, one small strike a press at the presses' own uneven spacing, with no ender | **A steady mash** (presses evenly spaced, within 3 ticks of the beat) is **a perfect blur:** one blur pattern of five lights at the string's cadence (7 to 10 ticks, section 6.2), every strike clean, then its own ender, a burst that knocks the rival back | base: the 12 long and mid-range lights, or the 4 close ones when toward is held. Timed: a blur pattern (1.3), then one of 8 enders that send across, or the energy burst |
 | **Combo** | one to three | **Presses in any rhythm:** one link a light press and one accent a heavy press | **Taps in time** (each within 4 ticks of a blow landing) land **clean and hard:** 15% more, at full blow weight, and the showcase gates open | links: the 18 lights. Accents: heavies that send across first, since an accent pushes the rival back |
 | **Power** | four or five | **A held blow:** the charge pose, then the blow with more damage and a longer wind-up | **Released on the flash** (within 6 ticks of it, at full charge): **a guard-breaking blow.** Against a guard it breaks it; unguarded it earns a launch | the 20 heavies; the 16 enders as the last blow; 1 new pose, the charge |
 
@@ -171,7 +171,7 @@ Game Design's rule: a far taunt is a challenge. If the rival presses attack duri
 | **Narrative** | the player-facing name; at most one short line per fighter; taunt lines that read as a challenge |
 | **QA** | Orb asked for balance tests: consistent timing should give a substantial edge. Compare base against timed in each style |
 
-## 5. The recipes as live data (parked, not moved)
+## 5. The recipes as live data (live since `08a6002`)
 
 `pending/recipes.alchemist.json` is now in the form Encounter's slice A2 asks for (`docs/director/alchemy-plan.md`): it becomes `data/combat/recipes.json` as it stands, with `"schema": "combat.recipes/1"`. It is not moved yet.
 
@@ -199,3 +199,40 @@ Nothing is live because KAI and VORR still draw on the placeholder key sets, and
 | `showcase` | new on 2026-10-03, optional: fighter to a list of `{id, strike, sends, clearAboveBh, status}`. The flow's top ending as data, for Encounter's slice 11: a row is open when its strike is the string's ender, the launch goes its way and, where given, that much air is clear above. The rival has two rows (the overhead hammer down, the rising spear up), both waiting on wave 7's sketches; the Protagonist has none yet |
 
 **Cross-checks for Tools:** the styles' `heaviesInFive` cover 0 to 5 with no overlap; every pool a style names exists for every fighter; every pool id is one of that fighter's pieces; every blur step can be filled from that fighter's lights; the `lastPress` ids exist in the templates once the endings land.
+
+## 6. For slice 11: each piece's limb and target, and the cadence (parked, 2026-10-03)
+
+`data/combat/recipes.json` is live since `08a6002` (section 5's draft, as it stood). The next version is parked as `pending/recipes.slice11.json`, built on the live file at `ba91c14`. It differs in three places, and nothing in the tree is edited yet.
+
+### 6.1 `pieces`: the limb and the target of every pool strike
+The pools carry ids and statuses only, and the director cannot read Animation's manifests (they are render data, outside the sim's hash). So the blur patterns' steps had nothing to match against.
+
+- **Shape:** a new top-level block, one row per strike id: `"strike.jab": {"limb": "hand", "target": "head"}`. 48 rows: every id that any pool or showcase row names, the four waiting tail strikes included (limb `own`).
+- **One row for both fighters.** A strike id has one limb and one target whoever throws it; each fighter's own key set plays it. All 80 manifest rows at HEAD agree with the table.
+- **Not in the pool rows,** because a strike sits in several pools and the two copies could drift.
+
+**Keys for Tools** (`combat-recipes.schema.json`):
+
+| Key | Shape |
+| :--- | :--- |
+| `pieces` | required. An object: `_` keys are notes; every other key is a piece id, and its value is closed: `limb` (hand, foot, elbow, knee, shoulder, head or own) and `target` (a socket name), both required |
+
+**Cross-checks for Tools:**
+- Every id in a pool, and every showcase row's `strike`, has a `pieces` row. A row that nothing names is a warning.
+- A `target` is a socket of `data/anim/sockets.json`.
+- A posed piece's limb and target equal its manifest rows' (the manifest's limb without `_l` or `_r`).
+- `recipes-blur` reads `pieces` and no longer the manifests, and counts repeats: for each fighter, a step that a pattern uses twice needs two pieces of `blur.base` or `blur.toward` that are not waiting, since no key strike plays twice in a string.
+
+**How the patterns fill today** (checked by script, both fighters): every step of all six fills. Three steps have exactly as many pieces as the pattern needs: the rival's foot to the chest in `pendulum` (side kick, snap round), and the elbow to the jaw in `inside` for both (short elbow, rising elbow). There the director's rule of stepping past his last two picks has to give way to the pattern.
+
+### 6.2 What the cadence changes (Game Design, `agency-pass.md` section 20)
+A blur string now lands its blows 7, 8, 9 or 10 ticks apart, drawn when the string starts, in place of a fixed spacing.
+
+- **The six patterns do not change.** A pattern is an order of limbs and targets and has never carried ticks.
+- **The one fixed spacing was in the wording.** The blur's timed `plays` said "five lights at 6 ticks" (and section 1 above said "exactly 6 ticks"). It now says "at the string's cadence". `patternRule` gains a sentence: a pattern carries no ticks, and the gap is the director's number.
+- **The cadence set is not in the recipes.** It is the director's number, so it belongs in Encounter's `data/director/alchemy.json`.
+- **No strike row changes.** Every blur light winds up in 6 ticks, under the shortest cadence, except the twin spear and the sweep at 8. Those two lose one tick of wind-up at a cadence of 7 and play whole from 8 up. That is Animation's to shorten, as it already does at chain speed.
+
+**One question for Game Design.** Section 20 makes the perfect blur known at the fourth press on the beat. By then three or four of the string's blows are thrown, so "one pattern of five lights" cannot be the perfect blur's own five. Two ways to settle it:
+1. **Every blur string follows a pattern from its first blow, drawn with its cadence** (my recommendation). The limbs and the beat then show together in the first two blows, which is what the player is asked to read; the perfect grade changes how the blows land and the ender, not the order. Two lights fit no pattern today, the sweep (to the shins) and the Protagonist's knife-hand chop (to the arm), so I would add steps for them.
+2. **The pattern starts on the blow after the mash turns steady** and carries into the next string.
