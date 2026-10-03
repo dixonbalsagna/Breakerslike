@@ -32,11 +32,16 @@ const P = {
 // fired two bolts in 72 ticks, so no decisive shot ever came, a brink fighter was never finished and E4 and E5 ran to the cap
 // (GB-009; a56187a: 40 of 40 at 900 s). This one fires about every 14 ticks (mix LLLH: three bolts, a tap, three bolts).
 const BLAST = ':energy=1:idle=14:acc=80:win=4:mix=LLLH' + F;
+// The slow mix is kept as its own rows (EP, 2026-10-03): one press every 24 ticks in L L and a tapped H is a mix a real player can fire,
+// and slice 12 (any shot counts, window 120) is meant to make it finish. The faster script alone would hide it.
+const SLOW = ':energy=1:acc=80:win=4:mix=LLH' + F;
 const ENERGY = [
   ['E1', 'masher:energy=1' + F, P.masher, 'a bolt-only player (energy held, a bolt every 8 ticks) against a melee masher: must finish at least 95% (agency pass 16; the win share is reported, see the decided count)', null, null],
   ['E2', 'masher:energy=1' + F, P.ai, 'a bolt-only player against the medium AI (agency pass 16: 20 to 40%)', 20, 40],
   ['E3', 'tapper' + BLAST, P.ai, 'a mixed blaster (a bolt about every 14 ticks, a tapped heavy now and then) against the medium AI (starting band 25 to 45%, Game Design to confirm)', 25, 45],
   ['E4', 'tapper' + BLAST, P.timed, 'a mixed blaster against a timed melee player: must finish at least 95% before the cap (win share reported)', null, null, 95],
+  ['E4s', 'tapper' + SLOW, P.timed, 'the slow mix (L L and a tapped H, one press every 24 ticks) against a timed melee player: must finish at least 95% before the cap (win share reported)', null, null, 95],
+  ['E5s', 'tapper' + SLOW, P.timed, 'the slow mix against a rush-heavy timed script (agency pass 15.6: 40 to 60%; and finishes at least 95%)', 40, 60, 95],
   ['E5', 'tapper' + BLAST, P.timed, 'a blast-heavy timed script against a rush-heavy timed script (agency pass 15.6: 40 to 60%; and finishes at least 95%)', 40, 60, 95],
 ];
 const acc = a => `tapper:acc=${a}:win=4:mix=LLH${F}`;
