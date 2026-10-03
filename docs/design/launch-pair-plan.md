@@ -125,3 +125,74 @@ Legal's notes in Combat's plan hold for all three.
 | The end | A point-blank, all-out energy blast, as written |
 
 If Orb later gives teleporting to him, the flurry can go back to the ripple-step version as a variant.
+
+## 9. Numbers for the three launch energy kinds
+
+For `data/fight/shots.json`, answering Simulation's plan (`docs/architecture/pending/shots-events-and-kinds.md`). **Every number is a starting value for QA.** For scale, in today's data a light does 26 and a heavy 66; a bolt does 13 and costs 1 ki; a full charged shot does 82.5 and costs 8.
+
+**Any one kind can be dropped.** Each kind is its own block of data, and a fighter fires only the kinds his list names. Orb hasn't picked which extra kinds ship, and nothing below depends on another kind being there.
+
+**How they are sized.** QA measures blasts at about 11% of match damage, in a band of 10 to 25%. A full charged shot gives about 10 damage per ki. Each new kind gives less than that when it lands, and pays in something else: reach round a guard, a late dodger caught, or ground denied. So they widen what energy can do without making it the better way to deal damage.
+
+### The curving shot (the Protagonist)
+
+| Key | Value | Reason |
+| :--- | :--- | :--- |
+| Ki | 8 | A heavy energy press, like the arc and the charged shot |
+| `dmg` | 52.8 (×0.8 of a heavy) | The arc's damage. It is 6.6 per ki, under the charged shot's 10 |
+| `power` | 2 | It eats two bolts, like the arc |
+| `speed` | 40 units a tick | Slower than every straight shot, which is its price |
+| Arrival | Within 60 ticks, not 45 | So "slower" still holds at long range |
+| `curve.bow` | 0.35 of the distance at the fire | Simulation's value, confirmed |
+| `curve.bowMax` | 900 units (12 bh) | So a far shot doesn't bow off the screen |
+| `curve.bowMin` | 150 units (2 bh) | **New.** So a close shot still visibly bends |
+| **Does a guard stop it?** | **Half.** A held guard takes ×0.6 of it, where it takes ×0.38 of a straight shot | It comes round the front of the guard, which is the point of it. A full bypass would make guarding worthless |
+| Perfect block and dodge | Both work as against any heavy shot: a 10-tick window, and a deflect sends it wild | The timing answers stay whole |
+| Buildings and ground | They stop it, as Simulation plans | That is what makes the bend mean something |
+| The underside near the ground | The director doesn't offer the side that would put the bow underground | Simulation's open point 2: the director decides, not the core |
+| Structure damage | 40, before the tier factor | The arc's row (`agency-pass.md` §15.3) |
+| Knock-back | None | Only a full charged shot knocks back |
+
+### The splitting shot (the rival)
+
+It is the charged shot with a second press. Without the press it is an ordinary charged shot.
+
+| Key | Value | Reason |
+| :--- | :--- | :--- |
+| Ki | 8 for the charged shot, and nothing more for the split | The split gives up the knock-back, which is its cost |
+| `split.count` | 5 | As ruled |
+| `split.kind` | `shard` | Combat's sheet. A shard lives 24 ticks, so the pieces reach about 16 bh from the split |
+| `split.spread` | 0.32 (about 18 degrees each side) | Simulation's value, confirmed. It matches the spray cone at full spread |
+| **Damage share** | **Each piece does 16% of the parent's damage at the split, so 80% in all** | From a full charge that is 13.2 a piece, about a bolt. One or two usually land on a late dodger: 13 to 26, well under the 82.5 he dodged. All five at point-blank is 66, a heavy |
+| When the press works | From 6 ticks after the fire until the shot arrives | So it can't split in his own hand |
+| `power` of each piece | 1 | A shard's |
+| Counting | The five share one group, and count as **one** landed bolt toward the barrage's ender | So one split can't knock back by itself (`agency-pass.md` §16) |
+| No room under the cap | The parent flies on, unsplit | Simulation's open point 3, confirmed. Fewer pieces would make the cone lopsided |
+| Structure damage | 12 a piece, before the tier factor | The bolt's row |
+
+### Rain (the rival)
+
+| Key | Value | Reason |
+| :--- | :--- | :--- |
+| Ki | 10 | A heavy energy press plus 2. It can't be deflected back, and it takes ground away |
+| `rain.count` | 6 | Simulation's value, confirmed |
+| `rain.kind` | `bolt` | |
+| **Damage of each** | **10.4 (0.4 of a light)** | A fighter who stays in the patch takes one or two: 10 to 21 for 10 ki. All six is 62, under a heavy. It is the weakest kind per ki, because its job is to move the rival, not to hurt him |
+| `rain.width` | 450 units (6 bh) | As ruled |
+| `rain.height` | **900 units** (12 bh), not 1,500 | With the rise below, the first bolt lands a second after the throw, as ruled. From 1,500 it would be 1.4 s |
+| `rain.riseTicks` | **45**, not 60 | The same reason: 45 up and 15 down |
+| `rain.gap` | **120 units**, not 40 | The bolts land 2 ticks apart, over about 10 ticks, so it reads as rain and not as one flash |
+| The mark | Shown for the whole 60 ticks before the first landing | The warning is the rule |
+| Where the patch goes | The rival's position at the throw, or up to 6 bh from it by the stick | The director's pick |
+| **Can it hit its thrower?** | **Yes, at full damage.** The falling bolts hit whoever is under them | It makes the patch real ground. He can't rain on a clinch for free, and it matches the blast rule, where a shooter is hurt by his own explosion |
+| **Rain over a tower** | **It lands on the roof, and that is right.** The mark is drawn on the roof | Shots meet buildings. A fighter under a roof is sheltered, so cover matters, and the roof takes 12 a bolt before the tier factor |
+| How often | One rain in the air per fighter, and 6 s between throws | So he can't carpet the lane |
+| Counting | The six share one group: one landed bolt toward the barrage's ender | As for the split |
+| The carrier | It meets nothing on the way up, as Simulation plans | It is a throw, not a shot at someone |
+
+### What QA checks first
+
+- Blasts stay inside 10 to 25% of match damage with all three on.
+- Each kind's share of energy damage. None should pass a third of it.
+- The curving shot against a held guard: the guard should still be worth holding, so the curving shot lands for less than a clean charged shot does.
+- Rain: how often the thrower is hit by his own (it should be rare, under 5% of rains), and structures lost on roofs at tiers 1 and 2 against the per-tier rates.
