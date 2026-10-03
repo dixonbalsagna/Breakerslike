@@ -5,6 +5,24 @@
   "arriveTicks": 45,
   "chest": 40,
   "bodyR": 40,
+  "structures": true,
+  "deflect": {
+    "scatter": false,
+    "nearMin": 300,
+    "nearMax": 1500,
+    "farMin": 1500,
+    "farMax": 3000,
+    "farChance": 0.15,
+    "awayChance": 0.75,
+    "speedMul": 0.8,
+    "minTicks": 12,
+    "arcNear": 0.15,
+    "arcFar": 0.35,
+    "safeTicks": 10,
+    "backCos": 0.866
+  },
+  "mineCap": 6,
+  "mineGap": 150,
   "kinds": {
     "bolt": {
       "speed": 60,
@@ -21,6 +39,29 @@
       "lifeTicks": 36,
       "lobTicks": 36,
       "lobArc": 300
+    },
+    "mine": {
+      "speed": 0,
+      "r": 30,
+      "power": 3,
+      "dmg": 52.8,
+      "lifeTicks": 1200,
+      "mine": {
+        "trigR": 112.5,
+        "blastR": 150,
+        "chainR": 225,
+        "armTicks": 30,
+        "fuseBodyTicks": 8,
+        "fuseShotTicks": 0,
+        "chainTicks": 6,
+        "ownShare": 0.3,
+        "tierR": [
+          1,
+          1,
+          1.25,
+          1.5
+        ]
+      }
     }
   }
 }

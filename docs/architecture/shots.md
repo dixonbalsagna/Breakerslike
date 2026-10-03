@@ -184,7 +184,7 @@ Both switches ship off, so the code part is neutral. Each switch is its own part
 
 - The new event `shot_deflect {id, actor, kind, x, y, z, x1, y1, dur}` says who deflected it, where it is bound and when. The caller still sends its own `shot_hit` with the outcome `deflect`.
 - **One line of Encounter's changes.** The step's "he let it pass" branch tested `sh.owner != k`, which relied on the deflect changing the owner. It now tests that this call did not deflect the shot (`sh.deflected` unchanged). The result is the same with scatter off.
-- **The flight's shape.** In the data today: `speed` 50 units a tick, at least `minTicks` 12, an arc `arcPer` 0.25 of the distance high. Game Design's numbers (`agency-pass.md` section 17) are 0.8 of the shot's own speed, `minTicks` 12, and `arcPer` 0.15 for near landings and 0.35 for far ones. The speed and the two arcs need code, so they come in the next core commit.
+- **The flight's shape** (Game Design, `agency-pass.md` section 17; in the tree since 2026-10-03). It flies at `speedMul` 0.8 of its own kind's speed, for at least `minTicks` 12, with an arc `arcNear` 0.15 of the distance high for a near landing and `arcFar` 0.35 for a far one.
 - **A shot that hits its own shooter takes the plain rule:** its damage, and it ends. It is not handed to `DirBlast.hit`, because that rule reads the shot's owner as the attacker: a full charged shot would knock him back with himself as the attacker and could start a finisher on himself. Encounter can take the case over by widening the one condition in `hitFighter`.
 - **Still Encounter's from 15.2:** the +8 ki and the free approach, the context deflect, and the feed line (it still says the shot "goes back").
 
@@ -221,11 +221,11 @@ A mine is a shot that does not travel: mode `MINE`, in `S.shots`, hashed, laid w
 | Buildings, craters | `hitWorld(S, mine, "mine")`: World's `mineBlast` goes there |
 | Mines never close in on command (Legal) | A mine has no velocity and no target |
 
-- `Shot.fuse` is -1 until the mine is set off, then the ticks to its blast. A chain's delay goes in the same field. `fuseTicks` is 0 today for every cause. Game Design's rule (section 17) is 8 ticks when a body sets it off and 0 when a shot does, which needs a fuse per cause in code: the next core commit. A blow is a body there unless Game Design says otherwise.
+- `Shot.fuse` is -1 until the mine is set off, then the ticks to its blast. A chain's delay goes in the same field. The fuse is by cause (Game Design, section 17; in the tree since 2026-10-03): `fuseBodyTicks` 8 when a body sets it off (a fighter in the trigger radius, or a blow, by the EP's ruling) and `fuseShotTicks` 0 when a shot does.
 - The new event `mine_trip {id, actor, kind, x, y, z, dur}`: `kind` is `fighter`, `shot`, `blow` or `chain`, and `dur` is the time to the blast. The blast is `shot_end` with cause `mine`.
 - A mine does not trade with shots, and two mines never meet.
 
-**The chain radius.** Mines must be 2 bh apart and a blast reaches 2 bh, so with `chainR` equal to the blast a chain only happened at exactly the minimum gap. Game Design set `chainR` to 3 bh (225 units) at every tier (section 17), and a mine's own radius to 30 units so shots can clear a field. Both are in the data. Today `chainR` still grows by `tierR` like the blast; holding it at 3 bh at every tier is one line of code, in the next core commit.
+**The chain radius.** Mines must be 2 bh apart and a blast reaches 2 bh, so with `chainR` equal to the blast a chain only happened at exactly the minimum gap. Game Design set `chainR` to 3 bh (225 units) at every tier (section 17), and a mine's own radius to 30 units so shots can clear a field. The blast still grows by `tierR`; the chain's reach does not (in the tree since 2026-10-03).
 
 **A minefield and the cap.** 6 a fighter is 12 mines at most, which leaves 20 of the 32 for shots in flight. `fire` refuses a mine at the cap as it refuses a shot. A field of mines costs little while it waits (section 18). The cost is the shots that fly through it.
 
@@ -287,6 +287,6 @@ KAI's share drops 5 points with `scatter` on. The interval on 100 matches is abo
 4. **The chain radius against the gap:** ruled, 3 bh (Game Design, section 17); in the data.
 5. **A seeking shot through a building.** It is not stopped, as with the ground (section 9, point 1). With buildings now solid to other shots this shows more. The same one condition changes both.
 6. **A shot that runs out of life in the air** still ends with no blast. World asked for a call there; "every shot ends in an explosion" (15.1) says so too. It is one line (`hitWorld(S, shot, "air")` at the life's end) once World's blast fades with height, and it changes matches, so it goes in World's window.
-7. **My placeholders:** replaced by Game Design's section 17. In the data now: a mine's radius 30, `chainR` 225, `awayChance` 0.75, `minTicks` 12. Needing code (the next core commit): the fuse by cause (8 for a body, 0 for a shot), `chainR` at every tier, the wild flight at 0.8 of the shot's own speed, `arcPer` 0.15 near and 0.35 far.
+7. **My placeholders:** all replaced by Game Design's section 17 and in the tree: a mine's radius 30, `chainR` 225 at every tier, `awayChance` 0.75, `minTicks` 12, the fuse by cause (8 for a body, 0 for a shot), the wild flight at 0.8 of the shot's own speed, the arc 0.15 near and 0.35 far.
 8. **Mines and the shot kinds beyond these** (splitting, rain, curving, ricochet) are not designed here.
 

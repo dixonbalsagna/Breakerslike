@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/anim-fighters",
   "title": "anim.fighters/1",
-  "description": "data/anim/fighters.json: each fighter's animation profile (docs/animation/pose-pipeline.md section 9.25). shape: the key into shapes.json, ragdoll_motion.json and joints.json. pose_profile: the numbers wave_gen.mjs applies to the rival's wave 1 for the strike slots that keep his poses (read at generation, never at runtime). waves: the pose waves that carry his strikes, his entries and his energy poses. timing and arc: parked, not read yet. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every shape is in ragdoll_motion.json shapes; every named wave has a poses file and the strikes wave a keysets file in data/anim/waves; timing names profiles of profiles.json) are checked by tools/lib/xref-fight.js (fighters-*). Animation's draft: docs/animation/handoff/anim-fighters.schema.json.",
+  "description": "data/anim/fighters.json: each fighter's animation profile (docs/animation/pose-pipeline.md section 9.25). shape: the key into shapes.json, ragdoll_motion.json and joints.json. pose_profile: the numbers wave_gen.mjs applies to the rival's wave 1 for the strike slots that keep his poses (read at generation, never at runtime). waves: the pose waves that carry his strikes, his entries and his energy poses, and `more`, every other wave that is his (the pair's shared wave too). timing and arc: parked, not read yet. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every shape is in ragdoll_motion.json shapes; every named wave (the `more` ones too) has a poses file and the strikes wave a keysets file in data/anim/waves; timing names profiles of profiles.json) are checked by tools/lib/xref-fight.js (fighters-*). Animation's draft: docs/animation/handoff/anim-fighters.schema.json.",
   "type": "object",
   "required": [
     "schema",
@@ -56,9 +56,18 @@
                 "description": "The pose wave that carries his energy poses (hands, brace, curving shot).",
                 "type": "string",
                 "pattern": "^[a-z]+[0-9]+$"
+              },
+              "more": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z]+[0-9]+$"
+                },
+                "description": "Every other pose wave that is his: his finisher, taunts, blast presses and the rest, or the pair's shared wave (data/anim/waves/<wave>.poses.json)."
               }
             },
-            "description": "The pose waves that carry his strikes, his entries and his energy poses.",
+            "description": "The pose waves that carry his strikes, his entries and his energy poses, and `more`: the rest that are his.",
             "additionalProperties": false,
             "patternProperties": {
               "^_": true

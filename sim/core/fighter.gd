@@ -316,7 +316,8 @@ static func stepFighter(S: SimState, f, dt: float) -> void:
 			f.face = 1.0 if dxo > 0.0 else -1.0
 		if i.charge:
 			f.state = "charging"
-			f.hidden = false
+			if f.hidden:
+				SimHiding.regainLock(S, f)   # charging gives him away: the lock comes back announced (found, and no new break for a while)
 		else:
 			var sp: float = 430.0 * f.spd * (1.0 + f.ld.speed * (f.tier - 1.0))
 			if SimWounds.battered(f, SimWounds.LEGS):

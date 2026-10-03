@@ -41833,7 +41833,7 @@
       }
     },
     {
-      "id": "biomes-blast-mine-optional-area-share-ok",
+      "id": "biomes-blast-mine-area-share-absent-warns",
       "schema": "biomes-blast.schema.json",
       "mutate": [
         {
@@ -41843,7 +41843,10 @@
           ]
         }
       ],
-      "expect": null
+      "expect": {
+        "rule": "xref:blast-kind",
+        "pointer": "/kinds/mine"
+      }
     },
     {
       "id": "biomes-blast-chip-required",
@@ -42158,6 +42161,864 @@
         "rule": "type",
         "pointer": "/leave/rimLift"
       }
+    },
+    {
+      "id": "shots-deflect-speed-retired",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/speed": 50
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/deflect/speed"
+      }
+    },
+    {
+      "id": "shots-deflect-arc-per-retired",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/arcPer": 0.25
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/deflect/arcPer"
+      }
+    },
+    {
+      "id": "shots-deflect-speed-mul-required",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/deflect/speedMul"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/deflect"
+      }
+    },
+    {
+      "id": "shots-deflect-speed-mul-zero",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/speedMul": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/deflect/speedMul"
+      }
+    },
+    {
+      "id": "shots-deflect-speed-mul-type",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/speedMul": "fast"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/deflect/speedMul"
+      }
+    },
+    {
+      "id": "shots-deflect-speed-mul-above-one-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/speedMul": 1.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-deflect-arc-near-required",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/deflect/arcNear"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/deflect"
+      }
+    },
+    {
+      "id": "shots-deflect-arc-far-required",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/deflect/arcFar"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/deflect"
+      }
+    },
+    {
+      "id": "shots-deflect-arc-near-negative",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/arcNear": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/deflect/arcNear"
+      }
+    },
+    {
+      "id": "shots-deflect-arc-far-negative",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/arcFar": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/deflect/arcFar"
+      }
+    },
+    {
+      "id": "shots-deflect-arc-zero-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/arcNear": 0,
+            "/deflect/arcFar": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-deflect-arc-far-below-near-warns",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/arcFar": 0.05
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-deflect",
+        "pointer": "/deflect/arcFar"
+      }
+    },
+    {
+      "id": "shots-deflect-near-band-reversed",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/nearMin": 2000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-deflect",
+        "pointer": "/deflect/nearMin"
+      }
+    },
+    {
+      "id": "shots-deflect-far-band-reversed",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/farMin": 4000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-deflect",
+        "pointer": "/deflect/farMin"
+      }
+    },
+    {
+      "id": "shots-deflect-bands-overlap-warns",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/nearMax": 2000
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-deflect",
+        "pointer": "/deflect/farMin"
+      }
+    },
+    {
+      "id": "shots-deflect-bands-touch-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/deflect/nearMax": 1500
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-mine-fuse-retired",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/kinds/mine/mine/fuseTicks"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-body-required",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/kinds/mine/mine/fuseBodyTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/kinds/mine/mine"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-shot-required",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "del": [
+            "/kinds/mine/mine/fuseShotTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/kinds/mine/mine"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-body-negative",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseBodyTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/mine/mine/fuseBodyTicks"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-shot-negative",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseShotTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/mine/mine/fuseShotTicks"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-body-integer",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseBodyTicks": 7.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/mine/mine/fuseBodyTicks"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-shot-integer",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseShotTicks": 0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/mine/mine/fuseShotTicks"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-both-zero-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseBodyTicks": 0,
+            "/kinds/mine/mine/fuseShotTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-mine-fuse-shot-after-body-warns",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseShotTicks": 12
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-mine",
+        "pointer": "/kinds/mine/mine/fuseShotTicks"
+      }
+    },
+    {
+      "id": "shots-mine-fuse-equal-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/fuseShotTicks": 8
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "shots-mine-chain-below-blast-warns",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/chainR": 100
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:shots-mine",
+        "pointer": "/kinds/mine/mine/chainR"
+      }
+    },
+    {
+      "id": "shots-mine-chain-equals-blast-ok",
+      "schema": "fight-shots.schema.json",
+      "mutate": [
+        {
+          "file": "data/fight/shots.json",
+          "set": {
+            "/kinds/mine/mine/chainR": 150
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-mine-row-missing-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/kinds/mine"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-kind",
+        "pointer": "/kinds"
+      }
+    },
+    {
+      "id": "biomes-blast-mine-area-share-present-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/mine/areaShare": 0.5
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-fighters-waves-more-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "protag4"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-fighters-waves-more-two-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "protag4",
+                  "rival1"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-fighters-waves-more-empty-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": []
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "anim-fighters-waves-more-type",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": "protag4"
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/fighters/test/waves/more"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-item-type",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  4
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/fighters/test/waves/more/0"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-item-shape",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "Protag 4"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/fighters/test/waves/more/0"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-duplicate",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "protag4",
+                  "protag4"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/fighters/test/waves/more/1"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-without-poses",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "protag9"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/more/0"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-second-without-poses",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "protag4",
+                  "protag9"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/more/1"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-repeats-named-wave-warns",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "more": [
+                  "protag1"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/more/0"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-repeats-energy-warns",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "energy": "protag3",
+                "more": [
+                  "protag3"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:fighters-wave",
+        "pointer": "/fighters/test/waves/more/0"
+      }
+    },
+    {
+      "id": "anim-fighters-waves-more-note-ok",
+      "schema": "anim-fighters.schema.json",
+      "mutate": [
+        {
+          "file": "data/anim/fighters.json",
+          "set": {
+            "/fighters/test": {
+              "shape": "P",
+              "waves": {
+                "strikes": "protag1",
+                "_more": "comment",
+                "more": [
+                  "protag4"
+                ]
+              },
+              "pose_profile": {
+                "hand_states": {
+                  "claw": "open"
+                },
+                "rise": 3,
+                "stance": 1,
+                "twist": 1.15,
+                "guard_raise": 3,
+                "head_pitch": -3
+              }
+            }
+          }
+        }
+      ],
+      "expect": null
     }
   ],
   "text": [

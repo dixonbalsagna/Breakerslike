@@ -16,12 +16,13 @@
     "farMax": 3000.0,
     "farChance": 0.15,
     "awayChance": 0.75,
-    "speed": 50.0,
+    "speedMul": 0.8,
     "minTicks": 12,
-    "arcPer": 0.25,
+    "arcNear": 0.15,
+    "arcFar": 0.35,
     "safeTicks": 10,
     "backCos": 0.866,
-    "_note": "scatter true: a deflected shot flies wild (agency-pass.md section 15.2): it is knocked off as an arc to a seeded spot on the ground, nearMin to nearMax away (4 to 20 body heights) or, with farChance, farMin to farMax (20 to 40); with awayChance on the side away from the shooter. It still belongs to the shooter, it can hit either fighter or a building on the way (the deflector not for safeTicks), and it explodes where it lands. Its launch is never within the angle whose cosine is backCos (30 degrees) of the line back to the shooter. speed (units a tick), minTicks and arcPer (arc height per unit of distance) shape the flight. Game Design's numbers (agency-pass.md section 17): awayChance 0.75 and minTicks 12 are in; 0.8 of the shot's own speed and arcPer 0.15 near and 0.35 far need code and come next (today: a fixed 50 units a tick and 0.25). scatter false: the shot flies back at its owner"
+    "_note": "scatter true: a deflected shot flies wild (agency-pass.md section 15.2): it is knocked off as an arc to a seeded spot on the ground, nearMin to nearMax away (4 to 20 body heights) or, with farChance, farMin to farMax (20 to 40); with awayChance on the side away from the shooter. It still belongs to the shooter, it can hit either fighter or a building on the way (the deflector not for safeTicks), and it explodes where it lands. Its launch is never within the angle whose cosine is backCos (30 degrees) of the line back to the shooter. It flies at speedMul of its own kind's speed, for at least minTicks, with an arc arcNear (near band) or arcFar (far band) of the distance high: Game Design's numbers (agency-pass.md section 17). scatter false: the shot flies back at its owner"
   },
   "mineCap": 6,
   "mineGap": 150.0,
@@ -75,7 +76,8 @@
         "blastR": 150.0,
         "chainR": 225.0,
         "armTicks": 30,
-        "fuseTicks": 0,
+        "fuseBodyTicks": 8,
+        "fuseShotTicks": 0,
         "chainTicks": 6,
         "ownShare": 0.3,
         "tierR": [
@@ -85,7 +87,7 @@
           1.5
         ]
       },
-      "_note": "a mine (agency-pass.md section 15.5): it stays where it is laid for lifeTicks (20 s) and then fizzles. Armed after armTicks, it is set off by a rival's chest within trigR (1.5 body heights), by any shot that hits it, or by a blow; it blows fuseTicks later and hits every fighter within blastR (2 body heights; its owner for ownShare of the damage); mines within chainR follow, chainTicks apart, nearest first. Radii grow by tierR with the owner's tier. dmg is 0.8 of a heavy (66). r 30 (a shot must touch it) and chainR 3 body heights are Game Design's (agency-pass.md section 17). Still to come in code: chainR at every tier (today it grows by tierR) and the fuse by cause (8 ticks for a body, 0 for a shot; today fuseTicks 0 for both)"
+      "_note": "a mine (agency-pass.md section 15.5): it stays where it is laid for lifeTicks (20 s) and then fizzles. Armed after armTicks, it is set off by a rival's chest within trigR (1.5 body heights), by any shot that hits it, or by a blow; it blows fuseBodyTicks later when a body set it off (a fighter in the trigger radius, or a blow) and fuseShotTicks later when a shot did, and hits every fighter within blastR (2 body heights; its owner for ownShare of the damage); mines within chainR follow, chainTicks apart, nearest first. The blast grows by tierR with the owner's tier; chainR is the same at every tier. dmg is 0.8 of a heavy (66). r 30 (a shot must touch it) and chainR 3 body heights are Game Design's (agency-pass.md section 17). So are the fuses, 8 ticks for a body and 0 for a shot"
     }
   }
 }

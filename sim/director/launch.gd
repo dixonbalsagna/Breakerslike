@@ -313,7 +313,8 @@ static func doLaunch(S: SimState, att, tgt, plan: Dictionary, force: float, spec
 	tgt.hopped = false
 	tgt.stateT = 0.0
 	tgt.rush = null
-	tgt.hidden = false
+	if tgt.hidden:
+		SimHiding.regainLock(S, tgt)   # a launch gives him away: the lock comes back announced (found, and no new break for a while)
 	tgt.wet = tgt.y < 0.0 and WorldTerrain.seaAt(S, tgt.x)
 	if "slideFeet" in tgt:
 		tgt.slideFeet = String(plan.get("slide", "")) == "feet"   # World's flag for a slide on the feet (ground-contact.md section 24), once the field exists

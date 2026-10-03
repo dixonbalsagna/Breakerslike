@@ -32,7 +32,8 @@
     "region": "core",
     "strikes": [
      "strike.body_hook"
-    ]
+    ],
+    "_fighters": "each fighter's own key set: the rival's fist hook (rb.body_hook), the Protagonist's open-hand hook (ph.body_hook), on Combat's one row"
    },
    {
     "location": "flank",
@@ -54,8 +55,13 @@
     "region": "core",
     "strikes": [
      "strike.rib_shot",
-     "strike.double_palm"
-    ]
+     "strike.double_palm",
+     "strike.palm_push"
+    ],
+    "_fighters": {
+     "strike.rib_shot": "the rival only",
+     "strike.palm_push": "the Protagonist only"
+    }
    },
    {
     "location": "hip",
@@ -113,7 +119,7 @@
     "id": "bfb.brace",
     "look": "His own brace: both forearm plates drawn tight against his ribs, the lead shoulder rolled forward and the chin behind it, the spine upright. He gives ground on his heels and does not fold.",
     "limits": "elbows bent inside 160 degrees; the rear thigh at most 45 degrees behind the hip; no arm straight back",
-    "_fighter": "the rival's brace (rival1: rv.hold.bfb_brace); the Protagonist takes the blows in the shared computed reaction until his own brace is drawn"
+    "_fighter": "the rival's brace (rival1: rv.hold.bfb_brace). The Protagonist's own is confirmed (Animation's protag5): open hands up at the chest with the forearms close, upright, giving ground on his heels without folding"
    },
    {
     "id": "strike.body_hook",
@@ -185,14 +191,35 @@
   },
   "farTaunt": {
    "ticks": 45,
-   "pieces": [
-    "taunt.head_tilt",
-    "taunt.back_turned",
-    "taunt.dust_plate",
-    "taunt.stillness"
-   ],
-   "_note": "his taunt gestures at three quarters of their close length, played while he keeps flying; no beckoning",
-   "_fighter": "the pieces are the rival's taunts; the Protagonist's are not designed, so his far tap stays the fly-in"
+   "pieces": {
+    "rival": [
+     "taunt.head_tilt",
+     "taunt.back_turned",
+     "taunt.dust_plate",
+     "taunt.stillness"
+    ],
+    "protagonist": [
+     "taunt.nod",
+     "taunt.bounce",
+     "taunt.fist_palm"
+    ]
+   },
+   "_note": "each fighter's gestures at three quarters of their close length, played while he keeps flying; no beckoning, no two fingers, no point",
+   "_fighter": "the rival's four dismiss; the Protagonist's three invite (Animation's proposal, confirmed by Combat on 2026-10-03: ../launch-pair-movesets.md section 9)",
+   "rules": {
+    "order": "never the same gesture twice running",
+    "protagonist": {
+     "taunt.nod": "opens a stand-off: his first taunt before the two have traded blows",
+     "taunt.bounce": "on the ground only; in the air it is not offered",
+     "taunt.fist_palm": "one tap at chest height, a breath long, eyes on the rival; never ground or repeated"
+    }
+   },
+   "closeTaunt": {
+    "rival": "taunt.close",
+    "protagonist": "taunt.close",
+    "ticks": 60,
+    "_note": "each fighter's own; he can be hit; the sim has no close-taunt event yet"
+   }
   },
   "lightCharge": {
    "rules": {

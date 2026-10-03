@@ -37,7 +37,7 @@ static var bodyR: float = 0.0       # ... and his radius, for a shot's contact
 static var kinds: Dictionary = {}   # name -> {speed (units a tick), r, power, dmg, lifeTicks, lobTicks, lobArc, mine (a Dictionary, or null)}
 static var structures: bool = false # a straight or lobbed shot stops at a building its path crosses
 static var scatter: bool = false    # a deflect sends the shot wild (else back at its owner)
-static var defl: Dictionary = {}    # ... nearMin, nearMax, farMin, farMax, farChance, awayChance, speed, minTicks, arcPer, safeTicks, backCos
+static var defl: Dictionary = {}    # ... nearMin, nearMax, farMin, farMax, farChance, awayChance, speedMul, minTicks, arcNear, arcFar, safeTicks, backCos
 static var mineCap: int = 0         # mines one fighter may have laid at once (one more fizzles his oldest)
 static var mineGap: float = 0.0     # a mine cannot be laid within this of another
 
@@ -80,7 +80,7 @@ static func _ensure() -> void:
 			var md := {"tierR": [1.0, 1.0, 1.0, 1.0]}
 			for key in ["trigR", "blastR", "chainR", "ownShare"]:
 				md[key] = _num(where + "mine." + key, mj.get(key), 0.0)
-			for key in ["armTicks", "fuseTicks"]:
+			for key in ["armTicks", "fuseBodyTicks", "fuseShotTicks"]:
 				md[key] = int(_num(where + "mine." + key, mj.get(key), 0.0))
 			md.chainTicks = int(_num(where + "mine.chainTicks", mj.get("chainTicks"), 1.0))
 			var tr = mj.get("tierR")
@@ -100,9 +100,9 @@ static func _ensure() -> void:
 		dj = {}
 	scatter = dj.get("scatter", false) == true
 	defl = {}
-	for key in ["nearMin", "nearMax", "farMin", "farMax", "farChance", "awayChance", "arcPer", "backCos"]:
+	for key in ["nearMin", "nearMax", "farMin", "farMax", "farChance", "awayChance", "arcNear", "arcFar", "backCos"]:
 		defl[key] = _num("deflect." + key, dj.get(key, 0.0), 0.0)
-	defl.speed = _num("deflect.speed", dj.get("speed", 1.0), 0.001)
+	defl.speedMul = _num("deflect.speedMul", dj.get("speedMul", 1.0), 0.001)
 	defl.minTicks = int(_num("deflect.minTicks", dj.get("minTicks", 1), 1.0))
 	defl.safeTicks = int(_num("deflect.safeTicks", dj.get("safeTicks", 0), 0.0))
 	if scatter and not (defl.nearMax >= defl.nearMin and defl.farMax >= defl.farMin and defl.nearMin > 0.0):
@@ -283,7 +283,7 @@ static func deflect(S: SimState, sh, newOwner: int) -> void:
 		var bArc: float = 0.0
 		for c in range(4):
 			var cs: float = side if (c & 1) == 0 else -side
-			var ca: float = dist * defl.arcPer if c < 2 else 0.0
+			var ca: float = dist * (defl.arcFar if far else defl.arcNear) if c < 2 else 0.0
 			var lx: float = cs * dist
 			var ly: float = _landY(S, SimWrap.wrap(sh.x + lx)) - sh.y + 4.0 * ca
 			var ll: float = SimDetMath.hypot(lx, ly)
@@ -303,7 +303,7 @@ static func deflect(S: SimState, sh, newOwner: int) -> void:
 		sh.px = SimWrap.wrap(sh.x + bSide * dist)
 		sh.py = _landY(S, sh.px)
 		sh.arc = bArc
-		sh.left = maxi(defl.minTicks, int(ceil(SimDetMath.hypot(dist, sh.py - sh.y) / defl.speed)))
+		sh.left = maxi(defl.minTicks, int(ceil(SimDetMath.hypot(dist, sh.py - sh.y) / (defl.speedMul * kinds[sh.kind].speed))))
 		sh.total = sh.left
 		sh.deflected += 1
 		sh.wild = true
@@ -370,13 +370,15 @@ static func hitStructure(S: SimState, sh, b) -> bool:
 	return true
 
 
-## Set a mine off: it blows after its fuse (delay: after that many ticks instead). cause: fighter, shot, blow or chain;
+## Set a mine off: it blows after its fuse, the shot's for cause shot and the body's for any other (delay: after that many
+## ticks instead, as a chain passes). cause: fighter, shot, blow or chain;
 ## slot: who set it off, or -1. Returns false, and nothing happens, for a mine already set off, or one not armed yet
 ## (only another mine's blast sets off an unarmed mine). The director calls this for a blow landed on a mine.
 static func trip(S: SimState, sh, cause: String, slot: int = -1, delay: int = -1) -> bool:
 	if sh.mode != MINE or sh.dead or sh.fuse >= 0 or (sh.arm > 0 and cause != "chain"):
 		return false
-	sh.fuse = delay if delay >= 0 else int(kinds[sh.kind].mine.fuseTicks)
+	var md: Dictionary = kinds[sh.kind].mine
+	sh.fuse = delay if delay >= 0 else int(md.fuseShotTicks if cause == "shot" else md.fuseBodyTicks)
 	SimFx.mineTrip(S, sh, cause, slot, float(sh.fuse) / TPS)
 	return true
 
@@ -394,9 +396,9 @@ static func tripNear(S: SimState, x: float, y: float, r: float, cause: String, s
 	return c
 
 
-## A mine blows: every fighter within its blast radius is offered the hit (hitFighter: the plain rule gives its owner the
-## owner's share), World's blast goes off at the spot, and the mines within the chain radius follow, nearest first, one
-## chain delay apart.
+## A mine blows: every fighter within its blast radius (grown by the owner's tier) is offered the hit (hitFighter: the plain
+## rule gives its owner the owner's share), World's blast goes off at the spot, and the mines within the chain radius (the
+## same at every tier) follow, nearest first, one chain delay apart.
 static func _explode(S: SimState, sh) -> void:
 	var md: Dictionary = kinds[sh.kind].mine
 	var grow: float = md.tierR[clampi(int(S.fighters[sh.owner].tier), 1, 4) - 1]
@@ -410,7 +412,7 @@ static func _explode(S: SimState, sh) -> void:
 			if dx * dx + dy * dy <= rr:
 				hitFighter(S, sh, f)
 	hitWorld(S, sh, "mine")
-	var cr: float = md.chainR * grow * md.chainR * grow
+	var cr: float = md.chainR * md.chainR
 	var near: Array = []   # [distance squared, the mine], nearest first, ties in the order they were laid
 	for q in S.shots:
 		if q == sh or q.mode != MINE or q.dead or q.fuse >= 0:
@@ -418,7 +420,7 @@ static func _explode(S: SimState, sh) -> void:
 		var qx: float = SimWrap.sdx(sh.x, q.x)
 		var qy: float = q.y - sh.y
 		var d2: float = qx * qx + qy * qy
-		if d2 > cr or absf(q.z - sh.z) > md.chainR * grow:
+		if d2 > cr or absf(q.z - sh.z) > md.chainR:
 			continue
 		var at: int = near.size()
 		while at > 0 and near[at - 1][0] > d2:

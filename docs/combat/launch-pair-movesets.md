@@ -213,3 +213,28 @@ At wave 1's rate that is about three packs for Orb, about 25 minutes each.
 | **Narrative** | both names (Orb's); On the Chin's line; the Protagonist's identity strikes may want names only if they show on screen |
 | **Legal** | the Protagonist's eight strikes and two entries against the originality rules; the six On the Chin poses |
 | **Orb, through the EP** | the Protagonist and teleports; the Anti-hero's tail |
+
+## 9. Picks on Animation's additions for the Protagonist (2026-10-03)
+
+Animation's coverage pass (`docs/animation/launch-pair-coverage.md`) added one strike and proposed three taunt gestures for him. Combat's answers:
+
+**The ribs piece for Blow for Blow: `ph.body_hook`, confirmed.** A round hook with the open hand dug in along the ribs, the other open hand up at his cheek. It is an arc and an open hand, so it is his, where the rival's is a fist behind a forearm plate.
+- It takes Combat's row for `strike.body_hook` as it stands (`pending/strikes.launchpair.json`): a heavy to the gut socket, 54 u, ticks 10, 6 and 10, sends turned or across, one arm, fine on the ground or in the air. The manifest's 58 u and 12, 6 and 12 are a borrowed slot's.
+- With it he has all six places: ribs (this hook), flank (roundhouse), shoulder plate (dropping elbow, hammer), chest (double palm, and his own palm push), hip (rising knee, spinning heel), thigh (stomp). The rib shot stays the rival's.
+- His own brace for the set piece is confirmed too: open hands up at the chest with the forearms close, upright, giving ground on his heels without folding (Legal's rule 2: each takes the blow his own way).
+- It joins his recipe pools where the rival's hook sits (the blur's ender, power, the last power blow) when Animation's pack is committed: 43 pieces, all posed.
+
+**His far taunts: all three confirmed, with three conditions.** He is earnest and delighted, and his taunt is a challenge (`docs/narrative/voices/protagonist.md`). The rival's four dismiss; these three invite.
+
+| Gesture | Verdict | Condition |
+| :--- | :--- | :--- |
+| **The nod** (`taunt.nod`) | Yes. It opens a stand-off: the first taunt before the two have traded blows | Let the chest dip with the chin, about 10 degrees of spine, so it reads in the wide shot and not only in the face cut-in. It stays a nod: never a bow from the waist |
+| **The bounce** (`taunt.bounce`) | Yes, **on the ground only** | It springs off the toes, so in the air it is not offered and the director picks from the other two. Two bounces, as posed |
+| **Fist to palm** (`taunt.fist_palm`) | Yes | One tap at chest height, a breath long, eyes on the rival. Never ground into the palm, never repeated, no cracked knuckles: it is a courtesy and must not read as a threat |
+
+- **Which plays:** the nod first in a stand-off; after that the director walks the gestures he may use, never the same one twice running.
+- **None of them beckons,** and none uses two fingers or a point (Legal).
+- **The close taunt** (`taunt.close`, 60 ticks, he can be hit): confirmed as the three in one, the bounce, the tap, then the chin lifted. In the air its first phase needs the ground: Animation picks how it starts there, inside the same 60 ticks.
+- **For Legal, through the EP:** a screen of the fist to palm, as a real-world martial courtesy drawn our own way.
+
+The data is in `pending/templates.agency.json`: the far taunt's pieces by fighter, the Protagonist's chest piece, and both braces.

@@ -952,6 +952,24 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     for (let i = 1; i < byPower.length; i++) if (byPower[i][1].power > byPower[i - 1][1].power && byPower[i][1].dmg < byPower[i - 1][1].dmg) err(SH, `/kinds/${esc(byPower[i][0])}/dmg`, 'shots-order', `"${byPower[i][0]}" trades with more power (${byPower[i][1].power}) than "${byPower[i - 1][0]}" (${byPower[i - 1][1].power}) but does less damage (${byPower[i][1].dmg} against ${byPower[i - 1][1].dmg})`, 'warning');
   }
 
+  // ---- fight shots: the deflect's bands are ordered; a mine chains at least as far as it blasts and a shot sets it off no later than a body ----
+  if (isObj(shotsD)) {
+    const SH = 'data/fight/shots.json';
+    const dfl = shotsD.deflect;
+    if (isObj(dfl)) {
+      if (typeof dfl.nearMin === 'number' && typeof dfl.nearMax === 'number' && dfl.nearMin > dfl.nearMax) err(SH, '/deflect/nearMin', 'shots-deflect', `nearMin ${dfl.nearMin} is above nearMax ${dfl.nearMax}`);
+      if (typeof dfl.farMin === 'number' && typeof dfl.farMax === 'number' && dfl.farMin > dfl.farMax) err(SH, '/deflect/farMin', 'shots-deflect', `farMin ${dfl.farMin} is above farMax ${dfl.farMax}`);
+      if (typeof dfl.nearMax === 'number' && typeof dfl.farMin === 'number' && dfl.nearMax > dfl.farMin) err(SH, '/deflect/farMin', 'shots-deflect', `the near band reaches ${dfl.nearMax} but the far band starts at ${dfl.farMin}; the bands overlap`, 'warning');
+      if (typeof dfl.arcNear === 'number' && typeof dfl.arcFar === 'number' && dfl.arcFar < dfl.arcNear) err(SH, '/deflect/arcFar', 'shots-deflect', `arcFar ${dfl.arcFar} is below arcNear ${dfl.arcNear}; a far deflect should arc at least as high`, 'warning');
+    }
+    for (const [name, k] of Object.entries(isObj(shotsD.kinds) ? shotsD.kinds : {})) {
+      if (name.startsWith('_') || !isObj(k) || !isObj(k.mine)) continue;
+      const m = k.mine;
+      if (typeof m.chainR === 'number' && typeof m.blastR === 'number' && m.chainR < m.blastR) err(SH, `/kinds/${esc(name)}/mine/chainR`, 'shots-mine', `chainR ${m.chainR} is below blastR ${m.blastR}; a blast would reach mines it cannot set off`, 'warning');
+      if (typeof m.fuseShotTicks === 'number' && typeof m.fuseBodyTicks === 'number' && m.fuseShotTicks > m.fuseBodyTicks) err(SH, `/kinds/${esc(name)}/mine/fuseShotTicks`, 'shots-mine', `a shot sets the mine off after ${m.fuseShotTicks} ticks, later than a body (${m.fuseBodyTicks})`, 'warning');
+    }
+  }
+
   // ---- biomes blast: every shot kind has an entry; the tier multipliers do not fall ----
   const bl = get('data/biomes/blast.json');
   if (isObj(bl)) {
@@ -960,6 +978,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (isObj(bl.kinds) && isObj(shotsB) && isObj(shotsB.kinds)) {
       const missing = Object.keys(shotsB.kinds).filter((k) => !k.startsWith('_') && !(k in bl.kinds));
       for (const k of missing) err(BL, '/kinds', 'blast-kind', `shot kind "${k}" of data/fight/shots.json has no entry in kinds (${Object.keys(bl.kinds).filter((x) => !x.startsWith('_')).join(', ')})`, 'warning');
+      for (const [name, sk] of Object.entries(shotsB.kinds)) if (!name.startsWith('_') && isObj(sk) && isObj(sk.mine) && isObj(bl.kinds[name]) && bl.kinds[name].areaShare === undefined) err(BL, `/kinds/${esc(name)}`, 'blast-kind', `shot kind "${name}" is a mine (it has a mine block in data/fight/shots.json) but its blast row has no areaShare`, 'warning');
     }
     for (const [name, k] of Object.entries(isObj(bl.kinds) ? bl.kinds : {})) {
       if (name.startsWith('_') || !isObj(k)) continue;
@@ -1040,6 +1059,11 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
         if (!get(`data/anim/waves/${w}.poses.json`)) err(AF, `${at}/waves/${kind}`, 'fighters-wave', `${kind} wave "${w}" has no data/anim/waves/${w}.poses.json`);
         else if (kind === 'strikes' && !get(`data/anim/waves/${w}.keysets.json`)) err(AF, `${at}/waves/${kind}`, 'fighters-wave', `strikes wave "${w}" has no data/anim/waves/${w}.keysets.json`);
       }
+      if (isObj(fd.waves) && Array.isArray(fd.waves.more)) fd.waves.more.forEach((w, i) => {
+        if (typeof w !== 'string') return;
+        if (!get(`data/anim/waves/${w}.poses.json`)) err(AF, `${at}/waves/more/${i}`, 'fighters-wave', `more wave "${w}" has no data/anim/waves/${w}.poses.json`);
+        else if (['strikes', 'entries', 'energy'].some((k) => fd.waves[k] === w)) err(AF, `${at}/waves/more/${i}`, 'fighters-wave', `wave "${w}" is already named as ${['strikes', 'entries', 'energy'].find((k) => fd.waves[k] === w)}; it need not be in more`, 'warning');
+      });
       if (isObj(fd.timing)) for (const k of ['light', 'heavy']) if (typeof fd.timing[k] === 'string' && profsF.length && !profsF.includes(fd.timing[k])) err(AF, `${at}/timing/${k}`, 'fighters-timing', `timing ${k} "${fd.timing[k]}" is not a profile of profiles.json (${profsF.join(', ')})`);
     }
   }

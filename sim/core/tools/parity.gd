@@ -55,6 +55,7 @@ func _init() -> void:
 	check("depth in the core", _depth())
 	check("the intro phase", _intro())
 	check("the last stand", _lastStand())
+	check("a hidden fighter is found when he charges or is launched", _foundAnnounced())
 	check("shots", _plainShots())
 	check("shots: buildings, wild deflects, the spray, mines", _shots2())
 	check("agency lines", _agencyLines())
@@ -534,6 +535,54 @@ func _pause() -> String:
 ## The agency pass's small core lines: the autoCharge assist reaches a slot from the setup; the flow count is 0 at the
 ## start and setFlow sends one flow event for a change and none for the same value; the embed fields start clear; the
 ## four events (knockback, exchange_end, flow, embed) carry their fields; and no default match sends any of them.
+## Hiding ends announced (QA's lock-break trace): a hidden fighter who starts to charge, or is launched, is found on that
+## tick (the found event, hidden cleared, and lockBackT set so the lock cannot break again at once).
+func _foundAnnounced() -> String:
+	for launched in [false, true]:
+		var S := SimCore.createSim()
+		SimCore.newMatch(S, 5, {"p1": false, "p2": false}, {"intro": false})
+		for t in range(30):
+			SimCore.step(S)
+		var a = S.fighters[0]
+		var b = S.fighters[1]
+		S.out.fx.clear()
+		b.hidden = true
+		b.hiddenFor = 1.0
+		b.lockBackT = -100.0
+		var what: String
+		if launched:
+			what = "launched"
+			DirLaunch.doLaunch(S, a, b, {"ux": 1.0, "uy": 0.3}, 1300.0)
+		else:
+			what = "charging"
+			b.state = "free"
+			b.rush = null
+			b.stunTicks = 0
+			b.input.charge = true
+			SimFighter.stepFighter(S, b, SimConst.DT)
+		var found: int = 0
+		for e in S.out.fx:
+			if e.type == "found" and e.actor == 1.0 and e.tick == S.tick:
+				found += 1
+		var res: String = ""
+		if b.state != what:
+			res = "the test did not get him %s (state %s)" % [what, b.state]
+		elif found != 1 or b.hidden or b.lockBackT != S.T:
+			res = "a hidden fighter %s: %d found events, hidden %s, lockBackT %s at T %s" % [what, found, str(b.hidden), str(b.lockBackT), str(S.T)]
+		# a fighter who was not hidden is not announced
+		S.out.fx.clear()
+		if res == "" and not launched:
+			b.state = "free"
+			SimFighter.stepFighter(S, b, SimConst.DT)
+			for e in S.out.fx:
+				if e.type == "found":
+					res = "a fighter who was not hidden was announced as found when he charged"
+		SimCore.dispose(S)
+		if res != "":
+			return res
+	return ""
+
+
 ## The first round's check, with the second round's two rules off whatever the data's switches say.
 func _plainShots() -> String:
 	if not SimShots.errors().is_empty():
@@ -683,6 +732,10 @@ func _shots2Run() -> String:
 		if absf(dist - want) > 0.001:
 			return "a wild shot's distance is %s, the seeded draw says %s" % [str(dist), str(want)]
 		fars += 1 if far else 0
+		var wantT: int = maxi(int(D.minTicks), int(ceil(SimDetMath.hypot(dist, sh.py - y0) / (D.speedMul * bolt.speed))))
+		var bandArc: float = dist * (D.arcFar if far else D.arcNear)
+		if sh.left != wantT or (sh.arc != bandArc and sh.arc != 0.0):
+			return "a wild shot flies %d ticks with an arc of %s; %d and %s (or flat) wanted" % [sh.left, str(sh.arc), wantT, str(bandArc)]
 		sides[0 if SimWrap.sdx(x0, sh.px) < 0.0 else 1] += 1
 		var lx: float = SimWrap.sdx(x0, sh.px)
 		var ly: float = sh.py - y0 + 4.0 * sh.arc
@@ -824,7 +877,10 @@ func _shots2Run() -> String:
 	if m.fuse >= 0:
 		return "a mine was set off from beyond its trigger radius"
 	b.x = a.x + md.trigR - 5.0
-	run.call(1 + int(md.fuseTicks))
+	run.call(1)
+	if m.fuse != int(md.fuseBodyTicks) or (md.fuseBodyTicks > 0 and m.dead) or count.call("mine_trip", "kind", "fighter") != 1:
+		return "a rival within the trigger radius did not light the body's fuse (fuse %d)" % m.fuse
+	run.call(int(md.fuseBodyTicks))
 	if not m.dead or count.call("mine_trip", "kind", "fighter") != 1 or count.call("shot_end", "cause", "mine") != 1:
 		return "a rival within the trigger radius did not set the mine off"
 	if b.hp != hpB - mk.dmg or absf(a.hp - (hpA - mk.dmg * md.ownShare)) > 0.000001:
@@ -856,7 +912,7 @@ func _shots2Run() -> String:
 		m = SimShots.fire(S, 0, "mine", {"x": 40500.0})
 		run.call(int(md.armTicks) + 1)
 		sh = SimShots.fire(S, 0 if own else 1, "bolt", {"ux": 1.0 if own else -1.0, "uy": 0.0})
-		run.call(12 + int(md.fuseTicks))
+		run.call(12 + int(md.fuseShotTicks))
 		if not m.dead or not sh.dead or count.call("mine_trip", "kind", "shot") != 1 or count.call("shot_end", "cause", "mine") != 1 or count.call("shot_end", "cause", "clash") != 1:
 			return "%s bolt did not set the mine off" % ("its owner's" if own else "the rival's")
 		clear.call()
@@ -873,10 +929,10 @@ func _shots2Run() -> String:
 	if m1 == null or m2 == null or m3 == null or m4 == null:
 		return "the chain's mines were not laid"
 	run.call(int(md.armTicks) + 1)
-	if not SimShots.trip(S, m1, "blow", 1):
-		return "a blow did not set off an armed mine"
+	if not SimShots.trip(S, m1, "blow", 1) or m1.fuse != int(md.fuseBodyTicks):
+		return "a blow did not set off an armed mine with the body's fuse"
 	var ends: Array = [-1, -1, -1, -1]
-	for t in range(int(md.fuseTicks) + 3 * int(md.chainTicks) + 3):
+	for t in range(int(md.fuseBodyTicks) + 3 * int(md.chainTicks) + 3):
 		run.call(1)
 		var ms: Array = [m1, m2, m3, m4]
 		for n in range(4):
@@ -887,6 +943,20 @@ func _shots2Run() -> String:
 		return "the chain blew at ticks %s, a chain delay is %d" % [str(ends), md.chainTicks]
 	if count.call("mine_trip", "kind", "chain") != 3 or count.call("shot_end", "cause", "mine") != 4:
 		return "the chain sent %d chain events and %d blasts" % [count.call("mine_trip", "kind", "chain"), count.call("shot_end", "cause", "mine")]
+	clear.call()
+	# the chain's reach is the same at every tier: at tier 4 a mine just past chainR does not follow
+	var tier0: float = a.tier
+	a.tier = 4.0
+	var c1 = SimShots.fire(S, 0, "mine", {"x": 40000.0, "y": 3000.0})
+	var c2 = SimShots.fire(S, 0, "mine", {"x": 40000.0 + md.chainR + 10.0, "y": 3000.0})
+	run.call(int(md.armTicks) + 1)
+	SimShots.trip(S, c1, "shot", 1)
+	if c1.fuse != int(md.fuseShotTicks):
+		return "a shot did not light the shot's fuse"
+	run.call(int(md.fuseShotTicks) + 2 * int(md.chainTicks) + 2)
+	if not c1.dead or c2.dead or c2.fuse >= 0:
+		return "at tier 4 a mine past chainR followed the chain"
+	a.tier = tier0
 	clear.call()
 	# its life: it fizzles, and hurts nobody
 	m = SimShots.fire(S, 0, "mine", {"x": 40000.0, "y": 3000.0})
