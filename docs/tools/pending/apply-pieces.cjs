@@ -11,6 +11,9 @@
 //   - a piece that is not waiting in any pool has the limb (without _l or _r) and the target of each of its manifest rows (error)
 //   - a blur pattern's steps are filled from the pieces of the fighter's blur.base and blur.toward pools that are not waiting; a step a
 //     pattern uses k times needs k such pieces (error)
+//   - the optional `patternGates` (pattern name to {stick: "toward", ground: true, fighters: [pool keys]}, at least one of the three; `_` keys
+//     are notes): every key names a pattern of blurPatterns and every fighter is a key of pools; recipes-blur checks a pattern only for the
+//     fighters it is for
 // Re-runnable (a second run changes nothing).
 const fs = require('fs');
 const rj = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -48,16 +51,48 @@ const LIMBS = ['hand', 'foot', 'elbow', 'knee', 'shoulder', 'head', 'own'];
   }
 }
 
+{
+  const f = 'tools/schemas/combat-recipes.schema.json';
+  const s = rj(f);
+  if (!s.properties.patternGates) {
+    const props = {};
+    for (const k of Object.keys(s.properties)) {
+      props[k] = s.properties[k];
+      if (k === 'blurPatterns') {
+        props.patternGates = {
+          type: 'object',
+          propertyNames: { pattern: '^(_.*|[a-z][a-z0-9_]*)$' },
+          description: 'Optional. When a blur pattern may be drawn, read at the string\'s first blow; a pattern with no row is always open. stick: the stick toward; ground: both fighters on the ground; fighters: only these fighters\' strings draw it.',
+          additionalProperties: Object.assign({
+            type: 'object',
+            properties: {
+              stick: { const: 'toward', description: 'Open only with the stick toward at that press.' },
+              ground: { const: true, description: 'Open only with both fighters on the ground.' },
+              fighters: { type: 'array', minItems: 1, uniqueItems: true, items: { type: 'string', pattern: '^[a-z][a-z0-9_]*$' }, description: 'Keys of pools whose strings draw it.' },
+            },
+            anyOf: [{ required: ['stick'] }, { required: ['ground'] }, { required: ['fighters'] }],
+          }, closed),
+          patternProperties: { '^_': true },
+        };
+      }
+    }
+    if (!props.patternGates) throw new Error('blurPatterns anchor');
+    s.properties = props;
+    wj(f, s);
+  }
+}
+
 // =============================== fixture ===============================
 {
   const f = 'tools/fixtures/virtual/data/combat/recipes.json';
   const o = rj(f);
-  if (!o.pieces) {
+  if (!o.pieces || (!o.patternGates && (fs.existsSync('data/combat/recipes.json') ? rj('data/combat/recipes.json') : rj('docs/combat/pending/recipes.slice11.json')).patternGates)) {
     const live = fs.existsSync('data/combat/recipes.json') ? rj('data/combat/recipes.json') : null;
-    const src = live && live.pieces ? live.pieces : rj('docs/combat/pending/recipes.slice11.json').pieces;
+    const full = live && live.pieces ? live : rj('docs/combat/pending/recipes.slice11.json');
+    // the fixture is the whole file again (its patterns, gates and pieces belong together)
     const out = {};
-    for (const k of Object.keys(o)) { out[k] = o[k]; if (k === 'patternRule') out.pieces = src; }
-    if (!out.pieces) out.pieces = src;
+    for (const k of Object.keys(full)) if (!['_target', '_changes', '_status', '_counts'].includes(k)) out[k] = full[k];
+    out._about = o._about || 'Validator fixture, not game data: Combat\'s alchemist recipes (docs/combat/alchemist-recipes.md section 5).';
     wj(f, out);
   }
 }
@@ -116,7 +151,9 @@ const LIMBS = ['hand', 'foot', 'elbow', 'knee', 'shoulder', 'head', 'own'];
       "        if (!need.has(key)) need.set(key, { st, first: si, n: 0 });",
       "        need.get(key).n++;",
       "      });",
-      "      if (prow) for (const { st, first, n } of need.values()) for (const fid of fighters) {",
+      "      const gate = isObj(rec.patternGates) && isObj(rec.patternGates[pname]) ? rec.patternGates[pname] : null;",
+      "      const forFighters = gate && Array.isArray(gate.fighters) ? fighters.filter((x) => gate.fighters.includes(x)) : fighters;",
+      "      if (prow) for (const { st, first, n } of need.values()) for (const fid of forFighters) {",
       "        const fp = pools[fid];",
       "        const cand = new Map(); for (const e of [].concat(isObj(fp) && Array.isArray(fp['blur.base']) ? fp['blur.base'] : [], isObj(fp) && Array.isArray(fp['blur.toward']) ? fp['blur.toward'] : [])) if (isObj(e) && e.status !== 'waiting') cand.set(e.id, e);",
       "        if (!cand.size) continue;",
@@ -126,6 +163,33 @@ const LIMBS = ['hand', 'foot', 'elbow', 'knee', 'shoulder', 'head', 'own'];
       "    }",
     ].join('\n');
     t = t.slice(0, s) + block + t.slice(e);
+    fs.writeFileSync(f, t);
+  }
+}
+
+// ---- xref: the gates, and an upgrade for a tree where the first version ran ----
+{
+  const f = 'tools/lib/xref-fight.js';
+  let t = fs.readFileSync(f, 'utf8');
+  if (t.includes("'recipes-pieces'") && !t.includes("'recipes-gates'")) {
+    const oldLoop = "      if (prow) for (const { st, first, n } of need.values()) for (const fid of fighters) {";
+    if (t.includes(oldLoop)) {
+      t = t.replace(oldLoop, () => [
+        "      const gate = isObj(rec.patternGates) && isObj(rec.patternGates[pname]) ? rec.patternGates[pname] : null;",
+        "      const forFighters = gate && Array.isArray(gate.fighters) ? fighters.filter((x) => gate.fighters.includes(x)) : fighters;",
+        "      if (prow) for (const { st, first, n } of need.values()) for (const fid of forFighters) {",
+      ].join('\n'));
+    }
+    const anchor = "    // a blur pattern's steps [limb, target] are filled from the fighter's blur.base";
+    if (!t.includes(anchor)) throw new Error('gates anchor');
+    t = t.replace(anchor, () => [
+      "    for (const [gname, g] of Object.entries(isObj(rec.patternGates) ? rec.patternGates : {})) {",
+      "      if (gname.startsWith('_') || !isObj(g)) continue;",
+      "      if (!(isObj(rec.blurPatterns) && gname in rec.blurPatterns)) err(RC, `/patternGates/${esc(gname)}`, 'recipes-gates', `a gate for \"${gname}\", which is no pattern of blurPatterns`);",
+      "      if (Array.isArray(g.fighters)) g.fighters.forEach((x, i) => { if (!fighters.includes(x)) err(RC, `/patternGates/${esc(gname)}/fighters/${i}`, 'recipes-gates', `gate fighter \"${x}\" is no key of pools (${fighters.join(', ')})`); });",
+      "    }",
+      anchor,
+    ].join('\n'));
     fs.writeFileSync(f, t);
   }
 }
@@ -161,6 +225,18 @@ const LIMBS = ['hand', 'foot', 'elbow', 'knee', 'shoulder', 'head', 'own'];
     x('pieces-limb-differs-from-manifest', { set: { [P + 'strike.jab/limb']: 'foot' } }, { rule: 'xref:recipes-pieces', pointer: P + 'strike.jab/limb' }),
     x('pieces-target-differs-from-manifest', { set: { [P + 'strike.jab/target']: 'gut' } }, { rule: 'xref:recipes-pieces', pointer: P + 'strike.jab/target' }),
     x('pieces-waiting-row-free-ok', { set: { [P + 'strike.tail_jab']: { limb: 'hand', target: 'head' } } }, null),
+    x('gates-note-ok', { set: { '/patternGates/_note': 'comment' } }, null),
+    x('gate-unknown-key', { set: { '/patternGates/inside/mood': 'calm' } }, { rule: 'additionalProperties', pointer: '/patternGates/inside/mood' }),
+    x('gate-empty', { set: { '/patternGates/inside': {} } }, { rule: 'anyOf', pointer: '/patternGates/inside' }),
+    x('gate-stick-constant', { set: { '/patternGates/inside/stick': 'away' } }, { rule: 'const', pointer: '/patternGates/inside/stick' }),
+    x('gate-ground-constant', { set: { '/patternGates/reap/ground': false } }, { rule: 'const', pointer: '/patternGates/reap/ground' }),
+    x('gate-fighters-empty', { set: { '/patternGates/breach/fighters': [] } }, { rule: 'minItems', pointer: '/patternGates/breach/fighters' }),
+    x('gate-fighters-duplicate', { set: { '/patternGates/breach/fighters': ['protagonist', 'protagonist'] } }, { rule: 'uniqueItems', pointer: '/patternGates/breach/fighters/1' }),
+    x('gate-fighters-type', { set: { '/patternGates/breach/fighters': 'protagonist' } }, { rule: 'type', pointer: '/patternGates/breach/fighters' }),
+    x('gate-pattern-unknown', { set: { '/patternGates/nowhere': { ground: true } } }, { rule: 'xref:recipes-gates', pointer: '/patternGates/nowhere' }),
+    x('gate-fighter-unknown', { set: { '/patternGates/breach/fighters': ['nobody'] } }, { rule: 'xref:recipes-gates', pointer: '/patternGates/breach/fighters/0' }),
+    x('gate-both-keys-ok', { set: { '/patternGates/reap': { ground: true, stick: 'toward' } } }, null),
+    x('gate-lifted-checks-both-fighters', { del: ['/patternGates/breach'] }, { rule: 'xref:recipes-blur', pointer: '/blurPatterns/breach/0' }),
     x('blur-step-repeated-needs-pieces', { set: { '/blurPatterns/ladder': [['hand', 'head'], ['hand', 'head'], ['hand', 'head'], ['hand', 'head'], ['hand', 'head']] } }, { rule: 'xref:recipes-blur', pointer: '/blurPatterns/ladder/0' }),
   ];
   let n = 0;
