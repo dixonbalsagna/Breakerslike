@@ -126,3 +126,32 @@ Screens `docs/design/agency-pass.md` section 15. From the written plan. A screen
 **Burning wake: CONDITIONAL.** A scattered burning trail that fades in 3 s, drawn as heat shimmer and embers behind him, is fine. It must not be a solid straight neon line or wall that destroys on touch.
 
 **Shield orb: CONDITIONAL.** A single hovering shield, built in our hexagonal or faceted family (a faceted dome or crystal), not a smooth glowing sphere. One at a time. Never a set, never several orbiting him, never seven, and never with a face or markings.
+
+## Launch pair: the Protagonist and On the Chin (2026-10-02)
+
+Screens `docs/combat/launch-pair-movesets.md` and `docs/combat/pending/launch-pair.json`. From the written specs. A screen, not legal advice.
+
+| Item | Verdict | Log |
+|---|---|---|
+| The Protagonist's eight strikes | **GO** | RL-063 |
+| His two entries (air roll, cartwheel step) | **GO**, air roll with a condition | RL-063 |
+| His identity of arcs and open hands | **GO** | RL-063 |
+| The six On the Chin poses | **GO**, with a staging tweak | RL-064 |
+| Energy kinds per fighter (rain and splitting shot; curving and ricochet) | **GO** | RL-065 |
+
+**Strikes.** All eight are ordinary martial-arts blows with a round, open-hand look. Rules:
+- **Palm push:** a melee strike, one hand. No glow, light or beam leaves the hand, and it never pairs with a cupped hand at the hip.
+- **Rising palm and the kicks:** no leap and no multi-turn spin. The spinning back kick is a single turn.
+- **Hammer-fist:** one fist, never clasped, no fist held up afterwards.
+- **Knife-hand chop and ridge hand:** fine.
+
+**Air roll.** His shape is "the rolled ball", and a curled ball spinning into the target is a famous mascot's signature attack. So the air roll is a tumble that opens into the blow: limbs extended through the roll, at most one revolution, never a tight spinning ball, and never a blue or hedgehog-like shape. The cartwheel step is acrobatic and generic.
+
+**Identity.** Arcs and open hands are generic martial arts. Keep any energy out of the open palm unless it is the still flat palm release of his curving shot, and never at a hip.
+
+**On the Chin poses.** Standing tall with open palms and the chin up, and a small chin lift after each hit, is a trope. Tweak the stance so it is not a perfect cross: arms a little forward of the body line and slightly below shoulder height, not a flat T, and no head thrown back or closed eyes (that reads as a crucifixion pose). No scream, no aura, no rubble ring (the stacking rule, as written). Taking a beam on the chest with arms open and smoke from the plates is fine. The bravado line still gets its exact-phrase search before lock (it passed on 2026-10-01).
+
+**Energy kinds.**
+- **Anti-hero:** rain and the splitting shot, with the RL-062 rules: one arm with plates lit for the rain, never both hands overhead holding an orb; no hands spread wide as the splitting cue; nothing surrounds the rival.
+- **Protagonist:** the curving shot, steered by the stick only and released from a still flat palm (never a finger or a hand sweep), nothing closing in on command; the ricochet shot is fine.
+- **Both:** shot core in the lane colour, explosion may be fire-coloured, no shouted name.

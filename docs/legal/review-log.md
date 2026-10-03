@@ -82,6 +82,9 @@ First entries: 2026-09-28, P0 wave 1 (placeholder names, move names and the repo
 | RL-060 | Agency 15.1 to 15.4: explosions, wild deflect, buildings, spray cone | Game Design, VFX | Low | GO with look rules | Closed |
 | RL-061 | Agency 15.5: mines | Game Design | Low to Medium | GO; hexagonal plate, no sphere set, never surround | Open until looks exist |
 | RL-062 | Agency 15.5 kinds: splitting, rain, curving, ricochet GO; burning wake, shield orb CONDITIONAL | Game Design | Medium | see agency-pass-screen.md | Open |
+| RL-063 | Launch pair: Protagonist strikes, entries, identity | Combat | Low | GO; air roll never a spinning ball | Closed |
+| RL-064 | Launch pair: six On the Chin poses | Combat | Low | GO; not a flat cross, no head thrown back | Closed |
+| RL-065 | Launch pair: energy kinds per fighter | Combat | Low | GO | Closed |
 
 Open flags for the P0 gate: RL-001, RL-002, RL-012, RL-014, RL-016 to RL-025, RL-027 to RL-030, RL-035, RL-036.
 
