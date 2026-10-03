@@ -41,10 +41,13 @@ func _initialize() -> void:
 func _run() -> void:
 	AnimData.load_all()
 	var list: Array = []
+	if ids.size() > 0:   # the sheet follows the order of --ids (to set two fighters' poses side by side), every id that exists
+		for want in ids:
+			if AnimData.poses.has(want):
+				list.append(want)
 	for id in AnimData.poses:
 		if ids.size() > 0:
-			if ids.has(id):
-				list.append(id)
+			pass
 		elif id.begins_with(prefix) and not AnimData.poses[id].additive:
 			list.append(id)
 	var old_q: Dictionary = {}

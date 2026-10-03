@@ -146,7 +146,7 @@
           },
           "_wave": {
             "type": "string",
-            "pattern": "^wave[0-9]+$"
+            "pattern": "^(wave|protag)[0-9]+$"
           },
           "_variant": {
             "type": "string",

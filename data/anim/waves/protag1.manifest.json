@@ -1,0 +1,1458 @@
+{
+ "wave": "protag1",
+ "strikes": [
+  {
+   "id": "pr.hook",
+   "combat": "strike.hook",
+   "name": "hook",
+   "weight": "light",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "His version (open hands, rounder): A flat, tight arc at head height, the elbow a sharp right angle, the plated forearm leading the hand.",
+   "orig": "a wide round swing of the open hand at head height, the arm one long curve, the other open hand up at his cheek and the body turning full behind it",
+   "poses": [
+    "pr.hook.chamber",
+    "pr.hook.contact",
+    "pr.hook.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.overhand",
+   "combat": "strike.overhand",
+   "name": "overhand",
+   "weight": "heavy",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 86,
+   "band": "long",
+   "ticks": {
+    "load": 10,
+    "follow": 6,
+    "recover": 10
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "His version (open hands, rounder): A looping blow over the rival's guard, the shoulder rolled high, the head ducked off the line.",
+   "orig": "the open hand wheeled up and over in a big circle, the arm long, the body rising behind it, the head up and the eyes on the target",
+   "poses": [
+    "pr.overhand.chamber",
+    "pr.overhand.contact",
+    "pr.overhand.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.haymaker",
+   "combat": "strike.haymaker",
+   "name": "haymaker",
+   "weight": "heavy",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "His version (open hands, rounder): The widest swing he has: the arm nearly straight, the whole torso thrown round behind it.",
+   "orig": "a wheeling open-handed swing from low behind to the side, the arm nearly straight, the free hand flung back the other way for the turn",
+   "poses": [
+    "pr.haymaker.chamber",
+    "pr.haymaker.contact",
+    "pr.haymaker.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.palm_heel",
+   "combat": "strike.palm_heel",
+   "name": "palm_heel",
+   "weight": "light",
+   "target": "chest",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw",
+    "not_at_hip"
+   ],
+   "look": "His version (open hands, rounder): A clawed open palm pushed straight in from the ribs, fingers spread like tines, the wrist bent back.",
+   "orig": "a quick flat open palm pushed in at chest height with a step, the fingers together and up, the other hand open at his own chest",
+   "poses": [
+    "pr.palm_heel.chamber",
+    "pr.palm_heel.contact",
+    "pr.palm_heel.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.spear_hand",
+   "combat": "strike.spear_hand",
+   "name": "spear_hand",
+   "weight": "light",
+   "target": "gut",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 54,
+   "reach": 98,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "His version (open hands, rounder): A low blade-hand thrust from the crouch into the gut, the spine and the arm one long diagonal.",
+   "orig": "a straight flat hand thrust low into the belly from a stand, the knees bent a little, the body upright and leaning in",
+   "poses": [
+    "pr.spear_hand.chamber",
+    "pr.spear_hand.contact",
+    "pr.spear_hand.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.twin_spear",
+   "combat": "strike.twin_spear",
+   "name": "twin_spear",
+   "weight": "light",
+   "target": "chest",
+   "limb": "hand_r",
+   "limb2": "hand_l",
+   "offset": 52,
+   "reach": 98,
+   "band": "mid",
+   "ticks": {
+    "load": 8,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 2
+   },
+   "from": null,
+   "legal": [
+    "wrists_apart",
+    "hands_open_or_claw"
+   ],
+   "look": "His version (open hands, rounder): Both blade hands thrust side by side, a hand apart, elbows locked: two parallel lines.",
+   "orig": "both open hands thrust together, one high and one low, a hand and a half apart: a staggered pair, never two parallel lines",
+   "poses": [
+    "pr.twin_spear.chamber",
+    "pr.twin_spear.contact",
+    "pr.twin_spear.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.double_palm",
+   "combat": "strike.double_palm",
+   "name": "double_palm",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "hand_r",
+   "limb2": "hand_l",
+   "offset": 52,
+   "reach": 98,
+   "band": "mid",
+   "ticks": {
+    "load": 10,
+    "follow": 6,
+    "recover": 10
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 2
+   },
+   "from": null,
+   "legal": [
+    "wrists_apart",
+    "hands_open_or_claw",
+    "not_at_hip"
+   ],
+   "look": "His version (open hands, rounder): Both clawed palms shoved in at shoulder width, fingers up, elbows flared wide.",
+   "orig": "both flat palms shoved in at shoulder width with the elbows in and the fingers up, the body behind them: a blow, with nothing held out after it",
+   "poses": [
+    "pr.double_palm.chamber",
+    "pr.double_palm.contact",
+    "pr.double_palm.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.cross_arm_ram",
+   "combat": "strike.cross_arm_ram",
+   "name": "cross_arm_ram",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "elbow_r",
+   "limb2": "elbow_l",
+   "offset": 38,
+   "reach": 70,
+   "band": "close",
+   "ticks": {
+    "load": 10,
+    "follow": 5,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "arms": 2
+   },
+   "from": null,
+   "legal": [
+    "wrists_apart",
+    "no_cross_hold"
+   ],
+   "look": "His version (open hands, rounder): The forearm guards crossed into a wedge and driven in behind the shoulders, head tucked behind the plates.",
+   "orig": "both forearms side by side like a bar, one a little higher, driven in behind the shoulder: a ram, never a wedge of crossed arms",
+   "poses": [
+    "pr.cross_arm_ram.chamber",
+    "pr.cross_arm_ram.contact",
+    "pr.cross_arm_ram.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.snap_round",
+   "combat": "strike.snap_round",
+   "name": "snap_round",
+   "weight": "light",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 72,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": "round",
+   "legal": [],
+   "look": "His version (open hands, rounder): A quick whip from the knee, the hips barely turned, the foot back before the rival moves.",
+   "orig": "a quick round whip of the leg from the knee, the hands up and open at his face, the standing leg springing",
+   "poses": [
+    "pr.snap_round.chamber",
+    "pr.snap_round.contact",
+    "pr.snap_round.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.roundhouse",
+   "combat": "strike.roundhouse",
+   "name": "roundhouse",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 78,
+   "band": "mid",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": "round",
+   "legal": [],
+   "look": "His version (open hands, rounder): The full turn of the hips, the leg a long blade through the ribs, the arms thrown back the other way.",
+   "orig": "the full round swing of a straight leg through the ribs, the turn of the hips round and the hands kept up and open, not thrown back",
+   "poses": [
+    "pr.roundhouse.chamber",
+    "pr.roundhouse.contact",
+    "pr.roundhouse.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.spinning_heel",
+   "combat": "strike.spinning_heel",
+   "name": "spinning_heel",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 70,
+   "band": "mid",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [
+    "single_turn"
+   ],
+   "look": "His version (open hands, rounder): One turn with his back shown, the heel coming round at the end of a straight leg.",
+   "orig": "one round turn with the arms opened wide to carry it, the heel coming round at the end of a long leg, the head turned to keep the eyes on him",
+   "poses": [
+    "pr.spinning_heel.chamber",
+    "pr.spinning_heel.contact",
+    "pr.spinning_heel.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.sweep",
+   "combat": "strike.sweep",
+   "name": "sweep",
+   "weight": "light",
+   "target": "shins",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 72,
+   "band": "mid",
+   "ticks": {
+    "load": 8,
+    "follow": 4,
+    "recover": 8
+   },
+   "ground": "only",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "His version (open hands, rounder): Dropped onto one hand, the other leg scything flat along the ground.",
+   "orig": "a wide low arc: down on one open hand, the other arm lifted for balance, the leg swept round flat along the ground",
+   "poses": [
+    "pr.sweep.chamber",
+    "pr.sweep.contact",
+    "pr.sweep.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.palm_push",
+   "combat": "strike.palm_push",
+   "name": "palm_push",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw",
+    "not_at_hip",
+    "no_cross_hold"
+   ],
+   "look": "One open hand driven from the shoulder into the chest, the other hand open at his own chest.",
+   "orig": "one open hand driven from the shoulder into the chest, the other hand open at his own chest, the weight shifting through the palm",
+   "poses": [
+    "pr.palm_push.chamber",
+    "pr.palm_push.contact",
+    "pr.palm_push.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.ridge_hand",
+   "combat": "strike.ridge_hand",
+   "name": "ridge_hand",
+   "weight": "light",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "The edge of the open hand swung round in an arc to the head.",
+   "orig": "the edge of the open hand swung round in an arc to the head, the elbow leading and then opening, the other hand at his chest",
+   "poses": [
+    "pr.ridge_hand.chamber",
+    "pr.ridge_hand.contact",
+    "pr.ridge_hand.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.rising_palm",
+   "combat": "strike.rising_palm",
+   "name": "rising_palm",
+   "weight": "heavy",
+   "target": "jaw",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 10,
+    "follow": 6,
+    "recover": 10
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw",
+    "no_leap",
+    "no_held_raise"
+   ],
+   "look": "The heel of an open hand lifted under the jaw, the body rising behind it; no leap, the arm lowers at once.",
+   "orig": "the heel of the open hand lifted under the jaw, the body rising behind it on straight legs with the feet staying down, the arm lowering at once",
+   "poses": [
+    "pr.rising_palm.chamber",
+    "pr.rising_palm.contact",
+    "pr.rising_palm.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.knife_chop",
+   "combat": "strike.knife_chop",
+   "name": "knife_chop",
+   "weight": "light",
+   "target": "arm_r",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 56,
+   "reach": 86,
+   "band": "long",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "hands_open_or_claw"
+   ],
+   "look": "A short downward chop with a flat hand, the elbow bent through the chop.",
+   "orig": "a short downward chop with a flat hand to the shoulder, the elbow staying bent through it, the other hand open at his chest",
+   "poses": [
+    "pr.knife_chop.chamber",
+    "pr.knife_chop.contact",
+    "pr.knife_chop.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.hammer_fist",
+   "combat": "strike.hammer_fist",
+   "name": "hammer_fist",
+   "weight": "light",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 56,
+   "reach": 86,
+   "band": "long",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "no_clasp",
+    "no_held_raise"
+   ],
+   "look": "The bottom of one fist brought down: a return blow that sends down.",
+   "orig": "one fist brought down on its heel in a short return blow, the other hand open at his chest; nothing held up after it",
+   "poses": [
+    "pr.hammer_fist.chamber",
+    "pr.hammer_fist.contact",
+    "pr.hammer_fist.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.crescent_kick",
+   "combat": "strike.crescent_kick",
+   "name": "crescent_kick",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 78,
+   "band": "mid",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "A straight leg swept round from the inside out.",
+   "orig": "a straight leg swept round from the inside out in a crescent at chest height, the hands up and open",
+   "poses": [
+    "pr.crescent_kick.chamber",
+    "pr.crescent_kick.contact",
+    "pr.crescent_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.hook_kick",
+   "combat": "strike.hook_kick",
+   "name": "hook_kick",
+   "weight": "light",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 72,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The heel hooked back round from beyond the target.",
+   "orig": "the leg carried past the target and the heel hooked back round into the chest, the knee folding, the hands up and open",
+   "poses": [
+    "pr.hook_kick.chamber",
+    "pr.hook_kick.contact",
+    "pr.hook_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.spinning_back_kick",
+   "combat": "strike.spinning_back_kick",
+   "name": "spinning_back_kick",
+   "weight": "heavy",
+   "target": "gut",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 70,
+   "band": "mid",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [
+    "single_turn"
+   ],
+   "look": "One turn and a straight kick with the heel.",
+   "orig": "one turn with his back shown and a straight kick with the heel into the belly, the arms open for the turn",
+   "poses": [
+    "pr.spinning_back_kick.chamber",
+    "pr.spinning_back_kick.contact",
+    "pr.spinning_back_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null
+  },
+  {
+   "id": "pr.jab",
+   "combat": "strike.jab",
+   "name": "jab",
+   "weight": "light",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": "jab",
+   "legal": [],
+   "look": "A straight blade hand from the lead shoulder, the arm one line with the rear leg; the body barely turns.",
+   "orig": "a straight blade hand from the lead shoulder, the arm one line with the rear leg, the body barely turning",
+   "poses": [
+    "pr.jab.chamber",
+    "pr.jab.contact",
+    "pr.jab.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.cross",
+   "combat": "strike.cross",
+   "name": "cross",
+   "weight": "light",
+   "target": "chest",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": "cross",
+   "legal": [],
+   "look": "The rear hand driven straight through the chest, hips turned full, the lead forearm guard folded across the ribs.",
+   "orig": "the rear blade hand driven through the chest with the hips turned full, the lead forearm folded across the ribs",
+   "poses": [
+    "pr.cross.chamber",
+    "pr.cross.contact",
+    "pr.cross.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.backfist",
+   "combat": "strike.backfist",
+   "name": "backfist",
+   "weight": "light",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 88,
+   "band": "long",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": "hook",
+   "legal": [],
+   "look": "The arm unfolds backhanded to full length, the back of the hand leading, chest opened away from the rival.",
+   "orig": "the arm unfolding backhanded to full length, the back of the hand leading, the chest opened away from the rival",
+   "poses": [
+    "pr.backfist.chamber",
+    "pr.backfist.contact",
+    "pr.backfist.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": "hand_arc",
+   "_via": "profile"
+  },
+  {
+   "id": "pr.uppercut",
+   "combat": "strike.uppercut",
+   "name": "uppercut",
+   "weight": "heavy",
+   "target": "jaw",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 58,
+   "reach": 98,
+   "band": "long",
+   "ticks": {
+    "load": 10,
+    "follow": 6,
+    "recover": 10
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": "upper",
+   "legal": [
+    "no_leap",
+    "no_held_raise"
+   ],
+   "look": "A closed fist rising under the chin; the rise is in the hip and shoulder, the feet stay where they are, the other arm low across the body.",
+   "orig": "a closed fist rising under the chin, the rise in the hip and shoulder, the feet planted, the other arm low across the body",
+   "poses": [
+    "pr.uppercut.chamber",
+    "pr.uppercut.contact",
+    "pr.uppercut.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.hammer",
+   "combat": "strike.hammer",
+   "name": "hammer",
+   "weight": "heavy",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": null,
+   "offset": 56,
+   "reach": 86,
+   "band": "long",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The fist comes straight down from above the head like a dropped blade, the body folding over it.",
+   "orig": "the fist brought straight down from above the head like a dropped blade, the body folding over it",
+   "poses": [
+    "pr.hammer.chamber",
+    "pr.hammer.contact",
+    "pr.hammer.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.short_elbow",
+   "combat": "strike.short_elbow",
+   "name": "short_elbow",
+   "weight": "light",
+   "target": "jaw",
+   "limb": "elbow_r",
+   "limb2": null,
+   "offset": 38,
+   "reach": 64,
+   "band": "close",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The forearm folded shut and the point of the elbow cut across under the jaw: a small, sharp triangle.",
+   "orig": "the forearm folded shut and the point of the elbow cut across at face height: a small sharp triangle",
+   "poses": [
+    "pr.short_elbow.chamber",
+    "pr.short_elbow.contact",
+    "pr.short_elbow.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.rising_elbow",
+   "combat": "strike.rising_elbow",
+   "name": "rising_elbow",
+   "weight": "light",
+   "target": "jaw",
+   "limb": "elbow_r",
+   "limb2": null,
+   "offset": 38,
+   "reach": 64,
+   "band": "close",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The elbow driven up the centre line under the jaw, the hand ending behind his own ear, the plate edge leading.",
+   "orig": "the elbow driven up the centre line, the hand ending behind his own ear, the plate edge leading",
+   "poses": [
+    "pr.rising_elbow.chamber",
+    "pr.rising_elbow.contact",
+    "pr.rising_elbow.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.spinning_elbow",
+   "combat": "strike.spinning_elbow",
+   "name": "spinning_elbow",
+   "weight": "heavy",
+   "target": "jaw",
+   "limb": "elbow_r",
+   "limb2": null,
+   "offset": 34,
+   "reach": 62,
+   "band": "close",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [
+    "single_turn"
+   ],
+   "look": "One turn with his back shown, the elbow whipping through level at jaw height at the end of it.",
+   "orig": "one turn with his back shown, the elbow whipping through level at the end of it",
+   "poses": [
+    "pr.spinning_elbow.chamber",
+    "pr.spinning_elbow.contact",
+    "pr.spinning_elbow.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.dropping_elbow",
+   "combat": "strike.dropping_elbow",
+   "name": "dropping_elbow",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "elbow_r",
+   "limb2": null,
+   "offset": 38,
+   "reach": 72,
+   "band": "close",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 10
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "From above: the point of the elbow dropped onto the chest, the other hand pinning the rival's guard down.",
+   "orig": "the point of the elbow dropped onto the chest from above, the other hand pinning the rival guard down",
+   "poses": [
+    "pr.dropping_elbow.chamber",
+    "pr.dropping_elbow.contact",
+    "pr.dropping_elbow.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.double_hammer",
+   "combat": "strike.double_hammer",
+   "name": "double_hammer",
+   "weight": "heavy",
+   "target": "head",
+   "limb": "hand_r",
+   "limb2": "hand_l",
+   "offset": 50,
+   "reach": 84,
+   "band": "mid",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "ok",
+   "uses": {
+    "arms": 2
+   },
+   "from": null,
+   "legal": [
+    "wrists_apart",
+    "no_clasp"
+   ],
+   "look": "Both forearm guards brought down side by side like a dropped bar; the hands are apart and open.",
+   "orig": "both forearm guards brought down side by side like a dropped bar, the hands apart and open",
+   "poses": [
+    "pr.double_hammer.chamber",
+    "pr.double_hammer.contact",
+    "pr.double_hammer.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.front_kick",
+   "combat": "strike.front_kick",
+   "name": "front_kick",
+   "weight": "light",
+   "target": "gut",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 54,
+   "reach": 82,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": "kick",
+   "legal": [],
+   "look": "A straight push with the ball of the foot from a high knee, the body leaning back off the line.",
+   "orig": "a straight push with the ball of the foot from a high knee, the body leaning back off the line",
+   "poses": [
+    "pr.front_kick.chamber",
+    "pr.front_kick.contact",
+    "pr.front_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.side_kick",
+   "combat": "strike.side_kick",
+   "name": "side_kick",
+   "weight": "light",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 70,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "Turned fully side-on, the leg and the opposite arm one horizontal line, the heel leading.",
+   "orig": "turned fully side-on, the leg and the opposite arm one horizontal line, the heel leading",
+   "poses": [
+    "pr.side_kick.chamber",
+    "pr.side_kick.contact",
+    "pr.side_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.low_kick",
+   "combat": "strike.low_kick",
+   "name": "low_kick",
+   "weight": "light",
+   "target": "legs",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 50,
+   "reach": 76,
+   "band": "mid",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": "round",
+   "legal": [],
+   "look": "A short chop of the shin into the thigh, his own body upright and still.",
+   "orig": "a short chop of the shin into the thigh, his own body upright and still",
+   "poses": [
+    "pr.low_kick.chamber",
+    "pr.low_kick.contact",
+    "pr.low_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.axe_kick",
+   "combat": "strike.axe_kick",
+   "name": "axe_kick",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 48,
+   "reach": 66,
+   "band": "mid",
+   "ticks": {
+    "load": 14,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The leg lifted straight and brought down heel first onto the collar, his body a vertical line beside it.",
+   "orig": "the leg lifted straight and brought down heel first onto the collar, his body a vertical line beside it",
+   "poses": [
+    "pr.axe_kick.chamber",
+    "pr.axe_kick.contact",
+    "pr.axe_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.stomp",
+   "combat": "strike.stomp",
+   "name": "stomp",
+   "weight": "heavy",
+   "target": "gut",
+   "limb": "foot_r",
+   "limb2": null,
+   "offset": 54,
+   "reach": 76,
+   "band": "mid",
+   "ticks": {
+    "load": 12,
+    "follow": 6,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The knee drawn to his chest and the sole driven straight down; his arms spread for balance.",
+   "orig": "the knee drawn to his chest and the sole driven straight down, his arms spread for balance",
+   "poses": [
+    "pr.stomp.chamber",
+    "pr.stomp.contact",
+    "pr.stomp.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.drop_kick",
+   "combat": "strike.drop_kick",
+   "name": "drop_kick",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "foot_r",
+   "limb2": "foot_l",
+   "offset": 50,
+   "reach": 64,
+   "band": "mid",
+   "ticks": {
+    "load": 12,
+    "follow": 5,
+    "recover": 14
+   },
+   "ground": "no",
+   "uses": {
+    "legs": 2
+   },
+   "from": null,
+   "legal": [],
+   "look": "Both feet together with the body laid flat behind them, arms back along his sides.",
+   "orig": "both feet together with the body laid flat behind them, the arms back along his sides",
+   "poses": [
+    "pr.drop_kick.chamber",
+    "pr.drop_kick.contact",
+    "pr.drop_kick.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.short_knee",
+   "combat": "strike.short_knee",
+   "name": "short_knee",
+   "weight": "light",
+   "target": "gut",
+   "limb": "knee_r",
+   "limb2": null,
+   "offset": 28,
+   "reach": 48,
+   "band": "close",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 5
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "A short knee from the clinch, one hand on the rival's shoulder, the standing leg straight.",
+   "orig": "a short knee from the clinch, one hand on the rival shoulder, the standing leg straight",
+   "poses": [
+    "pr.short_knee.chamber",
+    "pr.short_knee.contact",
+    "pr.short_knee.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.rising_knee",
+   "combat": "strike.rising_knee",
+   "name": "rising_knee",
+   "weight": "heavy",
+   "target": "gut",
+   "limb": "knee_r",
+   "limb2": null,
+   "offset": 32,
+   "reach": 54,
+   "band": "close",
+   "ticks": {
+    "load": 10,
+    "follow": 6,
+    "recover": 10
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The knee driven up as he rises onto the toes, hips thrust through, both hands pulling down.",
+   "orig": "the knee driven up as he rises onto the toes, the hips thrust through, both hands pulling down",
+   "poses": [
+    "pr.rising_knee.chamber",
+    "pr.rising_knee.contact",
+    "pr.rising_knee.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.driving_knee",
+   "combat": "strike.driving_knee",
+   "name": "driving_knee",
+   "weight": "heavy",
+   "target": "gut",
+   "limb": "knee_r",
+   "limb2": null,
+   "offset": 28,
+   "reach": 54,
+   "band": "close",
+   "ticks": {
+    "load": 10,
+    "follow": 5,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {
+    "legs": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "A knee carried in on the end of a run, the body leaning back, the trailing leg straight behind.",
+   "orig": "a knee carried in on the end of a run, the body leaning back, the trailing leg straight behind",
+   "poses": [
+    "pr.driving_knee.chamber",
+    "pr.driving_knee.contact",
+    "pr.driving_knee.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.headbutt",
+   "combat": "strike.headbutt",
+   "name": "headbutt",
+   "weight": "heavy",
+   "target": "jaw",
+   "limb": "head",
+   "limb2": null,
+   "offset": 36,
+   "reach": 58,
+   "band": "close",
+   "ticks": {
+    "load": 10,
+    "follow": 5,
+    "recover": 10
+   },
+   "ground": "ok",
+   "uses": {
+    "head": 1
+   },
+   "from": null,
+   "legal": [],
+   "look": "The masked brow driven into the jaw from the waist, hands holding the rival's arms down.",
+   "orig": "the masked brow snapped forward from the neck and waist, the hands holding the rival arms down",
+   "poses": [
+    "pr.headbutt.chamber",
+    "pr.headbutt.contact",
+    "pr.headbutt.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.shoulder_check",
+   "combat": "strike.shoulder_check",
+   "name": "shoulder_check",
+   "weight": "light",
+   "target": "chest",
+   "limb": "shoulder_r",
+   "limb2": null,
+   "offset": 34,
+   "reach": 60,
+   "band": "close",
+   "ticks": {
+    "load": 6,
+    "follow": 4,
+    "recover": 6
+   },
+   "ground": "ok",
+   "uses": {},
+   "from": null,
+   "legal": [],
+   "look": "A short step and the plated shoulder into the chest, chin tucked behind it, arms close.",
+   "orig": "a short step and the plated shoulder into the chest, the chin tucked behind it, the arms close",
+   "poses": [
+    "pr.shoulder_check.chamber",
+    "pr.shoulder_check.contact",
+    "pr.shoulder_check.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  },
+  {
+   "id": "pr.body_ram",
+   "combat": "strike.body_ram",
+   "name": "body_ram",
+   "weight": "heavy",
+   "target": "chest",
+   "limb": "shoulder_r",
+   "limb2": null,
+   "offset": 34,
+   "reach": 68,
+   "band": "close",
+   "ticks": {
+    "load": 10,
+    "follow": 5,
+    "recover": 12
+   },
+   "ground": "plant",
+   "uses": {},
+   "from": null,
+   "legal": [],
+   "look": "He turns as he arrives and throws his plated back and the back of the shoulder into the chest, head turned away over the far shoulder, both feet leaving the ground.",
+   "orig": "he turns as he arrives and throws the plated back and the back of the shoulder into the chest, the head turned away over the far shoulder, both feet leaving the ground",
+   "poses": [
+    "pr.body_ram.chamber",
+    "pr.body_ram.contact",
+    "pr.body_ram.follow"
+   ],
+   "alt": null,
+   "_genericAb": false,
+   "_family": null,
+   "_via": "profile"
+  }
+ ],
+ "skipped": []
+}

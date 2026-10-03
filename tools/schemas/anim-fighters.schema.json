@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-fighters",
+  "title": "anim.fighters/1",
+  "description": "data/anim/fighters.json: each fighter's animation profile (docs/animation/pose-pipeline.md section 9.25). shape: the key into shapes.json, ragdoll_motion.json and joints.json. pose_profile: the numbers wave_gen.mjs applies to the rival's wave 1 for the strike slots that keep his poses (read at generation, never at runtime). wave: the pose wave that carries the fighter's own strikes. timing and arc: parked, not read yet. Render only, outside the sim's data hash. Version field: schema. Policy: closed except keys starting with an underscore. Cross-references (every shape is in ragdoll_motion.json shapes; the wave has a keysets file in data/anim/waves; timing names profiles of profiles.json) are checked by tools/lib/xref-fight.js (fighters-*). Animation's draft: docs/animation/handoff/anim-fighters.schema.json.",
+  "type": "object",
+  "required": [
+    "schema",
+    "fighters"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.fighters/1"
+    },
+    "fighters": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "shape",
+          "wave",
+          "pose_profile"
+        ],
+        "properties": {
+          "replaces": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "The placeholder fighter this one replaces (a roster id)."
+          },
+          "shape": {
+            "type": "string",
+            "pattern": "^[A-Z]$",
+            "description": "The shape key into shapes.json, ragdoll_motion.json and joints.json."
+          },
+          "wave": {
+            "type": "string",
+            "pattern": "^[a-z]+[0-9]+$",
+            "description": "The pose wave that carries the fighter's own strikes (data/anim/waves/<wave>.*.json)."
+          },
+          "pose_profile": {
+            "type": "object",
+            "required": [
+              "hand_states",
+              "rise",
+              "stance",
+              "twist",
+              "guard_raise",
+              "head_pitch"
+            ],
+            "properties": {
+              "hand_states": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "open",
+                    "fist",
+                    "relaxed",
+                    "claw"
+                  ]
+                },
+                "additionalProperties": {
+                  "enum": [
+                    "open",
+                    "fist",
+                    "relaxed",
+                    "claw"
+                  ]
+                },
+                "description": "A hand state replaced by another (his hands are never claws)."
+              },
+              "rise": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Units the hips are lifted out of a crouch of 8 or more (never above standing)."
+              },
+              "stance": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Scale of how far the front foot is planted (1.0 is off)."
+              },
+              "twist": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Gain on the spine's turn (rounder arcs)."
+              },
+              "guard_raise": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Units the free hand is lifted (kicks: both hands)."
+              },
+              "head_pitch": {
+                "type": "number",
+                "description": "Degrees added to the head's pitch (chin up, eyes on the rival)."
+              }
+            },
+            "description": "The numbers that turn the rival's wave 1 into this fighter's own for the reuse slots.",
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "timing": {
+            "type": "object",
+            "required": [],
+            "properties": {
+              "light": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "description": "A profile of profiles.json for light blows."
+              },
+              "heavy": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "description": "A profile of profiles.json for heavy blows."
+              },
+              "fluid_bias": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "description": "Parked: how the fighter's blows are timed.",
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          },
+          "arc": {
+            "type": "object",
+            "required": [],
+            "properties": {
+              "bias": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "description": "Parked: how wide his arcs run.",
+            "additionalProperties": false,
+            "patternProperties": {
+              "^_": true
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "patternProperties": {
+    "^_": true
+  }
+}

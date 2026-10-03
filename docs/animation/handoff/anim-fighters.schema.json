@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meridian/anim-fighters",
+  "title": "anim.fighters/1",
+  "description": "data/anim/fighters.json: each fighter's animation profile (docs/animation/pose-pipeline.md section 9.25). shape: the key into shapes.json and ragdoll_motion.json. pose_profile: the numbers wave_gen.mjs applies to the rival's wave 1 for the strike slots that keep his poses. wave: the pose wave that carries the fighter's own strikes. timing and arc are parked. Render only, outside the sim's data hash. Policy: closed except keys starting with an underscore.",
+  "type": "object",
+  "required": [
+    "schema",
+    "fighters"
+  ],
+  "properties": {
+    "schema": {
+      "const": "anim.fighters/1"
+    },
+    "fighters": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "shape",
+          "waves",
+          "pose_profile"
+        ],
+        "properties": {
+          "replaces": {
+            "type": "string"
+          },
+          "shape": {
+            "type": "string",
+            "pattern": "^[A-Z]$"
+          },
+          "pose_profile": {
+            "type": "object",
+            "required": [
+              "hand_states",
+              "rise",
+              "stance",
+              "twist",
+              "guard_raise",
+              "head_pitch"
+            ],
+            "properties": {
+              "hand_states": {
+                "type": "object",
+                "additionalProperties": {
+                  "enum": [
+                    "open",
+                    "fist",
+                    "relaxed",
+                    "claw"
+                  ]
+                }
+              },
+              "rise": {
+                "type": "number",
+                "minimum": 0
+              },
+              "stance": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "twist": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "guard_raise": {
+                "type": "number",
+                "minimum": 0
+              },
+              "head_pitch": {
+                "type": "number"
+              }
+            },
+            "patternProperties": {
+              "^_": {}
+            },
+            "additionalProperties": false
+          },
+          "timing": {
+            "type": "object"
+          },
+          "arc": {
+            "type": "object"
+          },
+          "waves": {
+            "type": "object",
+            "required": [
+              "strikes"
+            ],
+            "properties": {
+              "strikes": {
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]+$"
+              },
+              "entries": {
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]+$"
+              },
+              "energy": {
+                "type": "string",
+                "pattern": "^[a-z]+[0-9]+$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "patternProperties": {
+          "^_": {}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "patternProperties": {
+    "^_": {}
+  },
+  "additionalProperties": false
+}

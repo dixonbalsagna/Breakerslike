@@ -1017,6 +1017,23 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     if (Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number' && p[0] >= p[1]) err('data/anim/flight.json', `/${k}/0`, 'flight-order', `${k} runs from ${p[0]} to ${p[1]}; the lead needs a range that rises`);
   }
 
+  // ---- anim fighters: the shape, the wave and the timing profiles exist ----
+  const afs = get('data/anim/fighters.json');
+  if (isObj(afs) && isObj(afs.fighters)) {
+    const AF = 'data/anim/fighters.json';
+    const motF = get('data/anim/ragdoll_motion.json');
+    const prF = get('data/anim/profiles.json');
+    const shapesF = isObj(motF) && isObj(motF.shapes) ? Object.keys(motF.shapes).filter((k) => !k.startsWith('_')) : [];
+    const profsF = isObj(prF) && isObj(prF.profiles) ? Object.keys(prF.profiles) : [];
+    for (const [id, fd] of Object.entries(afs.fighters)) {
+      if (id.startsWith('_') || !isObj(fd)) continue;
+      const at = `/fighters/${esc(id)}`;
+      if (typeof fd.shape === 'string' && shapesF.length && !shapesF.includes(fd.shape)) err(AF, `${at}/shape`, 'fighters-shape', `shape "${fd.shape}" is not in ragdoll_motion.json shapes (${shapesF.join(', ')})`);
+      if (typeof fd.wave === 'string' && !get(`data/anim/waves/${fd.wave}.keysets.json`)) err(AF, `${at}/wave`, 'fighters-wave', `wave "${fd.wave}" has no data/anim/waves/${fd.wave}.keysets.json`);
+      if (isObj(fd.timing)) for (const k of ['light', 'heavy']) if (typeof fd.timing[k] === 'string' && profsF.length && !profsF.includes(fd.timing[k])) err(AF, `${at}/timing/${k}`, 'fighters-timing', `timing ${k} "${fd.timing[k]}" is not a profile of profiles.json (${profsF.join(', ')})`);
+    }
+  }
+
   // ---- fighter ladder: the beam tables never decrease with the tier ----
   for (const rel of docsFor(/^data\/fighters\/[^/]+\/ladder\.json$/)) {
     const lad = get(rel);

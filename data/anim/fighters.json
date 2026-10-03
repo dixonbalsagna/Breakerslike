@@ -1,0 +1,21 @@
+{
+ "schema": "anim.fighters/1",
+ "_about": "Each fighter's animation profile (docs/animation/pose-pipeline.md section 9.25; docs/design/launch-pair-plan.md). shape: the key into data/anim/shapes.json, ragdoll_motion.json and joints.json (idle, flinch and body build). pose_profile: the numbers that turn the rival's wave 1 into this fighter's own for a strike slot that does not need its own silhouette (the reuse slots): read by render/anim/tools/wave_gen.mjs when it derives a fighter's wave from wave 1, never at runtime, so the poses it writes are plain poses. hand_states: a hand state replaced by another (his hands are never claws). rise: units the hips are lifted out of a crouch of 8 or more (never above standing; in a lunge the rear foot has no slack). stance: scale of how far the front foot is planted (1.0 is off: 1.12 pulled the rear foot out of its reach). twist: gain on the spine's turn (rounder arcs). guard_raise: units the free hand is lifted (kicks: both hands). head_pitch: degrees added to the head's pitch (chin up, eyes on the rival). timing and arc: parked, not read yet: how the fighter's blows are timed and how wide his arcs run. waves: the pose waves that carry his strikes, his entries and his energy poses (hands, brace, curving shot). Render only, outside the sim's data hash.",
+ "fighters": {
+  "protagonist": {
+   "replaces": "KAI",
+   "shape": "P",
+   "waves": {"strikes": "protag1", "entries": "protag2", "energy": "protag3"},
+   "pose_profile": {
+    "hand_states": {"claw": "open"},
+    "rise": 3,
+    "stance": 1.0,
+    "twist": 1.15,
+    "guard_raise": 3,
+    "head_pitch": -3
+   },
+   "timing": {"light": "snappy", "heavy": "fluid", "fluid_bias": 0.15},
+   "arc": {"bias": 0.25}
+  }
+ }
+}

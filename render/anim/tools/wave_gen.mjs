@@ -14,14 +14,14 @@ const wave = argv[0] || 'wave1';
 const opt = (n, d) => { const i = argv.indexOf('--' + n); return i >= 0 ? argv[i + 1] : d; };
 const project = resolve(opt('project', '.'));
 const outDir = resolve(opt('out', join(project, 'data/anim/waves')));
-const prefix = wave === 'ground1' ? 'gc' : wave === 'intro1' ? 'in' : wave === 'laststand1' ? 'ls' : wave === 'agency1' ? 'ag' : wave === 'energy1' ? 'en' : wave.startsWith('step') ? 's' + wave.slice(4) : wave.replace('wave', 'w');   // w1, s3
+const prefix = wave === 'ground1' ? 'gc' : wave === 'intro1' ? 'in' : wave === 'laststand1' ? 'ls' : wave === 'agency1' ? 'ag' : wave === 'energy1' ? 'en' : wave === 'protag1' ? 'pr' : wave === 'protag2' ? 'pe' : wave === 'protag3' ? 'pn' : wave === 'protag4' ? 'pf' : wave === 'rival1' ? 'rv' : wave === 'rival2' ? 'rb' : wave.startsWith('step') ? 's' + wave.slice(4) : wave.replace('wave', 'w');   // w1, s3
 
 const poses = JSON.parse(readFileSync(join(project, 'data/anim/poses.json'), 'utf8')).poses;
 const mod = await import(pathToFileURL(resolve(project, 'render/anim/tools/waves/' + wave + '.mjs')).href);
 const entriesMode = !!mod.entries;
 const seqMode = !!mod.sequences;
 const combatFile = resolve(opt('combat', join(project, 'docs/combat/pending/' + (entriesMode ? 'entries' : 'strikes') + '.antihero.' + wave + '.json')));
-const combat = seqMode ? { strikes: [], entries: [] } : JSON.parse(readFileSync(combatFile, 'utf8'));
+const combat = seqMode ? { strikes: [], entries: [] } : mod.rows ? (entriesMode ? { entries: mod.rows(JSON.parse(readFileSync(join(project, 'docs/combat/pending/entries.antihero.wave2.json'), 'utf8')).entries) } : { strikes: mod.rows(JSON.parse(readFileSync(join(project, 'docs/combat/pending/strikes.antihero.wave1.json'), 'utf8')).strikes) }) : JSON.parse(readFileSync(combatFile, 'utf8'));
 const spec = mod.strikes;
 
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -68,6 +68,25 @@ function blendToGuard(c, t) {
   if (r.hip_twist !== undefined) r.hip_twist = Math.round(r.hip_twist * 2) / 2;
   if (c.family === 'upright_lunge') r.family = 'upright';
   return r;
+}
+
+// a fighter's profile (data/anim/fighters.json) applied to one of the rival's pose sketches. limb is the striking limb of a strike (null for an entry pose: nothing is
+// lifted and an airborne pose keeps its head); two: a two-handed blow lifts no free hand
+function applyProfile(pp, p0, limb, two) {
+  const r5 = x => Math.round(x * 2) / 2;
+  const p = clone(p0);
+  const air = String(p.family || '').startsWith('airborne') || p.family === 'tumble';
+  for (const sd of ['r', 'l']) if (p.hands && pp.hand_states[p.hands[sd]]) p.hands[sd] = pp.hand_states[p.hands[sd]];
+  if (p.hips && p.hips[1] <= -8) p.hips[1] = r5(Math.min(0, p.hips[1] + pp.rise));   // out of a crouch only: in a lunge the rear foot is already at the end of its reach
+  for (const fk of ['foot_r', 'foot_l']) if (p[fk] && p[fk][1] <= 3 && p[fk][0] > 0) p[fk][0] = r5(p[fk][0] * pp.stance);   // the front foot plants wider; the rear foot is already at the end of its reach
+  if (p.spine && p.spine.twist !== undefined) p.spine.twist = r5(p.spine.twist * pp.twist);
+  if (!air) p.head = { ...(p.head || {}), pitch: r5((p.head?.pitch ?? 0) + pp.head_pitch) };
+  const raise = h => { if (p[h] && p[h][1] > 40 && p[h][1] < 70) p[h][1] = r5(p[h][1] + pp.guard_raise); };
+  if (limb) {
+    if (limb.startsWith('foot') || limb.startsWith('knee')) { raise('hand_r'); raise('hand_l'); }
+    else if (!two) raise('hand_l');
+  }
+  return p;
 }
 
 const SIDE = { hand: 'hand_r', elbow: 'elbow_r', foot: 'foot_r', knee: 'knee_r', head: 'head', shoulder: 'shoulder_r' };
@@ -168,6 +187,37 @@ if (entriesMode) {
       legal: sp.legal || [], look: row.look, lab: sp.lab || {}, alt: sp.alt ? sp.alt.label : null, poses: phases.map(p => p.pose), phases: sp.phases.map(p => p.id),
       newPoses: row.poses?.new || [], derive: row.poses?.derive || [] });
   }
+  // a fighter's entries over wave 2 (`reuse`): every wave 2 entry the spec does not redo is the rival's poses with the fighter's profile applied (data/anim/fighters.json)
+  if (mod.reuse) {
+    const fighters = JSON.parse(readFileSync(join(project, 'data/anim/fighters.json'), 'utf8')).fighters;
+    const fighter = Object.values(fighters).find(f => Object.values(f.waves).includes(wave));
+    const pp = fighter.pose_profile;
+    const w2p = JSON.parse(readFileSync(join(project, 'data/anim/waves/wave2.poses.json'), 'utf8')).poses;
+    const w2e = JSON.parse(readFileSync(join(project, 'data/anim/waves/wave2.entries.json'), 'utf8')).entries;
+    const w2m = JSON.parse(readFileSync(join(project, 'data/anim/waves/wave2.entrymap.json'), 'utf8')).entries;
+    const done = new Set(eMan.map(m => m.name));
+    let n = 0;
+    for (const m of w2m) {
+      if (done.has(m.name)) continue;
+      const id = `${prefix}.${m.name}`;
+      const src = w2e[m.id];
+      const ent = clone(src);
+      ent._wave = wave;
+      ent._via = 'profile of ' + m.id;
+      ent.phases = [];
+      for (const ph of src.phases) {
+        const pn = ph.pose.split('.').pop();
+        const q = applyProfile(pp, w2p[ph.pose], null, true);
+        q._orig = String(w2p[ph.pose]._orig || '') + " (the rival's pose in his profile)";
+        ePoses[`${id}.${pn}`] = q;
+        ent.phases.push({ ...ph, pose: `${id}.${pn}` });
+      }
+      eOut[id] = ent;
+      eMan.push({ ...m, id, _via: 'profile', poses: ent.phases.map(p => p.pose), alt: null });
+      n++;
+    }
+    console.log(`[wave_gen] ${wave}: ${n} entries of wave 2 re-used in the profile`);
+  }
   mkdirSync(outDir, { recursive: true });
   const hdr2 = (kind) => ({ schema: `anim.wave.${kind}/1`, _about: `${wave}: ${kind} of the Anti-hero's entries, generated by render/anim/tools/wave_gen.mjs from render/anim/tools/waves/${wave}.mjs and docs/combat/pending/entries.antihero.${wave}.json. Parked: baked only with --waves; an entry beat (or a rush beat naming one) plays an entry, and none does in live matches. Render only, outside the sim's data hash.` });
   const lines2 = (o) => Object.entries(o).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(',\n');
@@ -259,6 +309,39 @@ for (const row of combat.strikes) {
   manifest.push({ id, combat: row.id, name, weight: row.weight, target: ks.target, limb: L, limb2: ks.limb2 || null,
     offset: row.range.offset, reach: row.range.reach, band: row.range.band, ticks: row.ticks, ground: row.ground, uses: row.uses,
     from: sp.from || null, legal: sp.legal || [], look: row.look, orig: sp.orig, poses: ks.keys.map(k => k.pose), alt: sp.alt ? sp.alt.label : null, _genericAb: !!sp.genericAb, _family: sp.family || null });
+}
+// a fighter's wave over wave 1 (`reuse`): every wave 1 slot the spec does not redo is the rival's three poses with the fighter's profile applied (data/anim/fighters.json)
+if (mod.reuse) {
+  const fighters = JSON.parse(readFileSync(join(project, 'data/anim/fighters.json'), 'utf8')).fighters;
+  const fighter = Object.values(fighters).find(f => Object.values(f.waves).includes(wave));
+  const pp = fighter.pose_profile;
+  const w1p = JSON.parse(readFileSync(join(project, 'data/anim/waves/wave1.poses.json'), 'utf8')).poses;
+  const w1k = JSON.parse(readFileSync(join(project, 'data/anim/waves/wave1.keysets.json'), 'utf8')).keysets;
+  const w1m = JSON.parse(readFileSync(join(project, 'data/anim/waves/wave1.manifest.json'), 'utf8')).strikes;
+  const done = new Set(manifest.map(m => m.name));
+  const r5 = x => Math.round(x * 2) / 2;
+  const apply = (p0, limb, two) => applyProfile(pp, p0, limb, two);
+  let n = 0;
+  for (const m of w1m) {
+    if (done.has(m.name)) continue;
+    const id = `${prefix}.${m.name}`;
+    const ks = clone(w1k[m.id]);
+    const two = (m.uses?.arms === 2 || m.uses?.legs === 2);
+    ks._wave = wave;
+    ks._via = 'profile of ' + m.id;
+    ks.keys = [];
+    for (const [role, part] of [['load', 'chamber'], ['contact', 'contact'], ['follow', 'follow']]) {
+      const src = w1p[`${m.id}.${part}`];
+      const q = apply(src, m.limb, two);
+      q._orig = String(src._orig || '').replace(/ \((the wind-up|the follow-through)\)$/, '') + ' (the rival\'s pose in his profile)' + (part === 'chamber' ? ' (the wind-up)' : part === 'follow' ? ' (the follow-through)' : '');
+      outPoses[`${id}.${part}`] = q;
+      ks.keys.push({ role, pose: `${id}.${part}` });
+    }
+    outKeysets[id] = ks;
+    manifest.push({ ...m, id, _via: 'profile', poses: ks.keys.map(k => k.pose), alt: null, _genericAb: false });
+    n++;
+  }
+  console.log(`[wave_gen] ${wave}: ${n} slots of wave 1 re-used in the profile of ${Object.keys(fighters).find(k => fighters[k] === fighter)}`);
 }
 // go-live step 1 (docs/combat/pending/golive-step1.picks.json): the pick lists, the gates and the shape they are for, read by AnimFighter._live_pick with --wave1-live
 const livePath = join(project, 'docs/combat/pending/golive-step1.picks.json');
