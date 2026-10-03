@@ -3,8 +3,9 @@ class_name DirAlchemy
 ## press of each fighter is kept with what it carried: weight, family, direction, tilt, when it was let go, its beat (the
 ## distance to the nearest blow contact of the running exchange) and its charge's flash. Controls' classifier
 ## (SimPressRead) reads the log: holding, tapping in time, mashing or tapping; perfect, good or off; a steady mash; a
-## release on the flash. That read is recorded with each press (READ). The rhythm tag on each press (held, mashed,
-## timed) and the flow still follow the director's own rules; they move onto the read with the timing upgrades (A3).
+## release on the flash. That read is recorded with each press (READ). In the dynamic profile the timed tag and the
+## flow follow the beat (Controls' grade; in a blur string the blur's own beat, DirBlur); the mashed tag is three
+## presses inside MASH_TICKS.
 ##
 ## The log lives in the director's per-fighter integers (f.act.dirI), after DirInterrupt's: a ring of the last RING
 ## presses (packed presses, their ticks, their release ticks, beats and flashes), the count of presses, the last live
@@ -33,7 +34,16 @@ const AIM_T: int = AIM_S + 1                 # ... and the tick it was set
 const READ: int = AIM_T + 1                  # the last read, packed (style, timing, steady, streak)
 const PIECE_1: int = READ + 1                # the last two pieces picked for him (DirRecipe), as hashes, newest first
 const PIECE_2: int = READ + 2
-const SIZE: int = READ + 3
+const BLUR_CAD: int = READ + 3               # his blur string's cadence, in ticks between blows; 0 when he is in none (DirBlur)
+const BLUR_PAT: int = READ + 4               # ... its pattern, as its place in the recipes' names plus 1; 0 for none
+const BLUR_STEP: int = READ + 5              # ... the step of the pattern its next blow takes
+const BLUR_ON: int = READ + 6                # ... his presses on the beat in a row
+const BLUR_U1: int = READ + 7                # ... the pieces the string has used, as hashes, newest first
+const BLUR_U2: int = READ + 8
+const BLUR_U3: int = READ + 9
+const BLUR_U4: int = READ + 10
+const BLUR_AT: int = READ + 11               # ... the live tick its last blow landed on
+const SIZE: int = READ + 12
 const PLAIN: int = 0
 const HELD: int = 1
 const MASHED: int = 2
@@ -81,7 +91,11 @@ static func _blows(S: SimState, f, at: int) -> Array:
 	for b in ex.beats:
 		if b.done or (b.op != "strike" and b.op != "chainStrike"):
 			continue
-		var n: int = maxi(1, int(ceil((b.t - ex.t) * DirData.TICKS_PER_SEC - 0.000001)))
+		var n: int = 0   # the steps until the beat runs: the director adds a tick to the exchange's clock, then runs every beat at or before it
+		var tt: float = ex.t
+		while n <= BEAT_REACH + 1 and (n == 0 or tt < b.t):
+			tt += SimConst.DT
+			n += 1
 		var c: int = S.tick + n - 1
 		if c - at <= BEAT_REACH:
 			out.append(c)
@@ -95,6 +109,11 @@ static func _blows(S: SimState, f, at: int) -> Array:
 ## The tick press number k (counted from his first) was made on: the tick it arrived, less the freeze it was made in.
 static func _down(f, k: int) -> int:
 	return f.act.dirI[T0 + k % RING] - ((f.act.dirI[P0 + k % RING] >> FREEZE_SHIFT) & 15)
+
+
+## The AI's press being logged is on the beat (1) or off it (0), decided where it was planned (DirBlur.aiPress); -1, the
+## log draws. Not state: it lives for one call.
+static var aiBeat: int = -1
 
 
 ## A press: weight (SimAct.LIGHT or HEAVY; a signature is not an ingredient), family (0 physical, 1 energy), and the stick.
@@ -125,16 +144,31 @@ static func log(S: SimState, f, weight: int, family: int) -> void:
 	f.act.dirI[COUNT] = n + 1
 	# Controls' read of the log, with this press in it.
 	var c: Dictionary = read(S, f)
-	# The tags and the flow keep the director's own rules in this slice: timed is one of his own blows landing within
-	# TIMED_TICKS of the press, and mashed is three presses inside MASH_TICKS. Controls' read is recorded beside them
-	# (READ) and takes the tags over with the timing upgrades (alchemy-plan.md A3).
+	# Outside the dynamic profile the timed tag keeps the old rule: one of his own blows landing within TIMED_TICKS of
+	# the press. Mashed is three presses inside MASH_TICKS in every profile.
 	var timed: bool = _timed(S, f)
 	var mashing: bool = n >= 2 and S.tick - f.act.dirI[T0 + (n - 2) % RING] <= MASH_TICKS
+	var keep: bool = false   # a press with no blow to time against leaves the flow as it is
+	if DirInterrupt.on():
+		# The beat decides (alchemy-plan.md A3): a press is timed when it is within the beat's window (Controls' grade)
+		# of a blow of the exchange, either fighter's. A press outside any exchange has no beat: the flow stays. In a
+		# blur string the beat is tighter (Controls' blurBeatHalf), and Controls' steady read locks the blur in. The AI times
+		# its presses at its level's rate.
+		var ex = S.dirS.ex
+		var inEx: bool = ex != null and (f == ex.A or f == ex.D)
+		keep = not inEx and (f.ai != null or beat == SimPressRead.NO_BEAT)
+		if f.ai != null:
+			timed = inEx and ((aiBeat == 1) if aiBeat >= 0 else S.rng.next() < float(DirAI.lv().get("timedPress", 0.0)))
+		else:
+			timed = beat != SimPressRead.NO_BEAT and SimPressRead.grade_of(beat) == "perfect"
+		if weight == SimAct.LIGHT and DirBlur.live(S, f):
+			var hit: bool = timed if f.ai != null else (beat != SimPressRead.NO_BEAT and absi(beat) <= int(SimPressRead.params().get("blurBeatHalf", 2)))
+			timed = DirBlur.onPress(S, f, hit, f.ai == null and bool(c.steady))
 	f.act.dirI[READ] = maxi(0, STYLES.find(String(c.style))) | (maxi(0, TIMINGS.find(String(c.timing))) << 3) | ((1 if c.steady else 0) << 5) | (mini(int(c.streak), 7) << 6)
 	# The flow count (agency-pass.md section 2): a timed press adds 1, up to FLOW_MAX; a press off the beat sets it back
 	# to 0 (and so do FLOW_LIFE ticks without a press: tick).
-	if DirInterrupt.on():
-		SimAct.setFlow(S, f, mini(FLOW_MAX, f.act.flow + 1) if timed else 0)
+	if DirInterrupt.on() and not keep:
+		SimAct.setFlow(S, f, mini(int(DirRecipe.cfg().get("flow", {}).get("max", FLOW_MAX)), f.act.flow + 1) if timed else 0)
 	var rhythm: int = TIMED if timed else (MASHED if mashing else PLAIN)
 	# Launch intent: a human's is his stick (any direction past the dead zone). The AI's stick is its flight path, so its
 	# intent is a number: the chance its heavy is thrown to launch (ai.json launchIntent), one draw per heavy press.
@@ -171,7 +205,7 @@ static func tick(S: SimState) -> void:
 		f.act.dirI[AIM_T] = int(latch.tick)
 		if f.act.flow > 0:
 			var n: int = f.act.dirI[COUNT]
-			if n == 0 or S.tick - f.act.dirI[T0 + (n - 1) % RING] > FLOW_LIFE:
+			if n == 0 or S.tick - f.act.dirI[T0 + (n - 1) % RING] > int(DirRecipe.cfg().get("flow", {}).get("lapseTicks", FLOW_LIFE)):
 				SimAct.setFlow(S, f, 0)
 		f.act.dirI[LIVE_AT] = S.tick
 
@@ -262,9 +296,12 @@ static func window(S: SimState, f) -> Array:
 	_size(f)
 	var out: Array = []
 	var n: int = f.act.dirI[COUNT]
+	# Section 20: his last five presses stay until LIFE ticks pass with no press, and then the window clears as a
+	# whole (as the flow does, and as Controls' classifier reads its mix).
+	if n == 0 or S.tick - f.act.dirI[T0 + (n - 1) % RING] > LIFE:
+		return out
 	for k in range(maxi(0, n - WINDOW), n):
-		if S.tick - f.act.dirI[T0 + k % RING] <= LIFE:
-			out.append(f.act.dirI[P0 + k % RING])
+		out.append(f.act.dirI[P0 + k % RING])
 	return out
 
 

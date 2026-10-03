@@ -265,6 +265,7 @@ static func _start(S: SimState, A, kind: String) -> int:
 	planStale = 0
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "sig" if kind == "sig" else "melee")
+	DirBlur.onStart(S, ex, kind)   # a light press in the blur style starts a blur string: its cadence and its pattern
 	DirRecipe.dress(S, ex)   # the alchemist: each strike of the plan takes a piece from the pool its fighter's style calls
 	var stanceLabel: String = DirData.defLabel if DirData.defLabel != "" else ("CHARGING" if dState == "charging" else STN[int(D.stance)])   # step 2b: NEUTRAL too
 	SimEvents.feed(S, A.name + " " + kind.to_upper() + " vs " + stanceLabel, ex.tag + ("  (ambush)" if A.ambush else ""))
@@ -297,9 +298,11 @@ static func runBeat(S: SimState, ex, b) -> void:
 		"press":
 			var who = A if a.who == "A" else D
 			# The AI's ender: a heavy once the string is full. How often it uses an earner is its level's earnerUse (section 13, rule 7).
-			var ender: bool = a.get("queue", false) and DirInterrupt.on() and DirLaunch.data().get("earned", {}).get("enabled", false) and DirInterrupt.gi(who, DirInterrupt.LANDED) >= int(DirLaunch.data().earned.enderAfter) and S.rng.next() < float(DirAI.lv().get("earnerUse", 1.0))
+			var ender: bool = a.get("queue", false) and DirInterrupt.on() and DirLaunch.data().get("earned", {}).get("enabled", false) and DirLaunch.aiEnder(who) and S.rng.next() < float(DirAI.lv().get("earnerUse", 1.0))
 			if a.get("queue", false) or a.get("blast", false):
+				DirAlchemy.aiBeat = (1 if a.onBeat else 0) if a.has("onBeat") else -1
 				DirAlchemy.log(S, who, SimAct.HEAVY if (a.get("blast", false) or ender) else SimAct.LIGHT, 1 if a.get("blast", false) else who.act.mode)
+				DirAlchemy.aiBeat = -1
 			if a.get("sig", false):
 				SimAct.push(who, SimAct.SIG, who.act.mode, 0, S.tick)   # step 2b: the AI answers a beam with its own signature
 			elif a.get("blast", false):
@@ -409,7 +412,9 @@ static func openWindow(S: SimState, ex) -> void:
 	ex.ext = e
 	SimFx.windowOpen(S, ex.A, "chain", 0.6, int(ex.combo))
 	if ex.A.ai != null and S.rng.next() < SimMathx.jclamp(0.62 - 0.14 * ex.combo, 0.05, 0.6):
-		schedule(ex, ex.t + S.rng.range_(0.12, 0.35), "press", {"who": "A", "queue": ex.A.act.v2})
+		var pa: Dictionary = {"who": "A", "queue": ex.A.act.v2}
+		var late: float = S.rng.range_(0.12, 0.35)
+		schedule(ex, ex.t if DirBlur.aiPress(S, ex, pa) else ex.t + late, "press", pa)   # in a blur string its press is on the beat at its level's rate
 
 
 static func chain(S: SimState, ex) -> void:
@@ -418,6 +423,7 @@ static func chain(S: SimState, ex) -> void:
 	ex.ext = null
 	A.ki -= 6.0
 	var t: float = ex.t
+	var before: Array = ex.beats.duplicate()   # the link's own beats are the ones planned after this (DirBlur.onLink)
 	SimFx.banner(S, SimMathx.jstr(ex.combo) + " HIT CHAIN", "#ffd45a", 0.7)
 	var chk = null
 	if planCheck.is_valid():
@@ -425,6 +431,7 @@ static func chain(S: SimState, ex) -> void:
 	DirData.planChain(ex)
 	if chk != null:
 		planCheck.call(chk, ex, S.rng.a, "chain")
+	DirBlur.onLink(S, ex, before)   # in a blur string the link's blow lands on the cadence
 	DirRecipe.dress(S, ex)   # the link's strikes take their pieces
 	DirInterrupt.onChainLink(S, ex)   # step 3: the defender's burst at its link (the AI, the Simple layout's autoBurst)
 

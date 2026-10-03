@@ -12,7 +12,8 @@
     "blurPatterns",
     "patternRule",
     "lastPress",
-    "pools"
+    "pools",
+    "pieces"
   ],
   "properties": {
     "schema": {
@@ -298,9 +299,104 @@
         "^_": true
       }
     },
+    "patternGates": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*)$"
+      },
+      "description": "Optional. When a blur pattern may be drawn, read at the string's first blow; a pattern with no row is always open. stick: the stick toward; ground: both fighters on the ground; fighters: only these fighters' strings draw it.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "stick": {
+            "const": "toward",
+            "description": "Open only with the stick toward at that press."
+          },
+          "ground": {
+            "const": true,
+            "description": "Open only with both fighters on the ground."
+          },
+          "fighters": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "description": "Keys of pools whose strings draw it."
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "stick"
+            ]
+          },
+          {
+            "required": [
+              "ground"
+            ]
+          },
+          {
+            "required": [
+              "fighters"
+            ]
+          }
+        ],
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
+    },
     "patternRule": {
       "type": "string",
       "minLength": 1
+    },
+    "pieces": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(_.*|[a-z][a-z0-9_]*([.][a-z0-9_]+)*)$"
+      },
+      "description": "Each pool strike's striking limb and the socket it lands on, one row per strike id, shared by both fighters (each fighter's own key set plays it).",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "limb",
+          "target"
+        ],
+        "properties": {
+          "limb": {
+            "enum": [
+              "hand",
+              "foot",
+              "elbow",
+              "knee",
+              "shoulder",
+              "head",
+              "own"
+            ],
+            "description": "The striking limb: hand, foot, elbow, knee, shoulder, head or own."
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[a-z][a-z_]*$",
+            "description": "A socket (region) of data/anim/sockets.json."
+          }
+        },
+        "additionalProperties": false,
+        "patternProperties": {
+          "^_": true
+        }
+      },
+      "patternProperties": {
+        "^_": true
+      }
     },
     "lastPress": {
       "type": "object",

@@ -55,7 +55,8 @@
       "beamDodge": 0.4,
       "beamWade": 0.3,
       "beamLate": 0.05,
-      "mineShare": 0.02
+      "mineShare": 0.02,
+      "timedPress": 0.4
     },
     "medium": {
       "beamAnswer": 0.35,
@@ -89,7 +90,8 @@
       "beamDodge": 0.55,
       "beamWade": 0.5,
       "beamLate": 0.1,
-      "mineShare": 0.04
+      "mineShare": 0.04,
+      "timedPress": 0.65
     },
     "hard": {
       "beamAnswer": 0.6,
@@ -123,7 +125,8 @@
       "beamDodge": 0.7,
       "beamWade": 0.7,
       "beamLate": 0.2,
-      "mineShare": 0.06
+      "mineShare": 0.06,
+      "timedPress": 0.85
     }
   },
   "beamLook": {

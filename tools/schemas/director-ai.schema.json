@@ -145,7 +145,8 @@
             "beamDodge",
             "beamWade",
             "beamLate",
-            "mineShare"
+            "mineShare",
+            "timedPress"
           ],
           "properties": {
             "beamAnswer": {
@@ -301,6 +302,12 @@
             },
             "mineShare": {
               "description": "The chance an AI blast press is a mine.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "timedPress": {
+              "description": "The chance an AI press is timed (on the beat).",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -338,7 +345,8 @@
             "beamDodge",
             "beamWade",
             "beamLate",
-            "mineShare"
+            "mineShare",
+            "timedPress"
           ],
           "properties": {
             "beamAnswer": {
@@ -494,6 +502,12 @@
             },
             "mineShare": {
               "description": "The chance an AI blast press is a mine.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "timedPress": {
+              "description": "The chance an AI press is timed (on the beat).",
               "type": "number",
               "minimum": 0,
               "maximum": 1
@@ -531,7 +545,8 @@
             "beamDodge",
             "beamWade",
             "beamLate",
-            "mineShare"
+            "mineShare",
+            "timedPress"
           ],
           "properties": {
             "beamAnswer": {
@@ -687,6 +702,12 @@
             },
             "mineShare": {
               "description": "The chance an AI blast press is a mine.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "timedPress": {
+              "description": "The chance an AI press is timed (on the beat).",
               "type": "number",
               "minimum": 0,
               "maximum": 1

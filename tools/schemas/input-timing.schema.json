@@ -280,11 +280,6 @@
           "minimum": 1,
           "description": "Accessibility: the beat window is multiplied by this."
         },
-        "steadyJitter": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "A mash is steady when its gaps differ by this many ticks or fewer."
-        },
         "perfectStreak": {
           "type": "integer",
           "minimum": 1,

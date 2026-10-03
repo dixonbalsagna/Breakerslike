@@ -10,17 +10,21 @@
       ],
       "base": {
         "read": "mashing",
-        "pool": "blur.base",
-        "towardPool": "blur.toward",
-        "ender": null
-      },
-      "timed": {
-        "read": "steady",
-        "plays": "a perfect blur: one blur pattern of five lights at 6 ticks, every strike clean",
+        "_plays": "the plain blur, mashed off the beat: the string's pattern with loose contact; each strike at the mashed share of a light (data/director/launch.json blur.strikeMul); no flow, because the presses are off the beat",
         "pool": "blur.base",
         "towardPool": "blur.toward",
         "ender": "blur.ender",
-        "endsIn": "knock-back"
+        "_endsIn": "knock-back, the weak one: blur.enderDist of the tier's distance and setup.weight.blurPlain of a set-up (launch.json); never a launch"
+      },
+      "timed": {
+        "read": "steady",
+        "_from": "the fourth press in a row that is evenly spaced and within 2 ticks of one of the blur's blows landing (agency-pass.md section 20)",
+        "plays": "the perfect blur, from that press on: the same pattern locks in and every strike lands clean, at a light's full damage; each on-beat press adds 1 to flow",
+        "pool": "blur.base",
+        "towardPool": "blur.toward",
+        "ender": "blur.ender",
+        "endsIn": "knock-back, the full one: the pattern's own closing blow, the tier's full distance and a full set-up; never a launch",
+        "_look": "full contact on every strike, a thin outline of his aura, and a rising accent in the sound for each blow (VFX and Audio)"
       }
     },
     {
@@ -202,9 +206,262 @@
         "hand",
         "chest"
       ]
+    ],
+    "reap": [
+      [
+        "hand",
+        "head"
+      ],
+      [
+        "hand",
+        "chest"
+      ],
+      [
+        "foot",
+        "shins"
+      ],
+      [
+        "hand",
+        "chest"
+      ],
+      [
+        "hand",
+        "head"
+      ]
+    ],
+    "breach": [
+      [
+        "hand",
+        "arm_r"
+      ],
+      [
+        "hand",
+        "head"
+      ],
+      [
+        "foot",
+        "chest"
+      ],
+      [
+        "hand",
+        "head"
+      ],
+      [
+        "hand",
+        "chest"
+      ]
     ]
   },
-  "patternRule": "each step is filled from the fighter's lights with that limb and target, no key strike twice; inside is offered only when toward is held",
+  "patternGates": {
+    "_about": "When a pattern may be drawn, read at the string's first blow. A pattern with no row is always open. stick: the stick's direction at that press; with the stick toward, the draw is among the patterns gated to toward, and without it those are closed. ground: both fighters are on the ground. fighters: only these fighters' strings draw it",
+    "inside": {
+      "stick": "toward"
+    },
+    "reap": {
+      "ground": true
+    },
+    "breach": {
+      "fighters": [
+        "protagonist"
+      ]
+    }
+  },
+  "patternRule": "every blur string draws one open pattern, with its cadence, at its first blow (patternGates). Each light of the string takes the next step, filled from the fighter's blur lights with that limb and target (pieces), no key strike twice in a string; a string that runs past the fifth step starts the pattern again. The pattern's own closing blow is drawn from the ender pool and lands where the string's last light landed, when a piece of that pool does; otherwise any piece of it. A pattern carries no ticks: the gap between blows is the string's cadence, the director's number",
+  "pieces": {
+    "_about": "Each pool strike's striking limb and the socket it lands on, one row per strike id, shared by both fighters (each fighter's own key set plays it). The director fills a blur pattern's steps from these, and Tools checks them against Animation's manifests. limb: hand, foot, elbow, knee, shoulder, head or own. target: a socket of data/anim/sockets.json",
+    "strike.jab": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.cross": {
+      "limb": "hand",
+      "target": "chest"
+    },
+    "strike.hook": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.backfist": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.palm_heel": {
+      "limb": "hand",
+      "target": "chest"
+    },
+    "strike.spear_hand": {
+      "limb": "hand",
+      "target": "gut"
+    },
+    "strike.twin_spear": {
+      "limb": "hand",
+      "target": "chest"
+    },
+    "strike.front_kick": {
+      "limb": "foot",
+      "target": "gut"
+    },
+    "strike.side_kick": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.low_kick": {
+      "limb": "foot",
+      "target": "legs"
+    },
+    "strike.snap_round": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.sweep": {
+      "limb": "foot",
+      "target": "shins"
+    },
+    "strike.tail_jab": {
+      "limb": "own",
+      "target": "chest"
+    },
+    "strike.tail_sweep": {
+      "limb": "own",
+      "target": "shins"
+    },
+    "strike.short_elbow": {
+      "limb": "elbow",
+      "target": "jaw"
+    },
+    "strike.rising_elbow": {
+      "limb": "elbow",
+      "target": "jaw"
+    },
+    "strike.short_knee": {
+      "limb": "knee",
+      "target": "gut"
+    },
+    "strike.shoulder_check": {
+      "limb": "shoulder",
+      "target": "chest"
+    },
+    "strike.overhand": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.haymaker": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.spinning_elbow": {
+      "limb": "elbow",
+      "target": "jaw"
+    },
+    "strike.double_palm": {
+      "limb": "hand",
+      "target": "chest"
+    },
+    "strike.roundhouse": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.spinning_heel": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.headbutt": {
+      "limb": "head",
+      "target": "jaw"
+    },
+    "strike.tail_whip": {
+      "limb": "own",
+      "target": "chest"
+    },
+    "strike.body_hook": {
+      "limb": "hand",
+      "target": "gut"
+    },
+    "strike.rib_shot": {
+      "limb": "hand",
+      "target": "chest"
+    },
+    "strike.cross_arm_ram": {
+      "limb": "elbow",
+      "target": "chest"
+    },
+    "strike.drop_kick": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.driving_knee": {
+      "limb": "knee",
+      "target": "gut"
+    },
+    "strike.body_ram": {
+      "limb": "shoulder",
+      "target": "chest"
+    },
+    "strike.uppercut": {
+      "limb": "hand",
+      "target": "jaw"
+    },
+    "strike.hammer": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.dropping_elbow": {
+      "limb": "elbow",
+      "target": "chest"
+    },
+    "strike.double_hammer": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.axe_kick": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.stomp": {
+      "limb": "foot",
+      "target": "gut"
+    },
+    "strike.rising_knee": {
+      "limb": "knee",
+      "target": "gut"
+    },
+    "strike.tail_spike": {
+      "limb": "own",
+      "target": "head"
+    },
+    "strike.ridge_hand": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.knife_chop": {
+      "limb": "hand",
+      "target": "arm_r"
+    },
+    "strike.hammer_fist": {
+      "limb": "hand",
+      "target": "head"
+    },
+    "strike.hook_kick": {
+      "limb": "foot",
+      "target": "chest"
+    },
+    "strike.palm_push": {
+      "limb": "hand",
+      "target": "chest"
+    },
+    "strike.spinning_back_kick": {
+      "limb": "foot",
+      "target": "gut"
+    },
+    "strike.rising_palm": {
+      "limb": "hand",
+      "target": "jaw"
+    },
+    "strike.crescent_kick": {
+      "limb": "foot",
+      "target": "chest"
+    }
+  },
   "lastPress": {
     "light": [
       "level.shove_off",

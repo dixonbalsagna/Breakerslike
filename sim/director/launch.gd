@@ -357,11 +357,29 @@ static func earned(S: SimState, ex, att, tgt) -> String:
 	if ((p >> 8) & 3) == DirAlchemy.HELD:
 		return "a held heavy"
 	var landed: int = DirInterrupt.gi(att, DirInterrupt.LANDED)
-	if landed - 1 >= int(e.enderAfter):
+	var fl: Dictionary = DirRecipe.cfg().get("flow", {})   # data/director/alchemy.json
+	if fl.get("enabled", false):
+		# Section 18: flow governs the string's ender. A heavy that ends a string of stringAfter or more landed strikes
+		# launches only at flow launchAt or more; below that it is a knock-back, and the stick only aims. The stick
+		# earner below is for a heavy that is its own exchange.
+		if landed - 1 >= int(fl.enderAfter):
+			return ("the ender of a string at flow " + str(att.act.flow) + " (" + str(landed - 1) + " strikes landed before it)") if att.act.flow >= int(fl.launchAt) else ""
+	elif landed - 1 >= int(e.enderAfter):
 		return "the ender of a full string (" + str(landed - 1) + " strikes landed before it)"
 	if (p & DirAlchemy.INTENT) != 0 and DirInterrupt.gi(att, DirInterrupt.TAKEN) <= int(e.cleanTaken):
 		return "a heavy with the stick, landing clean"
 	return ""
+
+
+## Whether the AI's next link press is its ender, a heavy: the string is full, or (with the flow gate) it has landed
+## enderAfter strikes and its flow would launch.
+static func aiEnder(who) -> bool:
+	var e: Dictionary = data().earned
+	var landed: int = DirInterrupt.gi(who, DirInterrupt.LANDED)
+	var fl: Dictionary = DirRecipe.cfg().get("flow", {})
+	if fl.get("enabled", false):
+		return landed >= int(fl.enderAfter) and who.act.flow >= int(fl.launchAt)
+	return landed >= int(e.enderAfter)
 
 
 ## The press behind att's blow at this launch beat: the attacker's is the one that started his exchange or link; the

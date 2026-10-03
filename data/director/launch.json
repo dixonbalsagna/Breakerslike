@@ -60,6 +60,7 @@
     "enderAfter": 4,
     "enderDist": 0.6,
     "strikeMul": 0.8,
+    "perfectDist": 1.0,
     "_note": "A blur always closes (agency-pass.md section 13). enderAfter: the light that follows this many landed strikes of the string is the blur's own ender, a knock-back and never a launch; if no press comes, the chain window's end plays it, free. enderDist: the share of the tier's knock-back distance the plain blur's ender goes. strikeMul: the damage of a blow from a mashed light press (three presses inside 20 ticks)"
   },
   "earned": {

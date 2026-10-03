@@ -18,7 +18,7 @@
     "heavyAdd": 0.1,
     "_note": "stance-matrix.md R5: the chance the AI perfect-blocks a strike with a window, by the state it holds (guard, press; none while dodging or escaping), plus heavyAdd against a heavy or an ender. Each level multiplies it by perfectBlockMul (moveset-rules.md section 11(g): 0.35, 0.6, 1.0)"
   },
-  "_medium": "The medium level against a lights-only masher (agency-pass.md section 13: it should win 35 to 50%): guardRepeat 5.5, punish 0.4 and punishHeavy 0.5 on the beam plays, measured with QA's masher script (qa/godot/masher.gd, 100 matches): 6.5 gave 33, 6.0 gave 35, 5.0 gave 45, 4.0 gave 55. The same build's bolt-only row (qa/godot/players.gd, the script in both slots, band 20 to 40%): barrageGuard 0.5 gave 54 of 100, 0.6 gave 37, 0.7 gave 31; with the spray cone (slice 9: a spammer lands fewer bolts) 0.7 gave 10, 0.5 gave 20, 0.45 gave 23, 0.4 gave 39, 0.3 gave 50, and 0.42 is in; guardRepeat went to 5.0 with it (the masher read 36 of 100 at 5.5 once the AI fired more). Both move with every slice: re-measure after each. On the section 14 rulings guardRepeat 6.5 gave 40 (a plain blur's ender is half a set-up, which slows his kills). On the buried-fighter build guardRepeat 8.75 gave 40 and 8 gave 56",
+  "_medium": "The medium level against a lights-only masher (agency-pass.md section 13: it should win 35 to 50%): guardRepeat 5.5, punish 0.4 and punishHeavy 0.5 on the beam plays, measured with QA's masher script (qa/godot/masher.gd, 100 matches): 6.5 gave 33, 6.0 gave 35, 5.0 gave 45, 4.0 gave 55. The same build's bolt-only row (qa/godot/players.gd, the script in both slots, band 20 to 40%): barrageGuard 0.5 gave 54 of 100, 0.6 gave 37, 0.7 gave 31; with the spray cone (slice 9: a spammer lands fewer bolts) 0.7 gave 10, 0.5 gave 20, 0.45 gave 23, 0.4 gave 39, 0.3 gave 50, and 0.42 is in; guardRepeat went to 5.0 with it (the masher read 36 of 100 at 5.5 once the AI fired more). Both move with every slice: re-measure after each. On the section 14 rulings guardRepeat 6.5 gave 40 (a plain blur's ender is half a set-up, which slows his kills). On the buried-fighter build guardRepeat 8.75 gave 40 and 8 gave 56. On slice 11 (a blur's blows land on its cadence, about twice as fast) 5.0 gave 52, 5.5 gave 50, 6.0 gave 45, 6.5 gave 42, 7.0 gave 35, and 6.5 is in",
   "_earnerUse": "Per level, earnerUse: how often the AI uses an earner at all (agency-pass.md section 13, rule 7): it multiplies launchIntent, heldHeavy and the chance a far heavy stays a heavy charge, and it is the chance its chain press is the heavy ender once the string is full",
   "_blastShare": "Per level, blastShare: the chance its attack beat outside the close band is a blast (a volley of bolts for a light, a charged shot for a heavy; it charges for a random part of the full time)",
   "_buriedFollowUp": "Per level, buriedFollowUp: the chance it takes the free blow on a rival it has buried (one draw a burial; it presses after reactTicks: the dive, or the charged shot when the dive cannot land in time). buriedBurst: buried itself, the chance it bursts out when no follow-up is coming (one draw a burial, from interrupts.json buried.burstFromTick, with its rival within burstWithinBh). barrageGuard: the chance it holds guard when a barrage is half way to closing on it (agency-pass.md section 16: a held guard stops the count; one draw as the second clean bolt lands, and it guards until those bolts leave the window)",
@@ -26,6 +26,7 @@
   "_beam": "The beam plays (sim/director/beamplay.gd), drawn once as a signature starts charging at the AI. Per level: beamDodge, the chance its dodge is in time when it is dodging; beamWade, the chance it holds toward when it guards (the wade); beamLate, the chance of a late answer when it did not answer in the tell and can pay for one. Its perfect block against a beam uses perfectBlock (guard, press, heavyAdd) times perfectBlockMul. beamLook: the weights of the look of that perfect block",
   "mineMinKi": 40,
   "_mine": "Per level, mineShare: the chance its attack beat in the far band lays a mine instead (it needs mineMinKi of ki). It does not avoid mines",
+  "_timedPress": "Per level, timedPress: the chance each of its attack presses is timed (agency-pass.md section 2: 40, 65 and 85%). A timed press adds to its flow and, in a blur string, counts toward locking the blur in; a press that is not sets both back",
   "reactTicks": 14,
   "answerTicks": 20,
   "_far": "The far band and the free approach (sim/director/bands.gd). reactTicks: the AI's reaction time to a rival's approach; an approach shorter than this gets no answer. answerTicks: how long after a rival's far taunt begins it presses its answer (past a heavy's 16-tick hold, so it answers a taunt and not a charge being gathered). Per level: farTaunt, the chance its attack beat in the far band is a taunt (a tap); farCharge, the chance it is otherwise a charge (it holds the button); below 1 it sometimes holds the beat instead, which measured slower (matches ran to the time cap at 0.5). After 6 s with no exchange it always charges. farHeavy: when it charges with a heavy, the chance it stays a heavy charge (slow and committed); otherwise it charges light. answerTaunt: the chance it answers a rival's far taunt with an attack press. approachReact: [guard, dodge, meet], the chances it answers a rival's approach by guarding, by dodging or by pressing to meet him; otherwise it carries on as it was",
@@ -56,13 +57,14 @@
       "beamLate": 0.05,
       "buriedBurst": 0.2,
       "barrageGuard": 0.2,
+      "timedPress": 0.4,
       "mineShare": 0.02,
       "approachReact": [0.1, 0.05, 0.1]
     },
     "medium": {
       "beamAnswer": 0.35,
       "perfectBlockMul": 0.6,
-      "guardRepeat": 5.0,
+      "guardRepeat": 6.5,
       "punish": 0.4,
       "reversal": [0.5, 0.2],
       "breakGuard": 0.6,
@@ -83,6 +85,7 @@
       "beamLate": 0.1,
       "buriedBurst": 0.5,
       "barrageGuard": 0.42,
+      "timedPress": 0.65,
       "mineShare": 0.04,
       "approachReact": [0.2, 0.1, 0.15]
     },
@@ -110,6 +113,7 @@
       "beamLate": 0.2,
       "buriedBurst": 0.8,
       "barrageGuard": 0.8,
+      "timedPress": 0.85,
       "mineShare": 0.06,
       "approachReact": [0.3, 0.2, 0.2]
     }

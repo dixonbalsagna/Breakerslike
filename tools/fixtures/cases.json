@@ -34414,7 +34414,8 @@
             "/blur": {
               "enderAfter": 4,
               "enderDist": 0.6,
-              "strikeMul": 0.8
+              "strikeMul": 0.8,
+              "perfectDist": 0.8
             }
           }
         }
@@ -47474,6 +47475,10 @@
             "/pools/protagonist/power/0": {
               "id": "strike.nowhere",
               "status": "waiting"
+            },
+            "/pieces/strike.nowhere": {
+              "limb": "hand",
+              "target": "head"
             }
           }
         }
@@ -47814,6 +47819,1247 @@
       "expect": {
         "rule": "xref:alchemy-pool",
         "pointer": "/recipes/fighters"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/pieces"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minProperties",
+        "pointer": "/pieces"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-note-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-pieces-id-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/Strike Jab": {
+              "limb": "hand",
+              "target": "head"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "propertyNames",
+        "pointer": "/pieces/Strike Jab"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-row-key-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/pieces/strike.jab/limb"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/pieces/strike.jab"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-row-target-required",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/pieces/strike.jab/target"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/pieces/strike.jab"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-row-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.jab/reach": 90
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/pieces/strike.jab/reach"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-limb-enum",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.jab/limb": "tail"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "enum",
+        "pointer": "/pieces/strike.jab/limb"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-target-shape",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.jab/target": "Head"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "pattern",
+        "pointer": "/pieces/strike.jab/target"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-pool-id-without-row",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/pieces/strike.jab"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pieces",
+        "pointerEndsWith": "/id"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-showcase-strike-without-row",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/showcase/rival/0/strike": "strike.nowhere"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pieces",
+        "pointer": "/showcase/rival/0/strike"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-unused-row-warns",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.unused": {
+              "limb": "hand",
+              "target": "head"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pieces",
+        "pointer": "/pieces/strike.unused"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-target-not-a-socket",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.jab/target": "moon"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pieces",
+        "pointer": "/pieces/strike.jab/target"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-limb-differs-from-manifest",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.jab/limb": "foot"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pieces",
+        "pointer": "/pieces/strike.jab/limb"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-target-differs-from-manifest",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.jab/target": "gut"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-pieces",
+        "pointer": "/pieces/strike.jab/target"
+      }
+    },
+    {
+      "id": "combat-recipes-pieces-waiting-row-free-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/pieces/strike.tail_jab": {
+              "limb": "hand",
+              "target": "head"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-gates-note-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-gate-unknown-key",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/inside/mood": "calm"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/patternGates/inside/mood"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/inside": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "anyOf",
+        "pointer": "/patternGates/inside"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-stick-constant",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/inside/stick": "away"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/patternGates/inside/stick"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-ground-constant",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/reap/ground": false
+          }
+        }
+      ],
+      "expect": {
+        "rule": "const",
+        "pointer": "/patternGates/reap/ground"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-fighters-empty",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/breach/fighters": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/patternGates/breach/fighters"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-fighters-duplicate",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/breach/fighters": [
+              "protagonist",
+              "protagonist"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "uniqueItems",
+        "pointer": "/patternGates/breach/fighters/1"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-fighters-type",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/breach/fighters": "protagonist"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/patternGates/breach/fighters"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-pattern-unknown",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/nowhere": {
+              "ground": true
+            }
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-gates",
+        "pointer": "/patternGates/nowhere"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-fighter-unknown",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/breach/fighters": [
+              "nobody"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-gates",
+        "pointer": "/patternGates/breach/fighters/0"
+      }
+    },
+    {
+      "id": "combat-recipes-gate-both-keys-ok",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/patternGates/reap": {
+              "ground": true,
+              "stick": "toward"
+            }
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "combat-recipes-gate-lifted-checks-both-fighters",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "del": [
+            "/patternGates/breach"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-blur",
+        "pointer": "/blurPatterns/breach/0"
+      }
+    },
+    {
+      "id": "combat-recipes-blur-step-repeated-needs-pieces",
+      "schema": "combat-recipes.schema.json",
+      "mutate": [
+        {
+          "file": "data/combat/recipes.json",
+          "set": {
+            "/blurPatterns/ladder": [
+              [
+                "hand",
+                "head"
+              ],
+              [
+                "hand",
+                "head"
+              ],
+              [
+                "hand",
+                "head"
+              ],
+              [
+                "hand",
+                "head"
+              ],
+              [
+                "hand",
+                "head"
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:recipes-blur",
+        "pointer": "/blurPatterns/ladder/0"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/flow"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-alchemy-timing-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/timing"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-alchemy-blur-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/blur"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "director-alchemy-flow-key-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/flow/lapseTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/flow"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-unknown-key",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/flow/extra"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-note-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-flow-enabled-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/enabled": "yes"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/flow/enabled"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-off-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/enabled": false
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-flow-max-zero",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/max": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flow/max"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-max-integer",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/max": 5.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/flow/max"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-lapse-zero",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/lapseTicks": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flow/lapseTicks"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-ender-after-zero",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/enderAfter": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flow/enderAfter"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-launch-at-zero",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/launchAt": 0
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/flow/launchAt"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-showcase-at-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/showcaseAt": "top"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/flow/showcaseAt"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-launch-above-showcase",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/launchAt": 5,
+            "/flow/showcaseAt": 3
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:alchemy-flow",
+        "pointer": "/flow/launchAt"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-launch-equals-showcase-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/launchAt": 4,
+            "/flow/showcaseAt": 4
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-flow-showcase-above-max-warns",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/showcaseAt": 9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:alchemy-flow",
+        "pointer": "/flow/showcaseAt"
+      }
+    },
+    {
+      "id": "director-alchemy-flow-ender-above-max-warns",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/flow/enderAfter": 9
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:alchemy-flow",
+        "pointer": "/flow/enderAfter"
+      }
+    },
+    {
+      "id": "director-alchemy-timing-key-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/timing": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/timing"
+      }
+    },
+    {
+      "id": "director-alchemy-timing-unknown-key",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/timing/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/timing/extra"
+      }
+    },
+    {
+      "id": "director-alchemy-timing-note-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/timing/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-timing-combo-mul-negative",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/timing/comboMul": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/timing/comboMul"
+      }
+    },
+    {
+      "id": "director-alchemy-timing-combo-mul-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/timing/comboMul": "more"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/timing/comboMul"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-key-required",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "del": [
+            "/blur/minLeadTicks"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blur"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-unknown-key",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/extra": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/blur/extra"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-note-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-blur-enabled-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/enabled": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blur/enabled"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-cadences-empty",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/cadences": []
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/blur/cadences"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-cadences-type",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/cadences": 8
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blur/cadences"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-cadence-integer",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/cadences": [
+              7,
+              8.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blur/cadences/1"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-cadence-zero",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/cadences": [
+              7,
+              0
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blur/cadences/1"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-cadence-one-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/cadences": [
+              8
+            ]
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-alchemy-blur-min-lead-negative",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/minLeadTicks": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blur/minLeadTicks"
+      }
+    },
+    {
+      "id": "director-alchemy-blur-min-lead-zero-ok",
+      "schema": "director-alchemy.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/alchemy.json",
+          "set": {
+            "/blur/minLeadTicks": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-launch-blur-perfect-dist-required",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "del": [
+            "/blur/perfectDist"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/blur"
+      }
+    },
+    {
+      "id": "director-launch-blur-perfect-dist-negative",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/perfectDist": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/blur/perfectDist"
+      }
+    },
+    {
+      "id": "director-launch-blur-perfect-dist-type",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/perfectDist": "far"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/blur/perfectDist"
+      }
+    },
+    {
+      "id": "director-launch-blur-perfect-dist-zero-ok",
+      "schema": "director-launch.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/launch.json",
+          "set": {
+            "/blur/perfectDist": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-timed-press-required-easy",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/easy/timedPress"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/easy"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-required-medium",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/medium/timedPress"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/medium"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-required-hard",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "del": [
+            "/levels/hard/timedPress"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/levels/hard"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-range",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/timedPress": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/levels/easy/timedPress"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-negative",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/medium/timedPress": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/levels/medium/timedPress"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-type",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/timedPress": "often"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/levels/hard/timedPress"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-harder-level-lower-warns",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/hard/timedPress": 0.01
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:ai-levels-order",
+        "pointer": "/levels/hard/timedPress"
+      }
+    },
+    {
+      "id": "director-ai-timed-press-edges-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/levels/easy/timedPress": 0,
+            "/levels/hard/timedPress": 1
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "director-ai-timed-press-note-ok",
+      "schema": "director-ai.schema.json",
+      "mutate": [
+        {
+          "file": "data/director/ai.json",
+          "set": {
+            "/_timedPress": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "input-timing-steady-jitter-retired",
+      "schema": "input-timing.schema.json",
+      "mutate": [
+        {
+          "file": "data/input/timing.json",
+          "set": {
+            "/read/steadyJitter": 4
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/read/steadyJitter"
       }
     }
   ],

@@ -8,5 +8,29 @@
       "VORR": "rival"
     },
     "_note": "enabled: every strike the director plans is given a piece (args.piece on its beat) from the pool its fighter's style calls; false, strikes carry no piece. fighters: the key of data/combat/recipes.json pools for each roster id (a fighter not listed uses his id in lower case). Pieces whose status is waiting are skipped; posed and live are drawn alike"
+  },
+  "flow": {
+    "enabled": true,
+    "max": 5,
+    "lapseTicks": 90,
+    "enderAfter": 1,
+    "launchAt": 3,
+    "showcaseAt": 5,
+    "_note": "The flow count (agency-pass.md sections 2, 18 and 20). A timed press adds 1, up to max: a press within the beat's window (Controls' data/input/timing.json read.beatHalf; in a blur string, the blur's beat below) of a blow of the exchange, either fighter's. A press off the beat sets it to 0, and so do lapseTicks with no press. A press outside any exchange leaves it as it is. The AI's presses are timed at its level's ai.json timedPress. enabled: flow gates the string's ender: a heavy that lands after enderAfter or more landed strikes of his in the exchange is the string's ender, and it launches only at flow launchAt or more; below that it knocks back and the stick only aims (launch.json earned.enderAfter is then not read). The stick earner is for a heavy with nothing landed before it. An ender launched at flow showcaseAt sends the showcase cue. false: the earners of launch.json alone"
+  },
+  "timing": {
+    "comboMul": 1.15,
+    "_note": "Clean and hard (agency-pass.md section 2): in the combo style a strike from a timed press does comboMul of its damage"
+  },
+  "blur": {
+    "enabled": true,
+    "cadences": [
+      7,
+      8,
+      9,
+      10
+    ],
+    "minLeadTicks": 5,
+    "_note": "The blur string (agency-pass.md section 20; sim/director/blur.gd). A string that starts on a light press in the blur style draws its cadence from 'cadences' (ticks between its blows) and its pattern from the recipes' blurPatterns, by keyed draws. The chain window opens on the blow; a link whose press is waiting lands one cadence after the last blow, and a later press lands minLeadTicks after it. The lock is Controls' steady read (data/input/timing.json read.steadyPresses presses in a row, each within blurBeatHalf ticks of a different blow's contact): from it each strike does a full light's damage (a plain blur's does launch.json blur.strikeMul) and the ender is the full one (launch.json blur.perfectDist, a full set-up). The AI's blur locks after steadyPresses of its presses in a row were timed. A heavy press ends the blur. enabled false: strings keep the template's timing and no blur locks in"
   }
 }

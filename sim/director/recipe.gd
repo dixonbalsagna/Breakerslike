@@ -40,6 +40,12 @@ static func cfg() -> Dictionary:
 	return _cfg
 
 
+## Combat's recipes (data/combat/recipes.json); {} when the file is not there.
+static func rec() -> Dictionary:
+	_ensure()
+	return _rec
+
+
 ## True when strikes are given pieces: the dynamic profile, the switch on, and Combat's pools loaded.
 static func on() -> bool:
 	_ensure()
@@ -53,6 +59,12 @@ static func _row(S: SimState, f) -> Dictionary:
 	for p in DirAlchemy.window(S, f):
 		h += p & 1
 	var rows = _rec.get("styles", STYLES)
+	# Section 20: the style goes by the share of heavies among the presses in the window, and Controls' classifier
+	# reads it (none is blur, up to its powerShare combo, over it power; a lone heavy is power).
+	var want: String = String(DirAlchemy.read(S, f).get("recipe", ""))
+	for st in rows:
+		if String(st.id) == ("blur" if want == "none" else want):
+			return st
 	for st in rows:
 		if h >= int(st.heaviesInFive[0]) and h <= int(st.heaviesInFive[1]):
 			return st
@@ -131,7 +143,15 @@ static func dress(S: SimState, ex, blurEnder: bool = false) -> void:
 		var p: int = DirInterrupt.gi(ex.A, DirInterrupt.PHRASE_P) if who == ex.A else DirAlchemy.last(S, who)
 		var weight: int = (p & 1) if p >= 0 else (SimAct.HEAVY if ex.kind == "heavy" else SimAct.LIGHT)
 		var toward: bool = p >= 0 and ((p >> 2) & 3) == 2
-		var id: String = pick(S, who, poolName(S, who, weight, toward, b == lastA and (blurEnder or weight == SimAct.HEAVY)), salt)
+		# A blur string's blows follow its pattern, and its closing blow lands where its last light did.
+		var closing: bool = who == ex.A and weight == SimAct.LIGHT and b == lastA and DirBlur.live(S, who) and (blurEnder or DirInterrupt.gi(who, DirInterrupt.LANDED) >= int(DirLaunch.data().get("blur", {}).get("enderAfter", 99)))
+		var id: String = ""
+		if closing:
+			id = DirBlur.ender(S, who)
+		elif who == ex.A and weight == SimAct.LIGHT:
+			id = DirBlur.piece(S, who, toward)
+		if id == "":
+			id = pick(S, who, poolName(S, who, weight, toward, b == lastA and (closing or blurEnder or weight == SimAct.HEAVY)), salt)
 		salt += 1
 		if id == "":
 			continue

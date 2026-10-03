@@ -311,7 +311,8 @@
       "required": [
         "enderAfter",
         "enderDist",
-        "strikeMul"
+        "strikeMul",
+        "perfectDist"
       ],
       "properties": {
         "enderAfter": {
@@ -330,6 +331,11 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "perfectDist": {
+          "type": "number",
+          "minimum": 0,
+          "description": "How far the perfect blur's ender goes."
         }
       },
       "description": "The blur (agency-pass.md section 13): a mashed light string always closes with a knock-back.",

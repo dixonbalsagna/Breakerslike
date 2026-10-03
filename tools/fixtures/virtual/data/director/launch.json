@@ -67,7 +67,8 @@
   "blur": {
     "enderAfter": 4,
     "enderDist": 0.6,
-    "strikeMul": 0.8
+    "strikeMul": 0.8,
+    "perfectDist": 1
   },
   "setup": {
     "weight": {

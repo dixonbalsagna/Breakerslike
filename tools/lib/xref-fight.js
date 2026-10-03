@@ -680,7 +680,7 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
     const lv = isObj(dai.levels) ? dai.levels : {};
     if (typeof dai.level === 'string' && isObj(dai.levels) && !(dai.level in lv)) err(AI, '/level', 'ai-level', `level "${dai.level}" is not in levels (${Object.keys(lv).filter((k) => !k.startsWith('_')).join(', ')})`);
     const order = ['easy', 'medium', 'hard'];
-    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp', 'barrageGuard', 'beamDodge', 'beamWade', 'beamLate']) {
+    for (const key of ['beamAnswer', 'perfectBlockMul', 'punish', 'breakGuard', 'guardRepeat', 'launchIntent', 'heldHeavy', 'earnerUse', 'buriedFollowUp', 'barrageGuard', 'beamDodge', 'beamWade', 'beamLate', 'timedPress']) {
       for (let i = 1; i < order.length; i++) {
         const a = isObj(lv[order[i - 1]]) ? lv[order[i - 1]][key] : undefined; const b = isObj(lv[order[i]]) ? lv[order[i]][key] : undefined;
         if (typeof a === 'number' && typeof b === 'number' && b < a) err(AI, `/levels/${order[i]}/${key}`, 'ai-levels-order', `${order[i]} ${key} ${b} is below ${order[i - 1]} ${a}; a harder level should not play worse`, 'warning');
@@ -1173,22 +1173,63 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
         else if (typeof r.strike === 'string' && r.status !== 'waiting' && mine.get(r.strike).status === 'waiting') err(RC, `${at}/status`, 'recipes-showcase', `the row is ${r.status} but its strike "${r.strike}" is waiting in ${fid}'s pools`, 'warning');
       });
     }
-    // a blur step [limb, target] can be filled by a posed piece of the fighter's blur pools
+    // the pieces block: one row per strike id, shared by both fighters; the blur is filled from it
+    const prow = isObj(rec.pieces) ? rec.pieces : null;
     const sockE = get('data/anim/sockets.json');
     const regsE = isObj(sockE) && isObj(sockE.regions) ? Object.keys(sockE.regions).filter((k) => !k.startsWith('_')) : [];
+    if (prow) {
+      const used = new Set();
+      const live = new Set();
+      for (const fid of fighters) for (const [pn, list] of Object.entries(isObj(pools[fid]) ? pools[fid] : {})) {
+        if (pn.startsWith('_') || !Array.isArray(list)) continue;
+        list.forEach((e, i) => {
+          if (!isObj(e) || typeof e.id !== 'string') return;
+          used.add(e.id);
+          if (e.status !== 'waiting') live.add(e.id);
+          if (!(e.id in prow)) err(RC, `/pools/${esc(fid)}/${esc(pn)}/${i}/id`, 'recipes-pieces', `"${e.id}" has no row in pieces`);
+        });
+      }
+      for (const [fid, rows] of Object.entries(isObj(rec.showcase) ? rec.showcase : {})) {
+        if (fid.startsWith('_') || !Array.isArray(rows)) continue;
+        rows.forEach((r, i) => { if (isObj(r) && typeof r.strike === 'string') { used.add(r.strike); if (!(r.strike in prow)) err(RC, `/showcase/${esc(fid)}/${i}/strike`, 'recipes-pieces', `showcase strike "${r.strike}" has no row in pieces`); } });
+      }
+      for (const [id, row] of Object.entries(prow)) {
+        if (id.startsWith('_') || !isObj(row)) continue;
+        if (!used.has(id)) err(RC, `/pieces/${esc(id)}`, 'recipes-pieces', `"${id}" is in pieces but in no pool and no showcase row`, 'warning');
+        if (regsE.length && typeof row.target === 'string' && !regsE.includes(row.target)) err(RC, `/pieces/${esc(id)}/target`, 'recipes-pieces', `target "${row.target}" is not a region in sockets.json (${regsE.join(', ')})`);
+        if (live.has(id)) for (const s of pieces.get(id) || []) {
+          const base = String(s.limb).replace(/_[lr]$/, '');
+          if (typeof row.limb === 'string' && base !== row.limb) err(RC, `/pieces/${esc(id)}/limb`, 'recipes-pieces', `limb "${row.limb}" differs from its manifest row's "${s.limb}" (${s.id})`);
+          if (typeof row.target === 'string' && s.target !== row.target) err(RC, `/pieces/${esc(id)}/target`, 'recipes-pieces', `target "${row.target}" differs from its manifest row's "${s.target}" (${s.id})`);
+        }
+      }
+    }
+    for (const [gname, g] of Object.entries(isObj(rec.patternGates) ? rec.patternGates : {})) {
+      if (gname.startsWith('_') || !isObj(g)) continue;
+      if (!(isObj(rec.blurPatterns) && gname in rec.blurPatterns)) err(RC, `/patternGates/${esc(gname)}`, 'recipes-gates', `a gate for "${gname}", which is no pattern of blurPatterns`);
+      if (Array.isArray(g.fighters)) g.fighters.forEach((x, i) => { if (!fighters.includes(x)) err(RC, `/patternGates/${esc(gname)}/fighters/${i}`, 'recipes-gates', `gate fighter "${x}" is no key of pools (${fighters.join(', ')})`); });
+    }
+    // a blur pattern's steps [limb, target] are filled from the fighter's blur.base and blur.toward pieces that are not waiting; a step used k times needs k
     const bp = isObj(rec.blurPatterns) ? rec.blurPatterns : {};
     for (const [pname, steps] of Object.entries(bp)) {
       if (pname.startsWith('_') || !Array.isArray(steps)) continue;
+      const need = new Map();
       steps.forEach((st, si) => {
         if (!Array.isArray(st) || st.length !== 2) return;
         if (regsE.length && typeof st[1] === 'string' && !regsE.includes(st[1])) err(RC, `/blurPatterns/${esc(pname)}/${si}/1`, 'recipes-blur', `target "${st[1]}" is not a region in sockets.json (${regsE.join(', ')})`);
-        for (const fid of fighters) {
-          const fp = pools[fid];
-          const cand = [].concat(isObj(fp) && Array.isArray(fp['blur.base']) ? fp['blur.base'] : [], isObj(fp) && Array.isArray(fp['blur.toward']) ? fp['blur.toward'] : []).filter((e) => isObj(e) && e.status !== 'waiting');
-          const ok = cand.some((e) => (pieces.get(e.id) || []).some((s) => (st[0] === 'own' || String(s.limb).replace(/_[lr]$/, '') === st[0]) && s.target === st[1]));
-          if (pieces.size && cand.length && !ok) err(RC, `/blurPatterns/${esc(pname)}/${si}`, 'recipes-blur', `step ${si + 1} [${st[0]}, ${st[1]}] has no light of fighter "${fid}" in blur.base or blur.toward to fill it`);
-        }
+        const key = `${st[0]}|${st[1]}`;
+        if (!need.has(key)) need.set(key, { st, first: si, n: 0 });
+        need.get(key).n++;
       });
+      const gate = isObj(rec.patternGates) && isObj(rec.patternGates[pname]) ? rec.patternGates[pname] : null;
+      const forFighters = gate && Array.isArray(gate.fighters) ? fighters.filter((x) => gate.fighters.includes(x)) : fighters;
+      if (prow) for (const { st, first, n } of need.values()) for (const fid of forFighters) {
+        const fp = pools[fid];
+        const cand = new Map(); for (const e of [].concat(isObj(fp) && Array.isArray(fp['blur.base']) ? fp['blur.base'] : [], isObj(fp) && Array.isArray(fp['blur.toward']) ? fp['blur.toward'] : [])) if (isObj(e) && e.status !== 'waiting') cand.set(e.id, e);
+        if (!cand.size) continue;
+        const fits = [...cand.keys()].filter((id) => isObj(prow[id]) && (st[0] === 'own' || prow[id].limb === st[0]) && prow[id].target === st[1]).length;
+        if (fits < n) err(RC, `/blurPatterns/${esc(pname)}/${first}`, 'recipes-blur', n > 1 ? `step [${st[0]}, ${st[1]}] is used ${n} times in "${pname}" but fighter "${fid}" has ${fits} piece${fits === 1 ? '' : 's'} for it in blur.base and blur.toward` : `step ${first + 1} [${st[0]}, ${st[1]}] has no piece of fighter "${fid}" in blur.base or blur.toward to fill it`);
+      }
     }
   }
 
@@ -1207,6 +1248,15 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       if (poolKeys && typeof pool === 'string' && !poolKeys.includes(pool)) err(AL, `/recipes/fighters/${esc(rid)}`, 'alchemy-pool', `"${rid}" draws on pool "${pool}", which is not a key of data/combat/recipes.json pools (${poolKeys.join(', ')})`);
     }
     if (rosterAlIds && poolKeys) for (const rid of rosterAlIds) if (typeof rid === 'string' && !(rid in map) && !poolKeys.includes(rid.toLowerCase())) err(AL, '/recipes/fighters', 'alchemy-pool', `roster id "${rid}" has no entry here and no pool "${rid.toLowerCase()}" in data/combat/recipes.json, so he gets no pieces`, 'warning');
+  }
+
+  // ---- director alchemy flow: the thresholds rise and fit under the maximum ----
+  const alf = get('data/director/alchemy.json');
+  if (isObj(alf) && isObj(alf.flow)) {
+    const AF = 'data/director/alchemy.json';
+    const fl = alf.flow;
+    if (typeof fl.launchAt === 'number' && typeof fl.showcaseAt === 'number' && fl.launchAt > fl.showcaseAt) err(AF, '/flow/launchAt', 'alchemy-flow', `launchAt ${fl.launchAt} is above showcaseAt ${fl.showcaseAt}; the showcase is the flow's top ending`);
+    for (const k of ['enderAfter', 'launchAt', 'showcaseAt']) if (typeof fl[k] === 'number' && typeof fl.max === 'number' && fl[k] > fl.max) err(AF, `/flow/${k}`, 'alchemy-flow', `${k} ${fl[k]} is above max ${fl.max}, so the flow never reaches it`, 'warning');
   }
 
   // ---- fighter ladder: the beam tables never decrease with the tier ----
