@@ -83,7 +83,7 @@ Each style works by feel at its base level. Timing lifts it.
 
 | Style | Base | With timing | The upgrade |
 | :--- | :--- | :--- | :--- |
-| **Blur** | Mashing: more strikes, less damage each, no ender | A **steady** mash, with presses evenly spaced within 3 ticks of the beat | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back. The player doesn't press for that ender: the blur plays it, and it is a knock-back, never a launch |
+| **Blur** | Mashing: more strikes, less damage each, and the weak ender (§13 and §14.4) | A **steady** mash, with presses evenly spaced within 3 ticks of the beat | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back. The player doesn't press for that ender: the blur plays it, and it is a knock-back, never a launch |
 | **Power** | A held blow: more damage and a longer wind-up | **Released on the flash,** within 6 ticks of the flash at full charge | **A guard-breaking blow.** Against a guard it breaks it. Unguarded, it earns a launch |
 | **Combo** | Presses in any rhythm | **Taps in time,** each within 4 ticks of a blow landing | **Clean and hard:** each timed strike does 15% more |
 
@@ -91,7 +91,7 @@ Each style works by feel at its base level. Timing lifts it.
 
 - Each timed press adds 1 to the fighter's **flow,** up to 5.
 - A press off the beat sets it back to 0, and so do 90 ticks without a press.
-- **A heavy ender launches only at flow 3 or more,** in the direction the stick picks. Below that it is a knock-back.
+- **A heavy ender after a string launches only at flow 3 or more,** in the direction the stick picks. Below that it is a knock-back. Flow governs only this earner: the other three in §3 stay (§18).
 - **At flow 5 the ender is a showcase ender,** with the panel and 20% more impact wear (Combat's proposal, confirmed).
 
 ### The running mix
@@ -654,3 +654,23 @@ Spam is the bigger show and the weaker attack, which is the same rule as mashing
 | `fuseTicks` | **8 when a body sets it off, 0 when a shot does** | A short beep after a fighter flies into the trigger radius gives him a moment to see what he did. A shot sets it off at once |
 | `awayChance` | **0.75**, confirmed | The wild shot favours the side away from the deflector |
 | The wild flight's shape | `speed` ×0.8 of the shot's own; `minTicks` 12; `arcPer` 0.15 for the near landings and 0.35 for the far ones | It visibly flies off before it comes down, and the far ones arc higher |
+
+## 18. Flow and the four earners: what a player who never times still has (2026-10-02)
+
+Encounter's alchemy plan (`docs/director/alchemy-plan.md`, A4) reads "flow earns the ending" as replacing the four earners. **It replaces one of them, not all four.** Orb picked the four earners in questionnaire 14, and then picked "timing earns the ending". Both hold.
+
+| Earner (§3) | With the alchemy layer | Needs timing? |
+| :--- | :--- | :--- |
+| **1. A charged, held heavy that lands** (a far heavy charge included) | Unchanged. Released on the flash it also breaks a guard (§2) | No |
+| **2. The ender of a full string** | **This is the one flow governs.** A heavy that ends a string of two or more landed strikes launches only at flow 3 or more. Below that it is a knock-back. A stick direction here only aims the launch | Yes |
+| **3. A heavy with a stick direction, landing clean** | A heavy that is its own exchange, an opener and not the end of a string, launches when it lands clean with the stick tilted. Inside a string the stick only aims, so flow can't be skipped by tilting | No |
+| **4. Winning a clash** (Blow for Blow included) | Unchanged | No, though Blow for Blow itself starts from timing |
+
+**So a player who never times still has:**
+- three ways to launch: a held heavy, a lone heavy with the stick, and a won clash;
+- knock-backs, which are decisive (§13), so he can always open a rival on the brink and finish him;
+- every set piece: signatures, finishers, crippling blows and throws.
+
+**What timing adds:** launches at the end of his strings, the showcase ender at flow 5, and each style's upgrade.
+
+**The mashed blur keeps its weak ender** (§13 and §14.4): after four landed lights, 0.6 of the knock-back distance and half a set-up. This replaces §2's first "no ender", which was written before §13. Encounter's plan follows the later rule, and that is right.
