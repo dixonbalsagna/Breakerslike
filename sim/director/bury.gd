@@ -194,7 +194,6 @@ static func tick(S: SimState) -> void:
 			DirInterrupt.si(f, DirInterrupt.BURY_SHOT, 0)
 			DirInterrupt.si(f, DirInterrupt.BURY_BURST, 0)
 			DirInterrupt.si(f, DirInterrupt.BURY_N, WorldContact.K_EMB_TICKS - f.embedT)
-			DirInterrupt.si(f, DirInterrupt.BURY_E, 0)
 			DirInterrupt.si(f, DirInterrupt.BURY_AI, 0)
 			if o.ai != null:
 				DirInterrupt.si(f, DirInterrupt.BURY_AI, AI_YES if S.rng.next() < float(DirAI.lv().get("buriedFollowUp", 0.0)) else AI_NO)

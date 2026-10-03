@@ -424,28 +424,36 @@ static func hit(S: SimState, sh, f) -> bool:
 	var brink0: bool = f.brink
 	SimDamage.hit(S, null, by, f, dmg, {"kind": "blast", "stop": float(c.stopTicks) / DirData.TICKS_PER_SEC, "shake": 3.0 if sh.power < 2.0 else 7.0})
 	SimFx.shotHit(S, sh, f, outcome)
-	_knock(S, sh, by, f, outcome, brink0)
-	_barrage(S, sh, by, f, outcome, brink0)
+	var knocked: bool = _knock(S, sh, by, f, outcome, brink0)
+	_barrage(S, sh, by, f, outcome, brink0, knocked)
 	return true
 
 
-## A barrage closes (agency-pass.md section 16), as a blur does: when enderAfter of a fighter's bolts land clean on his
-## rival inside 'window' ticks, the last is a knock-back he did not press: decisive, never a launch. Clean: not guarded,
-## not shrugged off, not a shot that was deflected. If each of them was fired measuredTicks or more after the one
-## before, it goes the tier's full distance and is a full set-up; otherwise enderDist.plain of it and half a set-up.
-## The count starts again, and the rival cannot be knocked back by another barrage for 'immune' ticks. A bolt that
-## would close while he is in an exchange, down, flying or immune still counts, and the next clean one closes.
-static func _barrage(S: SimState, sh, by, f, outcome: String, brink0: bool) -> void:
+## A barrage closes (agency-pass.md sections 16 and 21), as a blur does: when enderAfter of a fighter's shots, of any
+## kind, land clean on his rival inside 'window' ticks, the last is a knock-back he did not press: decisive, never a
+## launch. Clean: not guarded, not shrugged off, not a shot that was deflected. Each shot counts once; the shots of a
+## group that is not a run of pressed bolts (a split, a rain: one press, several shots) count once for the group. If
+## each was fired measuredTicks or more after the one before, it goes the tier's full distance and is a full set-up;
+## otherwise enderDist.plain of it and half a set-up. The count starts again, and the rival cannot be knocked back by
+## another barrage for 'immune' ticks. A shot that would close while he is in an exchange, down, flying or immune
+## still counts, and the next clean one closes. knocked: this shot was a full charged one and has knocked him back
+## by itself (_knock): it counts, and the barrage does not close on it.
+static func _barrage(S: SimState, sh, by, f, outcome: String, brink0: bool, knocked: bool = false) -> void:
 	var c: Dictionary = data().get("barrage", {})
-	if c.is_empty() or sh.kind != String(data().light.kind) or sh.deflected != 0 or (outcome != "hit" and outcome != "stop"):
+	if c.is_empty() or sh.deflected != 0 or (outcome != "hit" and outcome != "stop"):
 		return
+	# Pressed bolts share a group when fired close together (one volley to block), and each is still a shot of its own.
+	if sh.group != 0 and sh.kind != String(data().light.kind):
+		if DirInterrupt.gi(by, DirInterrupt.BAR_GROUP) == sh.group:
+			return
+		DirInterrupt.si(by, DirInterrupt.BAR_GROUP, sh.group)
 	var flight: int = clampi(sh.total - sh.left, 0, 4095)
 	var fires: Array = [S.tick - flight]   # the fire ticks of the clean bolts inside the window, newest first
 	for k in [DirInterrupt.BAR_1, DirInterrupt.BAR_2, DirInterrupt.BAR_3]:
 		var v: int = DirInterrupt.gi(by, k)
 		if v != 0 and S.tick - (v >> 12) < int(c.window):
 			fires.append((v >> 12) - (v & 4095))
-	var up: bool = S.game.ko == null and S.dirS.ex == null and (f.state == "free" or f.state == "charging")
+	var up: bool = not knocked and S.game.ko == null and S.dirS.ex == null and (f.state == "free" or f.state == "charging")
 	if fires.size() < int(c.enderAfter) or not up or S.tick < DirInterrupt.gi(f, DirInterrupt.BAR_IMMUNE):
 		DirInterrupt.si(by, DirInterrupt.BAR_3, DirInterrupt.gi(by, DirInterrupt.BAR_2))
 		DirInterrupt.si(by, DirInterrupt.BAR_2, DirInterrupt.gi(by, DirInterrupt.BAR_1))
@@ -466,22 +474,23 @@ static func _barrage(S: SimState, sh, by, f, outcome: String, brink0: bool) -> v
 		DirBands.drop(S, f, "a barrage knocked him back")
 	DirLaunch.knock(S, by, f, float(c.enderDist.measured if measured else c.enderDist.plain))
 	SimFx.cue(S, by, "barrage_ender", "", "")
-	SimEvents.feed(S, "BARRAGE ENDER", by.name + "'s " + str(int(c.enderAfter)) + " clean bolts inside " + str(int(c.window)) + " ticks: a knock-back, " + ("measured" if measured else "spammed (the weak one)"))
+	SimEvents.feed(S, "BARRAGE ENDER", by.name + "'s " + str(int(c.enderAfter)) + " clean shots inside " + str(int(c.window)) + " ticks: a knock-back, " + ("measured" if measured else "spammed (the weak one)"))
 	DirExchange.decisiveShot(S, by, f, -sh.id, brink0, "barrage", "barrage" if measured else "barragePlain")
 
 
 ## A fully charged shot that lands clean knocks him back, and that is decisive (agency-pass.md section 14.6). Clean:
-## not guarded and not shrugged off. Outside an exchange only, on a fighter who is up.
-static func _knock(S: SimState, sh, by, f, outcome: String, brink0: bool) -> void:
+## not guarded and not shrugged off. Outside an exchange only, on a fighter who is up. True when it knocked him back.
+static func _knock(S: SimState, sh, by, f, outcome: String, brink0: bool) -> bool:
 	var c: Dictionary = data()
 	if not c.heavy.get("knockFull", false) or S.game.ko != null or S.dirS.ex != null:
-		return
+		return false
 	if sh.kind != String(c.heavy.kind) or sh.dmg < float(SimShots.kinds[sh.kind].dmg) - 0.001:
-		return
+		return false
 	if (outcome != "hit" and outcome != "stop") or (f.state != "free" and f.state != "charging"):
-		return
+		return false
 	if DirBands.pending(f):
 		DirBands.drop(S, f, "a full charged shot knocked him back")
 	DirLaunch.knock(S, by, f, 1.0)
 	SimEvents.feed(S, "CHARGED SHOT: KNOCK BACK", "a full charge landed clean on " + f.name + ": decisive")
 	DirExchange.decisiveShot(S, by, f, -sh.id, brink0)
+	return true
