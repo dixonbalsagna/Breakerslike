@@ -12,6 +12,7 @@
   "leave": {
     "clear": 1.5,
     "lipLift": 1,
+    "rimLift": 3,
     "wall": 0.8,
     "stop": 60,
     "wallHaltBelow": 600

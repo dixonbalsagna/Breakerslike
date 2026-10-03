@@ -961,7 +961,13 @@ function xrefFight({ get, err, esc, isObj, plainKeys, docsFor }) {
       const missing = Object.keys(shotsB.kinds).filter((k) => !k.startsWith('_') && !(k in bl.kinds));
       for (const k of missing) err(BL, '/kinds', 'blast-kind', `shot kind "${k}" of data/fight/shots.json has no entry in kinds (${Object.keys(bl.kinds).filter((x) => !x.startsWith('_')).join(', ')})`, 'warning');
     }
-    for (const key of ['tierEnergy', 'tierDamage']) if (Array.isArray(bl[key])) for (let i = 1; i < bl[key].length; i++) if (typeof bl[key][i] === 'number' && typeof bl[key][i - 1] === 'number' && bl[key][i] < bl[key][i - 1]) err(BL, `/${key}/${i}`, 'blast-tier', `${key} falls from ${bl[key][i - 1]} to ${bl[key][i]} at tier ${i + 1}; it must not fall with the tier`, 'warning');
+    for (const [name, k] of Object.entries(isObj(bl.kinds) ? bl.kinds : {})) {
+      if (name.startsWith('_') || !isObj(k)) continue;
+      if (typeof k.fullDamage === 'number' && typeof k.damage === 'number' && k.fullDamage < k.damage) err(BL, `/kinds/${esc(name)}/fullDamage`, 'blast-full', `fullDamage ${k.fullDamage} is below the tap's damage ${k.damage}`, 'warning');
+      if (typeof k.fullRadius === 'number' && typeof k.radius === 'number' && k.fullRadius < k.radius) err(BL, `/kinds/${esc(name)}/fullRadius`, 'blast-full', `fullRadius ${k.fullRadius} is below the tap's radius ${k.radius}`, 'warning');
+      if (typeof k.craterETap === 'number' && typeof k.craterE === 'number' && k.craterETap > k.craterE) err(BL, `/kinds/${esc(name)}/craterETap`, 'blast-full', `craterETap ${k.craterETap} is above the full charge's craterE ${k.craterE}`, 'warning');
+    }
+    for (const key of ['tierEnergy', 'tierDamage', 'tierRadius']) if (Array.isArray(bl[key])) for (let i = 1; i < bl[key].length; i++) if (typeof bl[key][i] === 'number' && typeof bl[key][i - 1] === 'number' && bl[key][i] < bl[key][i - 1]) err(BL, `/${key}/${i}`, 'blast-tier', `${key} falls from ${bl[key][i - 1]} to ${bl[key][i]} at tier ${i + 1}; it must not fall with the tier`, 'warning');
   }
 
   // ---- anim targets: poses exist; a blow's limb is not retargeted in its contact pose ----

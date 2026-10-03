@@ -32505,7 +32505,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -32527,7 +32528,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -32577,7 +32579,8 @@
               "ringR": 160,
               "shake": 1.5,
               "splash": 4,
-              "glow": 1
+              "glow": 1,
+              "airReach": 4
             }
           }
         }
@@ -32602,7 +32605,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -32627,7 +32631,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -32652,7 +32657,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -32677,7 +32683,8 @@
               "dust": -1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -32702,7 +32709,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 2.5
+              "splash": 2.5,
+              "airReach": 4
             }
           }
         }
@@ -32727,7 +32735,8 @@
               "dust": 0,
               "ringR": 160,
               "shake": 1.5,
-              "splash": 0
+              "splash": 0,
+              "airReach": 4
             }
           }
         }
@@ -32749,7 +32758,8 @@
               "dust": 1,
               "ringR": 160,
               "shake": "big",
-              "splash": 4
+              "splash": 4,
+              "airReach": 4
             }
           }
         }
@@ -41616,6 +41626,537 @@
       "expect": {
         "rule": "pattern",
         "pointer": "/wave"
+      }
+    },
+    {
+      "id": "biomes-blast-air-reach-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/kinds/bolt/airReach"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/kinds/bolt"
+      }
+    },
+    {
+      "id": "biomes-blast-air-reach-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/bolt/airReach": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/bolt/airReach"
+      }
+    },
+    {
+      "id": "biomes-blast-air-reach-zero-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/bolt/airReach": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-air-reach-type",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/bolt/airReach": "far"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/kinds/bolt/airReach"
+      }
+    },
+    {
+      "id": "biomes-blast-full-damage-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/charged/fullDamage": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/charged/fullDamage"
+      }
+    },
+    {
+      "id": "biomes-blast-full-radius-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/charged/fullRadius": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/charged/fullRadius"
+      }
+    },
+    {
+      "id": "biomes-blast-crater-tap-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/charged/craterETap": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/charged/craterETap"
+      }
+    },
+    {
+      "id": "biomes-blast-full-keys-optional",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/kinds/charged/fullDamage",
+            "/kinds/charged/fullRadius",
+            "/kinds/charged/craterETap"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-full-below-tap-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/charged/fullDamage": 10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-full",
+        "pointer": "/kinds/charged/fullDamage"
+      }
+    },
+    {
+      "id": "biomes-blast-full-radius-below-tap-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/charged/fullRadius": 10
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-full",
+        "pointer": "/kinds/charged/fullRadius"
+      }
+    },
+    {
+      "id": "biomes-blast-crater-tap-above-full-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/charged/craterETap": 2
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-full",
+        "pointer": "/kinds/charged/craterETap"
+      }
+    },
+    {
+      "id": "biomes-blast-area-share-kind-range",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/mine/areaShare": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/kinds/mine/areaShare"
+      }
+    },
+    {
+      "id": "biomes-blast-area-share-kind-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/kinds/mine/areaShare": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/kinds/mine/areaShare"
+      }
+    },
+    {
+      "id": "biomes-blast-mine-optional-area-share-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/kinds/mine/areaShare"
+          ]
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-chip-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/chip"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-blast-chip-key-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/chip": {}
+          }
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/chip"
+      }
+    },
+    {
+      "id": "biomes-blast-chip-unknown-key",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/chip/floor": 1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "additionalProperties",
+        "pointer": "/chip/floor"
+      }
+    },
+    {
+      "id": "biomes-blast-chip-threshold-range",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/chip/threshold": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/chip/threshold"
+      }
+    },
+    {
+      "id": "biomes-blast-chip-threshold-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/chip/threshold": -0.1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/chip/threshold"
+      }
+    },
+    {
+      "id": "biomes-blast-chip-note-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/chip/_note": "comment"
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-blast-tier-radius-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/tierRadius"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-blast-tier-radius-length",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierRadius": [
+              1,
+              1,
+              1.25
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minItems",
+        "pointer": "/tierRadius"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-radius-positive",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierRadius": [
+              1,
+              0,
+              1.25,
+              1.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "exclusiveMinimum",
+        "pointer": "/tierRadius/1"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-radius-type",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierRadius": [
+              1,
+              "x",
+              1.25,
+              1.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/tierRadius/1"
+      }
+    },
+    {
+      "id": "biomes-blast-tier-radius-falls-warns",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/tierRadius": [
+              1,
+              1.5,
+              1.25,
+              1.5
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "rule": "xref:blast-tier",
+        "pointer": "/tierRadius/2"
+      }
+    },
+    {
+      "id": "biomes-blast-area-share-required",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "del": [
+            "/areaShare"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": ""
+      }
+    },
+    {
+      "id": "biomes-blast-area-share-range",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/areaShare": 1.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "maximum",
+        "pointer": "/areaShare"
+      }
+    },
+    {
+      "id": "biomes-blast-area-share-negative",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/areaShare": -0.5
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/areaShare"
+      }
+    },
+    {
+      "id": "biomes-blast-area-share-edges-ok",
+      "schema": "biomes-blast.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/blast.json",
+          "set": {
+            "/areaShare": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-rim-lift-required",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "del": [
+            "/leave/rimLift"
+          ]
+        }
+      ],
+      "expect": {
+        "rule": "required",
+        "pointer": "/leave"
+      }
+    },
+    {
+      "id": "biomes-contact-rim-lift-negative",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/leave/rimLift": -1
+          }
+        }
+      ],
+      "expect": {
+        "rule": "minimum",
+        "pointer": "/leave/rimLift"
+      }
+    },
+    {
+      "id": "biomes-contact-rim-lift-zero-ok",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/leave/rimLift": 0
+          }
+        }
+      ],
+      "expect": null
+    },
+    {
+      "id": "biomes-contact-rim-lift-type",
+      "schema": "biomes-contact.schema.json",
+      "mutate": [
+        {
+          "file": "data/biomes/contact.json",
+          "set": {
+            "/leave/rimLift": "high"
+          }
+        }
+      ],
+      "expect": {
+        "rule": "type",
+        "pointer": "/leave/rimLift"
       }
     }
   ],

@@ -82,7 +82,8 @@
         "lipLift",
         "wall",
         "stop",
-        "wallHaltBelow"
+        "wallHaltBelow",
+        "rimLift"
       ],
       "properties": {
         "clear": {
@@ -105,6 +106,11 @@
           "type": "number",
           "minimum": 0,
           "description": "A body that meets a wall below this speed halts instead of bouncing off."
+        },
+        "rimLift": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The lift a crater lip gives a body that leaves the ground over it."
         }
       },
       "description": "How the body leaves the ground.",

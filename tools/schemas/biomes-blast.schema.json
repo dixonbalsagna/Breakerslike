@@ -2,13 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "meridian/biomes-blast",
   "title": "biomes.blast/1",
-  "description": "data/biomes/blast.json: what an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind: craterE the crater's energy at tier 1, radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake; tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. Version field: schema. Policy: closed except keys starting with an underscore; the kinds are an open table of closed records (a new shot kind needs an entry). Every kind in data/fight/shots.json should have an entry (a warning, blast-kind) and the tier multipliers should not fall with the tier (a warning, blast-tier).",
+  "description": "data/biomes/blast.json: what an energy shot does to the world where it ends (sim/world/blast.gd; docs/world/ground-contact.md section 23). Per shot kind: craterE the crater's energy at tier 1, radius and damage the structure blast at tier 1 (units, hit points), the effect counts and the shake; tierEnergy and tierDamage multiply by the shooter's tier 1 to 4. Version field: schema. Policy: closed except keys starting with an underscore; the kinds are an open table of closed records (a new shot kind needs an entry). Every kind in data/fight/shots.json should have an entry (a warning, blast-kind) the tier multipliers (energy, damage and radius) should not fall with the tier (a warning, blast-tier), and a full charge should be at least its tap in damage, radius and crater (warnings, blast-full).",
   "type": "object",
   "required": [
     "schema",
     "kinds",
     "tierEnergy",
-    "tierDamage"
+    "tierDamage",
+    "chip",
+    "tierRadius",
+    "areaShare"
   ],
   "properties": {
     "schema": {
@@ -30,7 +33,8 @@
           "dust",
           "ringR",
           "shake",
-          "splash"
+          "splash",
+          "airReach"
         ],
         "properties": {
           "craterE": {
@@ -72,6 +76,32 @@
             "description": "Water splash pieces.",
             "type": "integer",
             "minimum": 0
+          },
+          "airReach": {
+            "description": "How far (body heights) an air burst of this kind reaches.",
+            "type": "number",
+            "minimum": 0
+          },
+          "fullDamage": {
+            "description": "The structure damage of a fully charged shot (a charged kind), at tier 1.",
+            "type": "number",
+            "minimum": 0
+          },
+          "fullRadius": {
+            "description": "The structure blast radius of a fully charged shot, in units.",
+            "type": "number",
+            "minimum": 0
+          },
+          "craterETap": {
+            "description": "The crater energy of a tapped (uncharged) shot.",
+            "type": "number",
+            "minimum": 0
+          },
+          "areaShare": {
+            "description": "The share of its structure damage a mine's blast deals across the whole area.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
           }
         },
         "additionalProperties": false,
@@ -102,6 +132,41 @@
         "minimum": 0
       },
       "description": "The structure damage multiplier by the shooter's tier 1 to 4."
+    },
+    "chip": {
+      "type": "object",
+      "required": [
+        "threshold"
+      ],
+      "properties": {
+        "threshold": {
+          "description": "A shot that would do less than this share of a structure's health chips it instead.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "description": "Chip damage to structures.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^_": true
+      }
+    },
+    "tierRadius": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "description": "The structure blast radius multiplier by the shooter's tier 1 to 4."
+    },
+    "areaShare": {
+      "description": "The share of a shot's structure damage dealt across the whole area (a mine overrides it).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
     }
   },
   "additionalProperties": false,
