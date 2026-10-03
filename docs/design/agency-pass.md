@@ -56,7 +56,7 @@ Presses are ingredients in the ongoing string, not a queue.
 
 ### The frame
 
-- **The window is each fighter's last 5 presses.** A press expires after 90 ticks.
+- **The window is each fighter's last 5 presses.** It clears when 90 ticks pass with no press (§20; presses no longer expire one by one).
 - **The recipe display is a setting.** When on, a small strip names the current recipe and shows the flow count.
 - **The stick picks the launch's direction, and the director snaps it to the most dramatic nearby target** within about 45 degrees: a building, water or a crater, inside the collateral budgets. With no tilt the director picks freely. In a juggle each return blow reads the tilt again. Depth stays the choreographer's (ADR 0009).
 
@@ -83,7 +83,7 @@ Each style works by feel at its base level. Timing lifts it.
 
 | Style | Base | With timing | The upgrade |
 | :--- | :--- | :--- | :--- |
-| **Blur** | Mashing: more strikes, less damage each, and the weak ender (§13 and §14.4) | A **steady** mash, with presses evenly spaced within 3 ticks of the beat | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back. The player doesn't press for that ender: the blur plays it, and it is a knock-back, never a launch |
+| **Blur** | Mashing: more strikes, less damage each, and the weak ender (§13 and §14.4) | A **steady** mash: evenly spaced, and each press within 2 ticks of a blow landing, four in a row (§20) | **A perfect blur:** every strike lands clean, and it closes with its own ender, a burst that knocks the rival back. The player doesn't press for that ender: the blur plays it, and it is a knock-back, never a launch |
 | **Power** | A held blow: more damage and a longer wind-up | **Released on the flash,** within 6 ticks of the flash at full charge | **A guard-breaking blow.** Against a guard it breaks it. Unguarded, it earns a launch |
 | **Combo** | Presses in any rhythm | **Taps in time,** each within 4 ticks of a blow landing | **Clean and hard:** each timed strike does 15% more |
 
@@ -708,3 +708,48 @@ Encounter's alchemy plan (`docs/director/alchemy-plan.md`, A4) reads "flow earns
 
 - **Firing share 0.2, 0.4 and 0.5** (it was 0.18, 0.35 and 0.45): confirmed. Deflected shots no longer hurt the shooter, so the AI needs to fire a little more to keep blasts at 10 to 25% of match damage.
 - **Medium `barrageGuard` 0.42** (it was 0.5): confirmed. Easy and hard stay at 0.2 and 0.8. The band it serves is a bolt-only player winning 20 to 40% against the medium AI.
+
+## 20. Two rulings for the alchemy layer: "steady", and reaching the power style (2026-10-03)
+
+### 1. A steady mash must be on the beat
+
+**The gap:** the classifier calls a mash steady when its gaps differ by 3 ticks or less. A metronome that ignores the screen passes it, so QA's masher, who presses exactly every 8 ticks, earns the perfect blur. Orb's direction is that timing against the blows on screen is the skill, and mashing is its own style.
+
+**The rule.** A mash earns the perfect blur only when all three hold:
+
+| Condition | Value |
+| :--- | :--- |
+| **Evenly spaced** | The gaps between presses differ by 3 ticks or less, as now |
+| **On the beat** | Each press is within **2 ticks** of one of the blur's blows landing on screen |
+| **Kept up** | **Four presses in a row** meet both |
+
+**And the beat has to be worth reading.** If every blur landed its blows 8 ticks apart, an 8-tick metronome would still be on the beat most of the time by luck. So **each blur string takes its cadence from a small set: 7, 8, 9 or 10 ticks between blows,** picked by a seeded draw when the string starts. The first two blows show it. A player who watches matches it. A blind metronome has the right period about one string in four, and then needs the right phase as well.
+
+**QA bands:**
+- a blind 8-tick masher earns the perfect blur on at most 20% of his strings;
+- a script that presses on the contacts earns it on at least 80%.
+
+Mashing off the beat is still the plain blur, with its weak ender (§13). That is its own style, and it is unchanged.
+
+**What changes for Controls and Combat.**
+- *Controls* (`sim/input/press_read`): "steady" can no longer be decided from the presses alone. It needs the blow contact ticks, as the timed grade already does. A new tolerance, 2 ticks, for the blur's beat, beside the 4 ticks for a combo's timed press.
+- *Combat:* the blur patterns take the string's cadence (7 to 10 ticks) in place of a fixed spacing.
+
+### 2. Reaching the power style
+
+**The gap:** power needs four or five heavies among the last five presses. Heavy exchanges start about 47 ticks apart, and each press expires 90 ticks after it was made, so no more than three heavies are ever alive. Honest play can't reach it.
+
+**Two changes.**
+
+1. **The window lapses as a whole, not press by press.** Encounter's proposal is confirmed: the last five presses stay until 90 ticks pass with no press, and then the window clears. The flow count already works this way.
+2. **With fewer than five presses in the window, the style goes by the share of heavies:**
+
+| Share of heavies in the window | Style |
+| :--- | :--- |
+| None | Blur |
+| Up to 60% | Combo |
+| Over 60% | Power |
+
+With five presses this is the rule in §2 unchanged (none; one to three; four or five). With fewer, it means a lone heavy is a power blow, and two heavies running are power. So a player who wants power gets it from his first heavy and doesn't have to press through three exchanges of something else to reach it.
+
+**What changes for Controls** (`sim/input/press_read`): `expireTicks` 90 becomes an idle lapse for the whole window, counted from the last press. `mixShort` stays 5. The style is read from the share of heavies among the presses present.
