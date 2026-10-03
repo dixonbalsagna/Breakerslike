@@ -719,9 +719,9 @@ Encounter's alchemy plan (`docs/director/alchemy-plan.md`, A4) reads "flow earns
 
 | Condition | Value |
 | :--- | :--- |
-| **Evenly spaced** | The gaps between presses differ by 3 ticks or less, as now |
-| **On the beat** | Each press is within **2 ticks** of one of the blur's blows landing on screen |
-| **Kept up** | **Four presses in a row** meet both |
+| **Evenly spaced** | **Dropped** (the EP's ruling). A TRADE BLOWS opener lands its blows about 28 and 44 ticks apart, so the spacing test rejected a player who was on every contact |
+| **On the beat** | Each press is within **2 ticks** of a different blow's contact |
+| **Kept up** | **Four presses in a row** do so. That is now the whole test |
 
 **And the beat has to be worth reading.** If every blur landed its blows 8 ticks apart, an 8-tick metronome would still be on the beat most of the time by luck. So **each blur string takes its cadence from a small set: 7, 8, 9 or 10 ticks between blows,** picked by a seeded draw when the string starts. The first two blows show it. A player who watches matches it. A blind metronome has the right period about one string in four, and then needs the right phase as well.
 
@@ -762,6 +762,8 @@ It never launches, in either form.
 - **Blur strings don't loop.** A second pass would need the director to run longer strings, which lengthens matches and helps the masher, for no gain now that four presses hold the band.
 - **So the perfect blur is the last blow and the ender:** from the fourth on-beat press, the fourth strike lands clean at ×1.0 and the fifth is the full ender, with the full knock-back and a full set-up. The table above reads "fourth" again.
 - **If a later change breaks the band** (hit-stop is the thing to watch), the lever is the cadence set, since the press count can't go above four.
+
+**Measured under the final test** (Encounter, 100 live matches each against the medium AI): the blind 8-tick masher locks 13.4% of five-blow strings, against a band of at most 20%, and the contact script locks every string, against at least 80%. Win rates against the medium AI: the masher 50 to 52%, the contact script 67%, and the bolt-only player 39%.
 
 **Two confirmations for the flow.**
 1. **A press with no blow to time against leaves the flow as it is.** The press that starts an exchange can't be on or off the beat, so it neither adds to the flow nor resets it. Flow carries from one string to the next, which is how flow 5 and the showcase ender are reached: a string gives at most four timed link presses.
