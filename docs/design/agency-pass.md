@@ -731,9 +731,25 @@ Encounter's alchemy plan (`docs/director/alchemy-plan.md`, A4) reads "flow earns
 
 Mashing off the beat is still the plain blur, with its weak ender (§13). That is its own style, and it is unchanged.
 
+**Every blur follows a pattern from its first blow** (Combat's follow-up, `docs/combat/alchemist-recipes.md` §6; its option (a) is chosen). The perfect blur is only known at the fourth on-beat press, when most of the string is already thrown, so the pattern can't belong to the perfect blur alone.
+- Each blur string draws a pattern together with its cadence when it starts. The first two blows show both: which limbs, and how fast.
+- Combat adds the steps it needs for the two lights that fit no pattern.
+- Starting the pattern only once the mash turns steady (option (b)) would make the plain blur a shapeless flurry and give the player nothing to read at the start, which is when he needs it.
+
+**What the perfect blur adds over the plain one:**
+
+| | Plain blur (mashed off the beat) | Perfect blur (from the fourth on-beat press) |
+| :--- | :--- | :--- |
+| **Damage** | ×0.8 of a light for each strike | ×1.0 for each strike from that press on: they land clean |
+| **The ender** | The weak one: 0.6 of the knock-back distance and half a set-up | The full one: the pattern's own closing blow, the full distance and a full set-up |
+| **Flow** | None, because the presses are off the beat | +1 for each on-beat press, as always |
+| **The look** | The pattern, with loose contact | The same pattern locks in: full contact on every strike, a thin outline of his aura, and a rising accent in the sound for each blow |
+
+It never launches, in either form.
+
 **What changes for Controls and Combat.**
 - *Controls* (`sim/input/press_read`): "steady" can no longer be decided from the presses alone. It needs the blow contact ticks, as the timed grade already does. A new tolerance, 2 ticks, for the blur's beat, beside the 4 ticks for a combo's timed press.
-- *Combat:* the blur patterns take the string's cadence (7 to 10 ticks) in place of a fixed spacing.
+- *Combat:* every blur string draws a pattern and a cadence (7 to 10 ticks) at its first blow, in place of a fixed spacing.
 
 ### 2. Reaching the power style
 
