@@ -6,12 +6,13 @@ extends RefCounted
 ## sim, the AI, QA and the tests all read a log the same way and a replay reproduces it. The log itself is the sim's state
 ## (Encounter and Simulation own it); this file only builds and reads it.
 ##
-## A log is an Array of entries, oldest first, at most `logSize` long (5: the alchemist reads the last five presses):
+## A log is an Array of entries, oldest first, at most `logSize` long (20: the running mix; the recipe reads the latest `mixShort`, 5):
 ##   {kind: int (LIGHT, HEAVY, SIG), mode: int (0 physical, 1 energy), down: int tick, up: int tick or -1 while held,
 ##    beat: int}
 ## `beat` is the signed distance in ticks from the press to the nearest blow contact of the running exchange (negative:
 ## early), or NO_BEAT outside one. A charged press (a hold at range or close) also carries `flash`: the tick the sim's
-## charge flashed, or NO_FLASH; releasing on the flash is the timed release. All numbers are data (timing.json, the `read`
+## charge flashed, or NO_FLASH; releasing on the flash is the timed release. The director stamps the PLANNED flash tick when
+## the charge begins (a tick that may still be ahead), so a release before it reads as "early" rather than as no grade. All numbers are data (timing.json, the `read`
 ## block), whole ticks at 60 a second.
 ##
 ## Timing grades (docs/controls/agency-input.md 1a): a press or a release is "perfect" within beatHalf ticks of its mark, "good"
@@ -25,7 +26,7 @@ const NO_BEAT: int = 32767
 const NO_FLASH: int = 32767
 
 const DEFAULTS: Dictionary = {
-	"logSize": 5,         # presses kept: the alchemist's read
+	"logSize": 20,        # presses kept: the running mix reads 20, the recipe the latest 5 (agency-pass.md section 2)
 	"holdTicks": 12,      # a button down this long is a hold (the number sprint and the channel use: tapHold.holdStart)
 	"beatHalf": 4,        # a press within this many ticks of a blow's contact is on the beat (8-tick window)
 	"touchBeatHalf": 5,   # the same on touch (10 ticks)
@@ -35,7 +36,8 @@ const DEFAULTS: Dictionary = {
 	"mashGap": 10,        # ... with every gap this many ticks or fewer are a mash
 	"mashClear": 20,      # a mash is over after this many ticks without a press
 	"staleTicks": 60,     # a log older than this reads as nothing
-	"mixShort": 3,        # the short mix window
+	"mixShort": 5,        # the short mix window: the latest presses the recipe reads
+	"expireTicks": 90,    # a press older than this no longer counts in either mix
 	"assistFactor": 2,    # accessibility: the beat window doubles
 	"steadyJitter": 3,    # a mash is steady when its gaps differ by this many ticks or fewer
 	"perfectStreak": 3,   # this many perfect presses in a row make a timed string
@@ -69,7 +71,7 @@ static func release(log: Array, kind: int, tick: int) -> void:
 			return
 
 
-## The charge of the latest still-held entry of `kind` flashed at `tick` (the sim's, set when the flash plays).
+## The charge of the latest still-held entry of `kind` flashes at `tick`: the sim's planned tick, stamped when the charge begins.
 static func set_flash(log: Array, kind: int, tick: int) -> void:
 	for k in range(log.size() - 1, -1, -1):
 		var e: Dictionary = log[k]
@@ -133,12 +135,13 @@ static func beat_offset(tick: int, blows: Array) -> int:
 ##   release: the grade of the latest released charge ("none" if there is none);
 ##   hold_ticks: how long the held button has been down (0 if none held);
 ##   on_beat: how many of the last `rhythmOf` presses were on the beat;
-##   mix_short / mix_long: {light, heavy, sig, energy} counts over the last `mixShort` and `logSize` presses;
+##   mix_short / mix_long: {light, heavy, sig, energy} counts over the last `mixShort` and `logSize` presses, leaving out any
+##     press older than `expireTicks` (90);
 ##   rate: presses a second over the log (0 with fewer than two).
 ## Precedence: hold, then rhythm, then mash, then taps. A mash that lands on the blows is rhythm.
 static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 	var p: Dictionary = opts.get("p", params())
-	var out: Dictionary = {"style": "none", "timing": "none", "streak": 0, "steady": false, "release": "none", "hold_ticks": 0, "on_beat": 0, "presses": log.size(), "mix_short": _mix(log, int(p["mixShort"])), "mix_long": _mix(log, int(p["logSize"])), "rate": 0.0}
+	var out: Dictionary = {"style": "none", "timing": "none", "streak": 0, "steady": false, "release": "none", "hold_ticks": 0, "on_beat": 0, "presses": log.size(), "mix_short": _mix(log, int(p["mixShort"]), now, int(p["expireTicks"])), "mix_long": _mix(log, int(p["logSize"]), now, int(p["expireTicks"])), "rate": 0.0}
 	if log.is_empty():
 		return out
 	var last: Dictionary = log[log.size() - 1]
@@ -214,9 +217,11 @@ static func classify(log: Array, now: int, opts: Dictionary = {}) -> Dictionary:
 	return out
 
 
-static func _mix(log: Array, n: int) -> Dictionary:
+static func _mix(log: Array, n: int, now: int, expire: int) -> Dictionary:
 	var m: Dictionary = {"light": 0, "heavy": 0, "sig": 0, "energy": 0}
 	for k in range(maxi(0, log.size() - n), log.size()):
+		if now - int(log[k]["down"]) > expire:
+			continue
 		match int(log[k]["kind"]):
 			LIGHT: m["light"] += 1
 			HEAVY: m["heavy"] += 1

@@ -32,7 +32,7 @@
     "style": "hold"
   },
   "read": {
-    "logSize": 5,
+    "logSize": 20,
     "holdTicks": 12,
     "beatHalf": 4,
     "touchBeatHalf": 5,
@@ -42,7 +42,8 @@
     "mashGap": 10,
     "mashClear": 20,
     "staleTicks": 60,
-    "mixShort": 3,
+    "mixShort": 5,
+    "expireTicks": 90,
     "assistFactor": 2,
     "steadyJitter": 3,
     "perfectStreak": 3,

@@ -73,6 +73,29 @@ Three additive fields, bits 40 to 42 of the packed intent, so **every older repl
 
 Until `intent-hash.patch` lands the new fields are in the record and the replay but not in the state hash; that is harmless while nothing reads them.
 
+## Note for the alchemy slices A1 to A4 (2026-10-02, to Encounter's `alchemy-plan.md`)
+
+**The beat.** What a press is graded against depends on what the press is:
+
+| Press | The beat (the mark) | Who grades it |
+| :--- | :--- | :--- |
+| A light, heavy or signature press in a string | **A blow's contact tick**: the tick a strike of the running exchange lands, taken from the director's strike schedule. Use the contacts of **every blow in the exchange, either fighter's**, the nearest wins (the player is watching the blows on screen, and a defender's timed press wins its trade beat). Include contacts up to 12 ticks ahead and 12 ticks behind. | the classifier: `SimPressRead.beat_offset(tick, blows)` gives the signed distance, stored in the entry's `beat` |
+| A hold released as a charge | **The charge's flash tick** (not the strike's wind-up) | the classifier: `release_grade` |
+| A strike's **wind-up** | not a beat. It is the perfect block's mark (`guardPress` inside the tell) and the director judges it as it does today | the director |
+| A clash press | **The pulse** (24, 48, 72 ticks; 30, 60, 90 for the grapple lock and the beam struggle) | the clash runner (A6), with `SimPressRead.grade_of(press_tick - pulse_tick, opts)`. **Clash presses are never pushed into the log** |
+
+**How the beat reaches the classifier.** Nothing is recomputed per tick; the director makes four calls on the events, with one clock (`S.tick`):
+1. **On a light, heavy or signature edge** (not a clash press): `SimPressRead.push(log, kind, f.input.mode, S.tick, SimPressRead.beat_offset(S.tick, blows))`. The beat is fixed at the press and never changed; outside an exchange pass `NO_BEAT` (the default).
+2. **On the level falling** (`lightHeld` or `heavyHeld` true last tick, false now): `SimPressRead.release(log, kind, S.tick)`.
+3. **When a charge begins** (the hold has lasted 12 ticks): `SimPressRead.set_flash(log, kind, planned_flash_tick)`. **Stamp the planned tick, which may still be in the future,** not the tick the flash plays: `set_flash` closes on the latest still-held entry, and a release before the flash must read "early", not "no grade". An unflashed entry (a hold that never became a charge) has `release_grade == "none"`.
+4. **When composing a string:** `SimPressRead.classify(log, S.tick, {touch, assist, offset})`: style, timing, streak, steady, release, and the two mixes. `opts` come from the fighter's device and settings (touch on touch layouts, assist from the slot's setting, the per-player timing offset from the match header).
+
+**One clock and the freeze.** A press made during a hit-stop freeze is kept by the layout and delivered on the first live tick (a host guarantee), so it is graded as if the freeze took no time, which is the fair reading when presses and contacts both use `S.tick`. If `S.tick` advances through a freeze, grade presses made in it against the real elapsed time instead, and tell me: the layout knows its own tick count, and I can carry it on the intent. Simulation to confirm which.
+
+**The log changed shape to match the plan (data, same function names).** `logSize` is **20** (the running mix, A5) and `mixShort` is **5** (the recipe's "last five", A2), with `expireTicks` 90: a press older than 90 ticks counts in neither mix. `mix_short` answers "heavies in the last five" and `mix_long` the 20. The style tests (hold, rhythm, mash) read only the latest 3 or 4 presses, so a longer log changes nothing in them. `expire-schema.patch` adds the one new key to Tools' schema.
+
+**Does the intent change for A1 to A4? No.** Everything A1 to A4 read is in the record already: `lightHeld`, `heavyHeld` and `escape` are committed, and so is their line in `hash.gd` (`INTENT` in HEAD carries the three fields). Mode per press is `mode`; the stick (`mx`, `my`) is the aim for A2's pool and A4's launch direction. Two small things for the director to own, with no intent change: **the stick's launch direction needs a 12-tick latch** (the latest sample beyond the 0.35 dead zone, in 8 sectors, `agency-input.md` 1b), which is a few integers of per-fighter state; and **A5's change-up and repeat** read the mixes as above. I can supply the sector-and-latch as a pure tested helper (`sim/input/aim.gd`, the same shape as the classifier) if Encounter wants it; say so.
+
 ## Recommendations at a glance
 
 | # | Item | Recommendation |

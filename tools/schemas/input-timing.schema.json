@@ -263,6 +263,11 @@
           "minimum": 1,
           "description": "This many perfect presses in a row make a timed string."
         },
+        "expireTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "A press older than this no longer counts in the recipe mix or the running mix (90)."
+        },
         "debounce": {
           "type": "integer",
           "minimum": 0,

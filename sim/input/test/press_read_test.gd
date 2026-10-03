@@ -49,7 +49,7 @@ func _mk(ticks: Array, beats: Array = [], kinds: Array = [], modes: Array = []) 
 
 func _data() -> void:
 	var p: Dictionary = SimPressRead.params()
-	ok(p["logSize"] == 5, "data: the log holds the alchemist's five presses")
+	ok(p["logSize"] == 20 and p["mixShort"] == 5 and p["expireTicks"] == 90, "data: the log holds 20 presses, the recipe reads the latest 5, a press expires after 90 ticks")
 	ok(p["holdTicks"] == SimInputData.ti(["tapHold", "holdStart"], 12) and p["holdTicks"] == 12, "data: a hold is the game's hold, 12 ticks")
 	ok(p["beatHalf"] == 4 and p["touchBeatHalf"] == 5, "data: the beat window is 8 ticks, 10 on touch")
 	ok(p["mashPresses"] == 4 and p["mashGap"] == 10 and p["mashClear"] == 20, "data: a mash is 4 presses 10 ticks apart or fewer, over after 20")
@@ -64,12 +64,12 @@ func _data() -> void:
 
 func _log() -> void:
 	var log: Array = []
-	for k in range(8):
+	for k in range(25):
 		SimPressRead.push(log, SimPressRead.LIGHT, 0, 100 + k * 10)
-	ok(log.size() == 5, "log: eight presses leave the last five")
-	ok(int(log[0]["down"]) == 130 and int(log[4]["down"]) == 170, "log: oldest first, the oldest dropped")
-	SimPressRead.release(log, SimPressRead.LIGHT, 175)
-	ok(int(log[4]["up"]) == 175 and int(log[3]["up"]) == -1, "log: a release closes the latest held entry of its kind")
+	ok(log.size() == 20, "log: 25 presses leave the last 20")
+	ok(int(log[0]["down"]) == 150 and int(log[19]["down"]) == 340, "log: oldest first, the oldest dropped")
+	SimPressRead.release(log, SimPressRead.LIGHT, 345)
+	ok(int(log[19]["up"]) == 345 and int(log[18]["up"]) == -1, "log: a release closes the latest held entry of its kind")
 	var l2: Array = []
 	SimPressRead.push(l2, SimPressRead.LIGHT, 0, 10)
 	SimPressRead.push(l2, SimPressRead.HEAVY, 0, 12)
@@ -160,12 +160,26 @@ func _windows() -> void:
 
 
 func _mix() -> void:
-	var log: Array = _mk([100, 130, 160, 190, 220], [], [0, 0, 1, 1, 2], [0, 1, 1, 0, 0])
-	var c: Dictionary = SimPressRead.classify(log, 223)
+	var log: Array = _mk([100, 115, 130, 145, 160], [], [0, 0, 1, 1, 2], [0, 1, 1, 0, 0])
+	var c: Dictionary = SimPressRead.classify(log, 163)
 	var ms: Dictionary = c["mix_short"]
 	var ml: Dictionary = c["mix_long"]
-	ok(ms["light"] == 0 and ms["heavy"] == 2 and ms["sig"] == 1 and ms["energy"] == 1, "mix: the last three presses (heavy, heavy, signature, one energy)")
-	ok(ml["light"] == 2 and ml["heavy"] == 2 and ml["sig"] == 1 and ml["energy"] == 2, "mix: all five presses (the alchemist's read)")
+	ok(ms["light"] == 2 and ms["heavy"] == 2 and ms["sig"] == 1 and ms["energy"] == 2, "mix: the latest five presses (the recipe's read: 2 light, 2 heavy, 1 signature, 2 energy)")
+	ok(ml == ms, "mix: with only five presses the long mix is the same")
+	# The long mix reads 20: eight lights, then three heavies, 8 ticks apart.
+	var ticks: Array = []
+	var kinds: Array = []
+	for k in range(11):
+		ticks.append(100 + k * 8)
+		kinds.append(0 if k < 8 else 1)
+	var long_log: Array = _mk(ticks, [], kinds)
+	var c2: Dictionary = SimPressRead.classify(long_log, 183)
+	ok(c2["mix_long"]["light"] == 8 and c2["mix_long"]["heavy"] == 3, "mix: the long mix counts every unexpired press (8 light, 3 heavy)")
+	ok(c2["mix_short"]["light"] == 2 and c2["mix_short"]["heavy"] == 3, "mix: and the short mix the latest five (2 light, 3 heavy)")
+	ok(SimPressRead.classify(long_log, 190)["mix_long"]["light"] == 8, "mix: a press exactly 90 ticks old still counts")
+	var c3: Dictionary = SimPressRead.classify(long_log, 191)
+	ok(c3["mix_long"]["light"] == 7 and c3["mix_long"]["heavy"] == 3, "mix: a press 91 ticks old has expired")
+	ok(SimPressRead.classify(long_log, 400)["mix_long"]["light"] == 0 and SimPressRead.classify(long_log, 400)["mix_long"]["heavy"] == 0, "mix: a log gone cold has an empty mix")
 
 
 func _determinism() -> void:
