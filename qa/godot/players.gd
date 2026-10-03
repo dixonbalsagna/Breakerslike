@@ -40,6 +40,7 @@ class Pl:
 	var pat_i: int = 0
 	var contacts: Array = []       # contact ticks (live ticks) of the running exchange's blows, both sides
 	var seen_ex = null
+	var beat_seen: int = 0         # beats of the running exchange already read for contacts (links add beats as they are taken)
 	var next_idle: int = 0
 	var presses: int = 0
 	var on_beat: int = 0
@@ -70,32 +71,53 @@ class Pl:
 		pat_i += 1
 		return 1 if c == "H" else 0
 
+	## The offset of one planned press from its blow's contact: on the beat with chance acc (within win ticks), else off it.
+	func _offset() -> int:
+		var acc: float = float(P.get("acc", "100")) / 100.0
+		var jit: int = int(P.get("jit", "1"))
+		var win: int = int(P.get("win", str(half)))
+		var off: int
+		if rng.randf() < acc:
+			off = rng.randi_range(-win, win)
+		else:
+			off = (1 if rng.randf() < 0.5 else -1) * rng.randi_range(win + 3, win + 10)
+		if jit > 0:
+			off += rng.randi_range(-jit, jit)
+		return off
+
 	## Plan the presses for a new exchange: one per blow of this player's own side, on or off the beat.
 	func _plan_exchange(S, slot: int, lt: int) -> void:
 		plan.clear()
 		contacts.clear()
+		beat_seen = 0
+		var ex = S.dirS.ex
+		if ex == null:
+			return
+		_read_beats(S, slot, lt)
+
+	## Read the beats not yet seen: each blow is a contact, and each of this player's own blows gets a press planned against it.
+	## A chain link's blow is a `chainStrike` beat (or, in a blur string, a strike beat) added when the link is taken, so this
+	## runs every call: a timed script follows the links and presses on every blow of its string, as a player watching would.
+	func _read_beats(S, slot: int, lt: int) -> void:
 		var ex = S.dirS.ex
 		if ex == null:
 			return
 		var mine: String = "A" if ex.A == S.fighters[slot] else "D"
-		var acc: float = float(P.get("acc", "100")) / 100.0
-		var jit: int = int(P.get("jit", "1"))
-		var win: int = int(P.get("win", str(half)))
 		var pattern: String = String(P.get("mix", "L"))
-		for b in ex.beats:
-			if b.op != "strike" or b.args == null:
+		while beat_seen < ex.beats.size():
+			var b = ex.beats[beat_seen]
+			beat_seen += 1
+			var linked: bool = b.op == "chainStrike"
+			if not linked and (b.op != "strike" or b.args == null):
 				continue
 			var contact: int = lt + int(roundf((b.t - ex.t) * 60.0))
 			contacts.append(contact)
-			if String(b.args.a) != mine:
+			if linked:
+				if mine != "A" or kind == "holder":
+					continue
+			elif String(b.args.a) != mine:
 				continue
-			var off: int
-			if rng.randf() < acc:
-				off = rng.randi_range(-win, win)
-			else:
-				off = (1 if rng.randf() < 0.5 else -1) * rng.randi_range(win + 3, win + 10)
-			if jit > 0:
-				off += rng.randi_range(-jit, jit)
+			var off: int = _offset()
 			if kind == "holder":   # a timed hold: down hold ticks before the release, released at the flash
 				var hold_t: int = int(P.get("hold", "16"))
 				if contact + off - hold_t > lt:
@@ -139,6 +161,8 @@ class Pl:
 				if S.dirS.ex != seen_ex:
 					seen_ex = S.dirS.ex
 					_plan_exchange(S, slot, lt)
+				elif S.dirS.ex != null and int(P.get("follow", "1")) != 0:
+					_read_beats(S, slot, lt)
 				if S.dirS.ex != null and not plan.is_empty():
 					if int(plan[0]["tick"]) <= lt:
 						var k: int = int(plan[0]["k"])
@@ -221,12 +245,12 @@ func _med(a: Array) -> float:
 
 
 func _blank() -> Dictionary:
-	return {"presses": 0, "onBeat": 0, "inExchange": 0, "styles": {}, "exchanges": 0, "launchEnds": 0, "otherEnds": 0, "damage": 0.0, "hits": 0, "heavyHits": 0, "launchesEarned": 0, "launchesTaken": 0, "airCatches": 0, "alternations": 0, "pairs": 0, "flowMax": 0, "flowTo3": 0, "end_launch": 0, "end_knockback": 0, "end_continue": 0}
+	return {"presses": 0, "onBeat": 0, "inExchange": 0, "styles": {}, "exchanges": 0, "launchEnds": 0, "otherEnds": 0, "damage": 0.0, "hits": 0, "heavyHits": 0, "launchesEarned": 0, "launchesTaken": 0, "airCatches": 0, "alternations": 0, "pairs": 0, "flowMax": 0, "flowTo3": 0, "end_launch": 0, "end_knockback": 0, "end_continue": 0, "strings5": 0, "locks5": 0}
 
 
 func _report(s: Dictionary, n: int) -> Dictionary:
 	var ex: float = maxf(1.0, float(s.exchanges))
-	return {"pressesPerMatch": snappedf(float(s.presses) / n, 0.1), "onBeatShare": snappedf(float(s.onBeat) / maxf(1.0, float(s.inExchange)), 0.001), "styles": s.styles, "exchangesPerMatch": snappedf(float(s.exchanges) / n, 0.1), "launchShareOfExchanges": snappedf(float(s.launchEnds) / ex, 0.001), "damagePerMatch": snappedf(float(s.damage) / n, 1.0), "damagePerExchange": snappedf(float(s.damage) / ex, 0.1), "hitsPerMatch": snappedf(float(s.hits) / n, 0.1), "heavyHitsPerMatch": snappedf(float(s.heavyHits) / n, 0.1), "launchesEarnedPerMatch": snappedf(float(s.launchesEarned) / n, 0.1), "launchesTakenPerMatch": snappedf(float(s.launchesTaken) / n, 0.1), "endsLaunch": s.end_launch, "endsKnockback": s.end_knockback, "endsContinue": s.end_continue, "flowMax": s.flowMax, "flowTo3PerMatch": snappedf(float(s.flowTo3) / n, 0.1)}
+	return {"pressesPerMatch": snappedf(float(s.presses) / n, 0.1), "onBeatShare": snappedf(float(s.onBeat) / maxf(1.0, float(s.inExchange)), 0.001), "styles": s.styles, "exchangesPerMatch": snappedf(float(s.exchanges) / n, 0.1), "launchShareOfExchanges": snappedf(float(s.launchEnds) / ex, 0.001), "damagePerMatch": snappedf(float(s.damage) / n, 1.0), "damagePerExchange": snappedf(float(s.damage) / ex, 0.1), "hitsPerMatch": snappedf(float(s.hits) / n, 0.1), "heavyHitsPerMatch": snappedf(float(s.heavyHits) / n, 0.1), "launchesEarnedPerMatch": snappedf(float(s.launchesEarned) / n, 0.1), "launchesTakenPerMatch": snappedf(float(s.launchesTaken) / n, 0.1), "endsLaunch": s.end_launch, "endsKnockback": s.end_knockback, "endsContinue": s.end_continue, "flowMax": s.flowMax, "flowTo3PerMatch": snappedf(float(s.flowTo3) / n, 0.1), "blurStrings": s.strings5, "blurLocked": s.locks5, "blurLockShare": snappedf(float(s.locks5) / maxf(1.0, float(s.strings5)), 0.001)}
 
 
 ## One match: specs[i] plays slot slots[i]. Returns {winner: 0 or 1 (the spec's index), -1 for a timeout, t}.
@@ -254,6 +278,9 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 	var ex_launch: bool = false
 	var ex_attacker: int = -1
 	var last_att: int = -1
+	var ex_hits: int = 0           # damaging strikes the running exchange's attacker has landed (a string of five or more is the blur's whole length)
+	var ex_heavies: int = 0
+	var ex_locked: bool = false    # the perfect blur locked in this exchange (cue blur_locked)
 	var brink_t: Dictionary = {}   # slot -> first brink_enter time
 	var ko_t: float = -1.0
 	while S.T < capsec and not (S.game.ko != null and S.game.koT > 3.0) and ticks < 400000:
@@ -305,6 +332,10 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 				var who = sums[_idx(pl, by_slot[int(e.attacker)])]
 				who.damage += e.amount
 				who.hits += 1
+				if int(e.attacker) == ex_attacker and cur_ex != null:
+					ex_hits += 1
+					if str(e.get("kind")) == "heavy":
+						ex_heavies += 1
 				if str(e.get("kind")) == "heavy":
 					who.heavyHits += 1
 			elif e.type == "brink_enter":
@@ -312,6 +343,8 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 					brink_t[int(e.actor)] = S.T
 			elif e.type == "ko":
 				ko_t = S.T
+			elif e.type == "cue" and str(e.get("kind")) == "blur_locked" and int(e.actor) == ex_attacker and cur_ex != null:
+				ex_locked = true
 			elif e.type == "exchange_end":   # slice 3: the director's ending of this player's exchange (the actor is the attacker)
 				var xw = sums[_idx(pl, by_slot[int(e.actor)])]
 				var xk: String = "end_" + str(e.get("kind"))
@@ -333,12 +366,19 @@ func _match(seed: int, specs: Array, slots: Array, capsec: float, sums: Array) -
 		if S.dirS.ex != cur_ex:
 			if cur_ex != null and ex_attacker >= 0 and (str(cur_ex.kind) == "light" or str(cur_ex.kind) == "heavy"):
 				var sm = sums[_idx(pl, by_slot[ex_attacker])]
+				if ex_hits >= 5 and ex_heavies == 0:   # a five-blow string with no heavy: the blur's whole length
+					sm.strings5 += 1
+					if ex_locked:
+						sm.locks5 += 1
 				if ex_launch:
 					sm.launchEnds += 1
 				else:
 					sm.otherEnds += 1
 			cur_ex = S.dirS.ex
 			ex_launch = false
+			ex_hits = 0
+			ex_heavies = 0
+			ex_locked = false
 			ex_attacker = S.fighters.find(cur_ex.A) if cur_ex != null else -1
 			if cur_ex != null and (str(cur_ex.kind) == "light" or str(cur_ex.kind) == "heavy"):
 				sums[_idx(pl, by_slot[ex_attacker])].exchanges += 1

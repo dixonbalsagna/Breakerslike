@@ -52,7 +52,7 @@ function runPair(tag, a, b, n, base) {
       const line = out.split(String.fromCharCode(10)).find(l => l.startsWith('{') && l.includes('"players"'));
       if (code !== 0 || !line) return reject(new Error('players.gd failed for ' + tag + ' (exit ' + code + ')' + String.fromCharCode(10) + out.slice(0, 1200)));
       const r = JSON.parse(line);
-      resolve({ pair: tag, n: r.n, aWins: r.aWins, bWins: r.bWins, timeouts: r.timeouts, medianSec: r.medianSec });
+      resolve({ pair: tag, n: r.n, aWins: r.aWins, bWins: r.bWins, timeouts: r.timeouts, medianSec: r.medianSec, strings: r.stats[0].blurStrings, locked: r.stats[0].blurLocked });
     });
   });
 }
@@ -66,9 +66,21 @@ async function runMasher({ n = 100, base = 1, levels = ['easy', 'medium', 'hard'
   const pairs = await Promise.all([
     runPair('bolt-melee', 'masher:energy=1:forms=1', 'masher:forms=1', Math.min(n, 40), base),
     runPair('bolt-medium', 'masher:energy=1:forms=1', 'ai:level=medium', Math.min(n, 40), base),
-    runPair('blast-rush', 'tapper:acc=80:win=4:mix=LLH' + E, 'tapper:acc=80:win=4:mix=LLH' + R, Math.min(n, 40), base),
+    runPair('blast-rush', 'tapper:idle=14:acc=80:win=4:mix=LLLH' + E, 'tapper:acc=80:win=4:mix=LLH' + R, Math.min(n, 40), base),
+    runPair('blast-medium', 'tapper:idle=14:acc=80:win=4:mix=LLLH' + E, 'ai:level=medium', Math.min(n, 40), base),
   ]);
-  return [...withForms, ...noForms, mirror, ...pairs];
+  // Agency pass section 20: how often the perfect blur locks, live against the medium AI. A blind 8-tick masher at most 20% of five-blow strings; a script that presses on every contact (and follows the chain links) at least 80%; a metronome on the real clock at 10, 12 and 14 ticks (Encounter measured 9, 27 and 26%; the same 20% ceiling is QA's assumption until Game Design rules).
+  const M = ':forms=1:stick=1', ai = 'ai:level=medium';
+  const blur1 = await Promise.all([
+    runPair('blur-blind', 'masher' + M, ai, n, base),
+    runPair('blur-contact', 'tapper:acc=100:win=0:jit=0:mix=L' + M, ai, n, base),
+    runPair('blur-m10', 'masher:gap=10' + M, ai, n, base),
+  ]);
+  const blur2 = await Promise.all([
+    runPair('blur-m12', 'masher:gap=12' + M, ai, n, base),
+    runPair('blur-m14', 'masher:gap=14' + M, ai, n, base),
+  ]);
+  return [...withForms, ...noForms, mirror, ...pairs, ...blur1, ...blur2];
 }
 
 const BANDS = { easy: [0.60, 1, 'at least 60%'], medium: [0.35, 0.50, '35 to 50%'], hard: [0, 0.15, 'at most 15%'] };
@@ -80,9 +92,16 @@ function masherRows(results) {
   });
   for (const r of results.filter(x => x.pair)) {
     const dec = r.aWins + r.bWins;
+    if (r.pair.startsWith('blur-')) {
+      const share = r.strings ? r.locked / r.strings : NaN, pct = (100 * share).toFixed(1) + '%';
+      const defs = { 'blur-blind': ['a blind 8-tick masher', 0, 0.20, 'at most 20%'], 'blur-contact': ['a script that presses on every contact and follows the links', 0.80, 1, 'at least 80%'], 'blur-m10': ['a blind metronome every 10 ticks', 0, 0.20, 'at most 20% (assumed ceiling)'], 'blur-m12': ['a blind metronome every 12 ticks', 0, 0.20, 'at most 20% (assumed ceiling)'], 'blur-m14': ['a blind metronome every 14 ticks', 0, 0.20, 'at most 20% (assumed ceiling)'] }[r.pair];
+      rows.push({ id: 'masher.' + r.pair.replace('-', '.'), ref: '§20', what: `The perfect blur locks on ${defs[0]}: share of five-blow strings against the medium AI (agency pass 20)`, status: r.strings >= 30 ? (share >= defs[1] && share <= defs[2] ? 'PASS' : 'FAIL') : 'PENDING', value: `${pct} (${r.locked} of ${r.strings} strings)`, band: defs[3], note: `${r.n} matches; the script wins ${dec ? (100 * r.aWins / dec).toFixed(0) : '-'}%; measured live as blur_locked cues over exchanges with five or more landed light strikes` });
+      continue;
+    }
     if (r.pair === 'bolt-melee') rows.push({ id: 'masher.bolt.finish', ref: '§6 masher', what: 'A bolt-only player (energy held, a bolt every 8 ticks) finishes the match against a melee masher before the cap (agency pass 16: at least 95%)', status: dec / r.n >= 0.95 ? 'PASS' : 'FAIL', value: `${(100 * dec / r.n).toFixed(1)}% (${dec} of ${r.n}; ${r.timeouts} ran to the cap)`, band: 'at least 95%', note: `median ${r.medianSec} s; point estimate` });
     else if (r.pair === 'bolt-medium') rows.push({ id: 'masher.bolt.medium', ref: '§6 masher', what: 'A bolt-only player wins against the medium AI (agency pass 16: 20 to 40%)', status: dec ? (r.aWins / dec >= 0.20 && r.aWins / dec <= 0.40 ? 'PASS' : 'FAIL') : 'PENDING', value: dec ? `${(100 * r.aWins / dec).toFixed(1)}% (${r.aWins} of ${dec})` : 'no decided matches', band: '20 to 40%', note: `${r.n} matches, ${r.timeouts} ran to the cap; point estimate` });
-    else if (r.pair === 'blast-rush') rows.push({ id: 'masher.blast.rush', ref: '§6 masher', what: 'A blast-heavy timed script against a rush-heavy timed script (agency pass 15.6: 40 to 60%)', status: dec ? (r.aWins / dec >= 0.40 && r.aWins / dec <= 0.60 ? 'PASS' : 'FAIL') : 'PENDING', value: dec ? `${(100 * r.aWins / dec).toFixed(1)}% (${r.aWins} of ${dec})` : 'no decided matches', band: '40 to 60%', note: `${r.n} matches, ${r.timeouts} ran to the cap; point estimate` });
+    else if (r.pair === 'blast-rush') rows.push({ id: 'masher.blast.rush', ref: '§6 masher', what: 'A blast-heavy timed script (a bolt about every 14 ticks) against a rush-heavy timed script (agency pass 15.6: 40 to 60%, and at least 95% of matches finish)', status: dec ? (r.aWins / dec >= 0.40 && r.aWins / dec <= 0.60 && dec / r.n >= 0.95 ? 'PASS' : 'FAIL') : 'FAIL', value: dec ? `${(100 * r.aWins / dec).toFixed(1)}% (${r.aWins} of ${dec}); ${(100 * dec / r.n).toFixed(0)}% finished` : 'no decided matches', band: '40 to 60%, finish at least 95%', note: `${r.n} matches, ${r.timeouts} ran to the cap; point estimate` });
+    else if (r.pair === 'blast-medium') rows.push({ id: 'masher.blast.medium', ref: '§6 masher', what: 'A mixed blaster (a bolt about every 14 ticks, a tapped heavy now and then) wins against the medium AI (starting band 25 to 45%, Game Design to confirm)', status: dec ? (r.aWins / dec >= 0.25 && r.aWins / dec <= 0.45 ? 'PASS' : 'FAIL') : 'PENDING', value: dec ? `${(100 * r.aWins / dec).toFixed(1)}% (${r.aWins} of ${dec})` : 'no decided matches', band: '25 to 45%', note: `${r.n} matches, ${r.timeouts} ran to the cap; point estimate` });
   }
   const m = results.find(r => r.mirror);
   if (m) rows.push({ id: 'masher.mirror', ref: '§6 masher', what: 'Two lights-only players (mashers who take their forms) finish the match before the cap', status: m.finished / m.n >= 0.95 ? 'PASS' : 'FAIL', value: `${(100 * m.finished / m.n).toFixed(1)}% (${m.finished} of ${m.n}; ${m.timeouts} ran to the cap)`, band: 'at least 95%', note: `median ${m.medianSec} s; point estimate` });

@@ -27,16 +27,21 @@ const P = {
   timedFull: 'tapper:acc=100:win=4:mix=LLH' + F,
   ai: 'ai:level=medium',
 };
+// The blaster's cadence matters: a barrage needs four clean bolts inside 90 ticks (interrupts.json blast.barrage), and a tap of the
+// heavy is a charged shot at 0.6 strength (only a full charge knocks back). The earlier blaster (a press every 24 ticks, mix LLH)
+// fired two bolts in 72 ticks, so no decisive shot ever came, a brink fighter was never finished and E4 and E5 ran to the cap
+// (GB-009; a56187a: 40 of 40 at 900 s). This one fires about every 14 ticks (mix LLLH: three bolts, a tap, three bolts).
+const BLAST = ':energy=1:idle=14:acc=80:win=4:mix=LLLH' + F;
 const ENERGY = [
   ['E1', 'masher:energy=1' + F, P.masher, 'a bolt-only player (energy held, a bolt every 8 ticks) against a melee masher: must finish at least 95% (agency pass 16; the win share is reported, see the decided count)', null, null],
   ['E2', 'masher:energy=1' + F, P.ai, 'a bolt-only player against the medium AI (agency pass 16: 20 to 40%)', 20, 40],
-  ['E3', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.ai, 'a timed blaster against the medium AI', null, null],
-  ['E4', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.timed, 'a timed blaster against a timed melee player', null, null],
-  ['E5', 'tapper:energy=1:acc=80:win=4:mix=LLH' + F, P.timed, 'a blast-heavy timed script against a rush-heavy timed script (agency pass 15.6: 40 to 60%)', 40, 60],
+  ['E3', 'tapper' + BLAST, P.ai, 'a mixed blaster (a bolt about every 14 ticks, a tapped heavy now and then) against the medium AI (starting band 25 to 45%, Game Design to confirm)', 25, 45],
+  ['E4', 'tapper' + BLAST, P.timed, 'a mixed blaster against a timed melee player: must finish at least 95% before the cap (win share reported)', null, null, 95],
+  ['E5', 'tapper' + BLAST, P.timed, 'a blast-heavy timed script against a rush-heavy timed script (agency pass 15.6: 40 to 60%; and finishes at least 95%)', 40, 60, 95],
 ];
 const acc = a => `tapper:acc=${a}:win=4:mix=LLH${F}`;
 
-// id, A, B, what, band for A's win share (lo, hi in percent; null: reported only)
+// id, A, B, what, band for A's win share (lo, hi in percent; null: reported only), and optionally the least share of matches that must end in a KO before the cap (percent)
 const CORE = [
   ['T1', P.timed, P.masher, 'timed (80% of beats) against a masher', 72, 82],
   ['T2', P.timed, P.styleOnly, 'timed against a style-only player (same mix, never on the beat)', 62, 70],
@@ -66,7 +71,7 @@ function run(m) {
     p.on('close', code => {
       const line = out.split('\n').find(l => l.startsWith('{') && l.includes('"players"'));
       if (code !== 0 || !line) return reject(new Error('players.gd failed for ' + m[0] + ' (exit ' + code + ')\n' + out.slice(0, 1200)));
-      resolve({ id: m[0], what: m[3], lo: m[4], hi: m[5], ...JSON.parse(line) });
+      resolve({ id: m[0], what: m[3], lo: m[4], hi: m[5], finMin: m[6] == null ? null : m[6], ...JSON.parse(line) });
     });
   });
 }
@@ -84,14 +89,16 @@ async function pool(items, n, fn) {
   const pct = v => (v * 100).toFixed(1) + '%';
   lines.push(`Timing-edge matchups: ${N} matches each from seed ${BASE}, ${((Date.now() - t0) / 1000).toFixed(0)} s on ${JOBS} jobs. A is the first-named player.`);
   lines.push('');
-  lines.push('| ID | Matchup | A wins | 95% interval | Band | Verdict | Damage per exchange A / B | Launches earned A / B | Turn-taking | A on-beat |');
-  lines.push('| :--- | :--- | ---: | :--- | :--- | :--- | :--- | :--- | ---: | ---: |');
+  lines.push('| ID | Matchup | A wins | 95% interval | Band | Finished | Verdict | Damage per exchange A / B | Launches earned A / B | Turn-taking | A on-beat | A blur locks |');
+  lines.push('| :--- | :--- | ---: | :--- | :--- | ---: | :--- | :--- | :--- | ---: | ---: | ---: |');
   for (const r of results) {
     const dec = r.aWins + r.bWins, w = dec ? r.aWins / dec : NaN, ci = dec ? S.wilson(r.aWins, dec) : [NaN, NaN];
     const band = r.lo === null ? '' : `${r.lo} to ${r.hi}%`;
-    const verdict = r.lo === null ? 'reported' : (w * 100 >= r.lo && w * 100 <= r.hi ? (ci[0] * 100 >= r.lo - 2 && ci[1] * 100 <= r.hi + 2 ? 'PASS' : 'in band, interval wide') : 'FAIL');
+    const fin = (r.aWins + r.bWins) / r.n * 100, finOk = r.finMin == null || fin >= r.finMin;
+    let verdict = r.lo === null ? 'reported' : (w * 100 >= r.lo && w * 100 <= r.hi ? (ci[0] * 100 >= r.lo - 2 && ci[1] * 100 <= r.hi + 2 ? 'PASS' : 'in band, interval wide') : 'FAIL');
+    if (r.finMin != null) verdict = finOk ? (verdict === 'reported' ? 'PASS' : verdict) : 'FAIL (finish)';
     const [a, b] = r.stats;
-    lines.push(`| ${r.id} | ${r.what} | ${pct(w)} (${r.aWins} of ${dec}) | ${pct(ci[0])} to ${pct(ci[1])} | ${band} | ${verdict} | ${a.damagePerExchange} / ${b.damagePerExchange} | ${a.launchesEarnedPerMatch} / ${b.launchesEarnedPerMatch} | ${pct(r.alternationShare)} | ${pct(a.onBeatShare)} |`);
+    lines.push(`| ${r.id} | ${r.what} | ${pct(w)} (${r.aWins} of ${dec}) | ${pct(ci[0])} to ${pct(ci[1])} | ${band}${r.finMin != null ? ' and finish at least ' + r.finMin + '%' : ''} | ${fin.toFixed(0)}% | ${verdict} | ${a.damagePerExchange} / ${b.damagePerExchange} | ${a.launchesEarnedPerMatch} / ${b.launchesEarnedPerMatch} | ${pct(r.alternationShare)} | ${pct(a.onBeatShare)} | ${a.blurLocked} of ${a.blurStrings} |`);
   }
   console.log(lines.join('\n'));
   const md = val('md', null), js = val('json', null);
