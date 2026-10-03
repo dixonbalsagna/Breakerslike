@@ -149,6 +149,7 @@ static func fighter(S: SimState, f) -> AnimFighter:
 		AnimData.load_all()
 		af = AnimFighter.new(S.fighters.find(f))
 		af.pair_key = AnimData.ensure_fighter(String(f.id))   # his own waves, baked when his first body is built (the match-start cost)
+		_log_pair_bake(S)
 		_fighters[id] = af
 	return af
 
@@ -269,6 +270,23 @@ static func consume(S: SimState, events: Array) -> void:
 					fighter(S, vf).on_hit(S.T, String(e.region), front, float(e.amount) / 70.0, String(e.kind), dm, float(e.amount) / 60.0, S.tick)
 					if String(e.kind) == "guard" and a >= 0 and a < S.fighters.size():
 						fighter(S, S.fighters[a]).on_blocked(S.T)
+
+
+## One console line per run, once every fighter of the match that plays as the pair has baked his waves: how long the live loader took and how many poses it baked
+## (docs/animation/split-bake-plan.md: the web build's number decides whether the incremental bake is built).
+static var _bake_logged: bool = false
+static func _log_pair_bake(S: SimState) -> void:
+	if _bake_logged:
+		return
+	var keys: Dictionary = {}
+	for fo in S.fighters:
+		var k: String = AnimData.fighter_key(String(fo.id))
+		if k != "":
+			keys[k] = true
+	if keys.is_empty() or AnimData.pair_lists.size() < keys.size():
+		return
+	_bake_logged = true
+	print("pair bake: %d ms, %d poses" % [int(round(float(AnimData.pair_bake_usec) / 1000.0)), AnimData.pair_bake_poses])
 
 
 ## What a far taunt's pick needs to know of the moment: whether he is in the air (the bounce is ground only) and whether any blow has landed yet this match (the nod opens a stand-off).
